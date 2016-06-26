@@ -1,8 +1,9 @@
-var React = require("react"),
-    App = React.createFactory(require("components/app"));
-    
-if (typeof window !== "undefined") {
-  window.onload = function() {
-    React.render(App(), document.getElementById("content"));
-  };
-}
+var $ = require('jquery'); 
+var _ = require('underscore'); 
+var sql = require('sql');
+
+require('./models/element'); 
+require('./models/engine_query'); 
+require('./models/filter'); 
+require('./models/engine'); 
+

@@ -6,15 +6,15 @@ require("node-jsx").install({
     extension: ".jsx"
 });
 
-var React = require("react"),
-    App = React.createFactory(require("../public/javascripts/components/app"));
+// var React = require("react"),
+//     App = React.createFactory(require("../public/javascripts/components/app"));
 
 /* GET home page. */
 router.get('/', function(req, res) {
-  var markup = React.renderToString(App());      
+  var markup = "HEllo"
 
   res.render('index', { 
-    title: 'Express',
+    title: 'ScoutSpot',
     markup: markup 
   });
 });

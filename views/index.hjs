@@ -3,11 +3,17 @@
   <head>
     <title>{{ title }}</title>
     <link rel='stylesheet' href='/stylesheets/style.css' />
-    <script src="javascripts/bundle.js"></script>
+    <script src="./javascripts/bundle.js"></script>
   </head>
   <body>
-    <div id="content">
-      {{{markup}}}
+    <div class='container'>
+      <div id="push"></div>
+      <div class='columns'>
+        <div class='column col-4' id='menu'>
+        </div>
+        <div class='column col-8' id='full-content'>
+        </div>
+      </div>
     </div>
   </body>
 </html>
