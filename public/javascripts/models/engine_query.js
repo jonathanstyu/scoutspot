@@ -6,21 +6,24 @@ require("./filter");
 var EngineQuery = function (schema) {
   if (schema) {
     this.table = schema.table == null ? "" : schema.table; 
-    this.elements = schema.elements == null ? [] : schema.elements;
+    this.contents = schema.contents == null ? [] : schema.contents;
+    this.columns = schema.columns == null ? [] : schema.columns;
     this.filters = schema.filters == null ? [] : schema.filters;
     this._initialSchema = schema; 
   } else {
     this.table = ""; 
-    this.elements = []; 
+    this.contents = []; 
+    this.columns = []; 
     this.filters = []; 
     this._initialSchema = null; 
   }
 }
 
-EngineQuery.reset_all = function () {
+EngineQuery.prototype.reset_all = function () {
   this.table = ""; 
-  this.elements.length = 0; 
-  this.filters.length = 0; 
+  this.contents = []; 
+  this.columns = []; 
+  this.filters = []; 
 }
 
 

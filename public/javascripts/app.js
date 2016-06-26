@@ -29,8 +29,13 @@ $(document).on('click', '.table-menu', function(event) {
   render(); 
 });
 
-$(document).on('click', '#clear-selected-table', function(event) {
-  engine.clear_selected_table();
+$(document).on('click', '#reset-all', function(event) {
+  engine.reset_all();
+  render(); 
+});
+
+$(document).on('click', 'tr.element-menu-row', function(event) {
+  engine.add_element(event.currentTarget.id); 
   render(); 
 });
 
