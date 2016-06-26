@@ -1,0 +1,37 @@
+{
+  "dialect": "mysql",
+  "tables": {
+    "orders": {
+      "name": "orders",
+      "columns": ["created_at", "id", "customer_id"]
+    },
+    "customers": {
+      "name": "customers",
+      "columns": ["id", "created_at", "email"]
+    }
+  },
+  "elements": [
+    {
+      "table": "orders",
+      "type": "content",
+      "description": "Count of individual orders",
+      "title": "count",
+      "sql_code": "COUNT(DISTINCT ID)"
+    },
+    {
+      "table": "customers",
+      "type": "content",
+      "description": "Count of individual customers",
+      "title": "count",
+      "sql_code": "COUNT(DISTINCT ID)"
+    }, 
+    {
+      "table": "customers",
+      "type": "column",
+      "description": "Customers email column",
+      "title": "email",
+      "sql_code": "customers.email",
+      "group_by": "customers.email"
+    }
+  ]
+}

@@ -1,5 +1,3 @@
-# expressiso
-A basic isomorphic JavaScript application with [React](http://facebook.github.io/react/), and [Express](expressjs.com).
 
 ### Installation
 ```bash

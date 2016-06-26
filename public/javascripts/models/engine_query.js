@@ -3,20 +3,25 @@
 require("./element"); 
 require("./filter"); 
 
-var Query = function (table, elements, filters) {
-  var a_query = {
-    "table": table == null ? "" : table,
-    "elements": elements == null ? [] : filters,
-    "filters": filters == null ? [] : filters
+var EngineQuery = function (schema) {
+  if (schema) {
+    this.table = schema.table == null ? "" : schema.table; 
+    this.elements = schema.elements == null ? [] : schema.elements;
+    this.filters = schema.filters == null ? [] : schema.filters;
+    this._initialSchema = schema; 
+  } else {
+    this.table = ""; 
+    this.elements = []; 
+    this.filters = []; 
+    this._initialSchema = null; 
   }
-  
-  a_query.reset = function () {
-    a_query["table"] = ""
-    a_query["elements"] = []
-    a_query["filters"] = []
-  }
-  
-  return a_query; 
 }
 
-module.exports = Query; 
+EngineQuery.reset_all = function () {
+  this.table = ""; 
+  this.elements.length = 0; 
+  this.filters.length = 0; 
+}
+
+
+module.exports = EngineQuery;
