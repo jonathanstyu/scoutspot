@@ -56,7 +56,7 @@
 	var engine = new Engine(); 
 
 	var bootstrap = JSON.parse($('#definitions').text().replace(/&quot;/g,'"'))
-	engine.loadDefinitions(bootstrap); 
+	engine.load_definitions(bootstrap); 
 
 	var render = function () {
 	  var menu = _.template(table_menu); 
@@ -70,18 +70,39 @@
 	  })); 
 	}
 
+	// select table 
 	$(document).on('click', '.table-menu', function(event) {
 	  engine.select_table(event.target.id); 
 	  render(); 
 	});
 
+	// click on the see table schema button 
+	$(document).on('click', '.see-schema', function(event) {
+	  var compiled_schema = _.template(table_schema_template); 
+	  $('#panel').html(compiled_schema({
+	    table: engine.definitions['tables'][event.currentTarget.id]
+	  }))
+	});
+
+	// dismiss and go back to the standard panel. Just rerun the render
+	$(document).on('click', '.dismiss-panel', function(event) {
+	  render();
+	});
+
+	// reset everything 
 	$(document).on('click', '#reset-all', function(event) {
 	  engine.reset_all();
 	  render(); 
 	});
 
+	// select column or content 
 	$(document).on('click', 'tr.element-menu-row', function(event) {
 	  engine.add_element(event.currentTarget.id); 
+	  render(); 
+	});
+
+	$(document).on('click', '.remove-element', function(event) { 
+	  engine.remove_element(event.currentTarget.id);
 	  render(); 
 	});
 
@@ -11780,25 +11801,18 @@
 
 	var Engine = function () {
 	  this.definitions = {},
-	  this.tables = {},
 	  this.available_elements = [],
 	  this.elements = [],
 	  this.filters = [],
 	  this.query = new EngineQuery()
 	}
 	  // Load the definitions file, defining the data 
-	Engine.prototype.loadDefinitions = function (definitions) {
+	Engine.prototype.load_definitions = function (definitions) {
 	  this.definitions = definitions; 
 	  var that = this; 
 	  
 	  // Set SQL defaults 
 	  sql.setDialect(this.definitions['dialect']); 
-	  
-	  // Populate tables with table definitions
-	  _.forEach(this.definitions['tables'], function (table) {
-	    var indexed_table = sql.define(table);
-	    that.tables[table["name"]] = indexed_table;
-	  });
 	  
 	  // Populate elements and filters
 	  _.forEach(this.definitions['elements'], function (element, index) {
@@ -11827,9 +11841,10 @@
 	    return "Empty Query"; 
 	  }
 	  
+	  // Create the table from the inbuilt definitions
 	  var table_key = this.query["table"] 
-	  // Retrieve the sql object from store
-	  var sql_query = Object.assign({}, this.tables[table_key]);
+	  var table_definition = this.definitions['tables'][table_key]; 
+	  var sql_query = sql.define(table_definition); 
 	  
 	  // Apply the individual parts of the query to it
 	  try {
@@ -11847,6 +11862,7 @@
 	  } // closes try/catch statement
 	} // closes render function 
 
+	// Handling the addition of an element Column or Content
 	Engine.prototype.add_element = function (element_id) {
 	  var selected_element = this.elements[element_id]; 
 	  if (selected_element.type == "content") {
@@ -11854,6 +11870,17 @@
 	  } else {
 	    this.query.columns.push(selected_element); 
 	  }
+	}
+
+	// Handling the removal of an element
+	Engine.prototype.remove_element = function (element_id) {
+	  this.query.contents = _.reject(this.query.contents, function (content) {
+	    return content.id == element_id
+	  }); 
+	  
+	  this.query.columns = _.reject(this.query.columns, function (column) {
+	    return column.id == element_id
+	  }); 
 	}
 
 	module.exports = Engine; 
@@ -34288,19 +34315,26 @@
 /* 86 */
 /***/ function(module, exports) {
 
-	var EXPORTED_SYMBOLS = ["element_menu", "table_menu", "panel_template"]
+	var EXPORTED_SYMBOLS = ["table_schema_template", "table_menu", "panel_template"]
 
 	table_menu = "<div class='container'>\
 	<table class='table' id='menu-list'><tbody>\
 	<% if (engine.query.table == '') { %>\
-	    <% _.forEach(engine.tables, function (table) { %>\
-	      <tr class='table-menu'><td id='<%= table._name %>'><%= table._name %></td></tr>\
+	    <% _.forEach(engine.definitions['tables'], function (table) { %>\
+	      <tr>\
+	      <td id='<%= table.name %>' class='table-menu'><%= table.name %></td>\
+	      <td><button class='see-schema btn' id='<%= table.name %>'>See Schema</button></td>\
+	      </tr>\
 	    <% }) %>\
 	<% } else { %>\
-	  <button id='reset-all'>Reset All</button>\
+	  <div class='btn-group btn-group-block'>\
+	    <button class='btn' id='reset-all'>Reset All</button>\
+	    <button class='see-schema btn' id='<%= engine.query.table %>'>See Schema</button>\
+	  </div>\
+	    <tr><th colspan=2>Table: <%= engine.query.table %></th></tr>\
 	  <% _.forEach(engine.available_elements, function (element) { %>\
 	    <tr id='<%= element.id %>' class='element-menu-row'>\
-	      <td><%= element.name %></td>\
+	      <td class='tooltip' data-tooltip='<%= element.description %>'><%= element.name %></td>\
 	      <td><%= element.type %></td>\
 	    </tr>\
 	  <% }) %>\
@@ -34309,26 +34343,20 @@
 	</div>"
 
 	panel_template = "<div class='container'>\
-	    <div class='columns col-gapless'>\
-	      <div class='column col-6'><p>CONTENT GOES HERE</p></div>\
-	      <div class='column col-6'><p id='table-identifier'>\
-	      <% if (engine.query.table == '') { %>\
-	        No Table Selected\
-	      <% } else { %>\
-	        <%= engine.query.table %>\
-	      <% } %>\
-	      </p></div>\
-	    </div>\
 	    <div class='column'>\
 	      <table class='table' id='menu-list'><tbody>\
+	        <tr><th colspan=2>Columns</th></tr>\
 	        <% _.forEach(engine.query.columns, function (column) { %>\
 	          <tr id='<%= column.id %>' class='element-panel-row element-panel-column'>\
 	            <td><%= column.name %></td>\
+	            <td><button class='btn remove-element' id='<%= column.id %>'>Remove</button></td>\
 	          </tr>\
 	        <% }) %>\
+	        <tr><th colspan=2>Contents</th></tr>\
 	        <% _.forEach(engine.query.contents, function (content) { %>\
 	          <tr id='<%= content.id %>' class='element-panel-row element-panel-content'>\
 	            <td><%= content.name %></td>\
+	            <td><button class='btn remove-element' id='<%= content.id %>'>Remove</button></td>\
 	          </tr>\
 	        <% }) %>\
 	      </tbody></table>\
@@ -34339,6 +34367,16 @@
 	      </div>\
 	    </div>\
 	  </div>"
+	          
+	table_schema_template = "<div class='column'>\
+	  <button class='dismiss-panel'>Return</button>\
+	  <table class='table'>\
+	    <tr><th>Columns</th></tr>\
+	    <% _.forEach(table.columns, function (column) { %>\
+	      <tr><td><%= column %></td></tr>\
+	    <% })%>\
+	  </table>\
+	</div>"
 
 /***/ }
 /******/ ]);

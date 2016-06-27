@@ -6,25 +6,18 @@ var Filter = require('./filter');
 
 var Engine = function () {
   this.definitions = {},
-  this.tables = {},
   this.available_elements = [],
   this.elements = [],
   this.filters = [],
   this.query = new EngineQuery()
 }
   // Load the definitions file, defining the data 
-Engine.prototype.loadDefinitions = function (definitions) {
+Engine.prototype.load_definitions = function (definitions) {
   this.definitions = definitions; 
   var that = this; 
   
   // Set SQL defaults 
   sql.setDialect(this.definitions['dialect']); 
-  
-  // Populate tables with table definitions
-  _.forEach(this.definitions['tables'], function (table) {
-    var indexed_table = sql.define(table);
-    that.tables[table["name"]] = indexed_table;
-  });
   
   // Populate elements and filters
   _.forEach(this.definitions['elements'], function (element, index) {
@@ -53,9 +46,10 @@ Engine.prototype.render_query = function () {
     return "Empty Query"; 
   }
   
+  // Create the table from the inbuilt definitions
   var table_key = this.query["table"] 
-  // Retrieve the sql object from store
-  var sql_query = Object.assign({}, this.tables[table_key]);
+  var table_definition = this.definitions['tables'][table_key]; 
+  var sql_query = sql.define(table_definition); 
   
   // Apply the individual parts of the query to it
   try {
@@ -73,6 +67,7 @@ Engine.prototype.render_query = function () {
   } // closes try/catch statement
 } // closes render function 
 
+// Handling the addition of an element Column or Content
 Engine.prototype.add_element = function (element_id) {
   var selected_element = this.elements[element_id]; 
   if (selected_element.type == "content") {
@@ -80,6 +75,17 @@ Engine.prototype.add_element = function (element_id) {
   } else {
     this.query.columns.push(selected_element); 
   }
+}
+
+// Handling the removal of an element
+Engine.prototype.remove_element = function (element_id) {
+  this.query.contents = _.reject(this.query.contents, function (content) {
+    return content.id == element_id
+  }); 
+  
+  this.query.columns = _.reject(this.query.columns, function (column) {
+    return column.id == element_id
+  }); 
 }
 
 module.exports = Engine; 
