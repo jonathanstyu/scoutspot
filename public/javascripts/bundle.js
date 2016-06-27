@@ -106,6 +106,12 @@
 	  render(); 
 	});
 
+	// actions on the sql query 
+	$(document).on('click', '#copy-query', function(event) { 
+	  console.log("copy the query!: " + $('#sql-content').text())
+	  render(); 
+	});
+
 	render(); 
 
 /***/ },
@@ -11849,6 +11855,25 @@
 	  // Apply the individual parts of the query to it
 	  try {
 	    var select_commands = []
+	    var group_by_commands = []
+	    
+	    // Handle the columns
+	    _.forEach(that.query.columns, function (column_element) {
+	      var column_table_definition = that.definitions['tables'][column_element.table]; 
+	      var column_table = sql.define(column_table_definition);
+	      var column_title = column_element.title;
+	      switch (column_element.sql_class) {
+	      case "field":
+	        select_commands.push(column_table[column_element.sql_code]
+	          .as(column_title)); 
+	        group_by_commands.push(column_table[column_element.sql_code]); 
+	        break;
+	      default:
+	        
+	      }
+	    }); 
+	    
+	    // Handle the Contents last after the columns
 	    _.forEach(that.query.contents, function (content_element) {
 	      
 	      // We need to initialize a sql table to access distinct and various other funcs
@@ -11871,11 +11896,17 @@
 	        
 	      }
 	    }); 
+	    // apply the select functions and the group function too 
 	    sql_query = sql_query.select(select_commands); 
+	    
+	    if (group_by_commands.length > 0) {
+	      sql_query = sql_query.group(group_by_commands); 
+	    }
+	    
 	    // This checks makes sure that we capture if not enough is done 
-	    var compiled_sql = (typeof sql_query.toQuery == 'function') ? sql_query.toQuery().text : "Incomplete Query"
-	    return compiled_sql
+	    return (typeof sql_query.toQuery == 'function') ? sql_query.toQuery().text : "Incomplete Query"
 	  } catch (variable) {
+	    //
 	    return variable
 	  } // closes try/catch statement
 	} // closes render function 
@@ -34380,8 +34411,14 @@
 	      </tbody></table>\
 	    </div>\
 	    <div class='card'>\
-	      <div class='card-body' id='sql-content'>\
+	      <b><div class='card-body' id='sql-content'>\
 	        <%= engine.render_query() %>\
+	      </b></div>\
+	      <div class='card-footer'>\
+	        <div class='btn-group btn-group-block'>\
+	          <button class='btn' id='copy-query'>Copy</button>\
+	          <button class='btn'>Save</button>\
+	        </div>\
 	      </div>\
 	    </div>\
 	  </div>"

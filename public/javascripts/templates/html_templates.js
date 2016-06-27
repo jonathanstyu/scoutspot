@@ -45,8 +45,14 @@ panel_template = "<div class='container'>\
       </tbody></table>\
     </div>\
     <div class='card'>\
-      <div class='card-body' id='sql-content'>\
+      <b><div class='card-body' id='sql-content'>\
         <%= engine.render_query() %>\
+      </b></div>\
+      <div class='card-footer'>\
+        <div class='btn-group btn-group-block'>\
+          <button class='btn' id='copy-query'>Copy</button>\
+          <button class='btn'>Save</button>\
+        </div>\
       </div>\
     </div>\
   </div>"

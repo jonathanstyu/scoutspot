@@ -40,9 +40,9 @@
       "type": "column",
       "description": "Customers email column",
       "title": "customers.email",
-      "sql_class": "email",
+      "sql_class": "field",
       "sql_code": "email",
-      "group_by": "customers.email"
+      "group_by": ""
     }
   ]
 }

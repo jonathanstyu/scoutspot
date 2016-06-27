@@ -60,4 +60,10 @@ $(document).on('click', '.remove-element', function(event) {
   render(); 
 });
 
+// actions on the sql query 
+$(document).on('click', '#copy-query', function(event) { 
+  console.log("copy the query!: " + $('#sql-content').text())
+  render(); 
+});
+
 render(); 
