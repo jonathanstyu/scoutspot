@@ -11,9 +11,9 @@ var Element = function (type, options, id) {
     sql_code: options["sql_code"] ? options["sql_code"] : "",
     type: type, 
     table: options["table"] ? options["table"] : "",
-    title: options["group_by"] ? options["group_by"] : "",
+    group_by: options["group_by"] ? options["group_by"] : "",
+    sql_class: options["sql_class"] ? options["sql_class"] : "",
     title: options["title"] ? options["title"] : "",
-    name: (options["table"] && options["title"]) ? options["table"] + "." +  options["title"] : ""
   }
 } 
 

@@ -47,19 +47,37 @@ Engine.prototype.render_query = function () {
   }
   
   // Create the table from the inbuilt definitions
-  var table_key = this.query["table"] 
-  var table_definition = this.definitions['tables'][table_key]; 
+  var that = this; 
+  var table_key = that.query["table"]; 
+  var table_definition = that.definitions['tables'][table_key]; 
   var sql_query = sql.define(table_definition); 
-  
   // Apply the individual parts of the query to it
   try {
-    _.forEach(this.query.contents, function (content_element) {
-      sql_query = sql_query['select'](content_element.sql_code); 
-    })
-    
-    // sql_query = sql_query['select']("orders.id");
-    // var compiled_sql = sql_query.select("user.id").select("user.email")
-    // console.log(compiled_sql.toQuery().text)
+    var select_commands = []
+    _.forEach(that.query.contents, function (content_element) {
+      
+      // We need to initialize a sql table to access distinct and various other funcs
+      var content_table_definition = that.definitions['tables'][content_element.table]; 
+      var content_table = sql.define(content_table_definition);
+      var content_title = content_element.title;
+
+      switch (content_element.sql_class) {
+      case "count":
+        select_commands.push(content_table[content_element.sql_code]
+          ["count"]()
+          ["distinct"]()
+          .as(content_title))
+        break;
+      case "sum":
+        select_commands.push(content_table[content_element.sql_code]
+          ["sum"]()
+          .as(content_title))
+      default:
+        
+      }
+    }); 
+    sql_query = sql_query.select(select_commands); 
+    // This checks makes sure that we capture if not enough is done 
     var compiled_sql = (typeof sql_query.toQuery == 'function') ? sql_query.toQuery().text : "Incomplete Query"
     return compiled_sql
   } catch (variable) {

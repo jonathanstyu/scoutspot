@@ -17,7 +17,7 @@ table_menu = "<div class='container'>\
     <tr><th colspan=2>Table: <%= engine.query.table %></th></tr>\
   <% _.forEach(engine.available_elements, function (element) { %>\
     <tr id='<%= element.id %>' class='element-menu-row'>\
-      <td class='tooltip' data-tooltip='<%= element.description %>'><%= element.name %></td>\
+      <td class='tooltip' data-tooltip='<%= element.description %>'><%= element.title %></td>\
       <td><%= element.type %></td>\
     </tr>\
   <% }) %>\
@@ -31,14 +31,14 @@ panel_template = "<div class='container'>\
         <tr><th colspan=2>Columns</th></tr>\
         <% _.forEach(engine.query.columns, function (column) { %>\
           <tr id='<%= column.id %>' class='element-panel-row element-panel-column'>\
-            <td><%= column.name %></td>\
+            <td><%= column.title %></td>\
             <td><button class='btn remove-element' id='<%= column.id %>'>Remove</button></td>\
           </tr>\
         <% }) %>\
         <tr><th colspan=2>Contents</th></tr>\
         <% _.forEach(engine.query.contents, function (content) { %>\
           <tr id='<%= content.id %>' class='element-panel-row element-panel-content'>\
-            <td><%= content.name %></td>\
+            <td><%= content.title %></td>\
             <td><button class='btn remove-element' id='<%= content.id %>'>Remove</button></td>\
           </tr>\
         <% }) %>\

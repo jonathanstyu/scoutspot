@@ -3,7 +3,7 @@
   "tables": {
     "orders": {
       "name": "orders",
-      "columns": ["created_at", "id", "customer_id"]
+      "columns": ["created_at", "id", "customer_id", "revenue"]
     },
     "customers": {
       "name": "customers",
@@ -15,22 +15,33 @@
       "table": "orders",
       "type": "content",
       "description": "Count of individual orders",
-      "title": "count",
-      "sql_code": "COUNT(DISTINCT ID)"
+      "title": "orders.count",
+      "sql_class": "count",
+      "sql_code": "id"
+    },
+    {
+      "table": "orders",
+      "type": "content",
+      "description": "sum of orders revenue",
+      "title": "orders.sum revenue",
+      "sql_class": "sum",
+      "sql_code": "revenue"
     },
     {
       "table": "customers",
       "type": "content",
       "description": "Count of individual customers",
-      "title": "count",
-      "sql_code": "COUNT(DISTINCT ID)"
+      "title": "customers.count",
+      "sql_class": "count",
+      "sql_code": "id"
     }, 
     {
       "table": "customers",
       "type": "column",
       "description": "Customers email column",
-      "title": "email",
-      "sql_code": "customers.email",
+      "title": "customers.email",
+      "sql_class": "email",
+      "sql_code": "email",
       "group_by": "customers.email"
     }
   ]

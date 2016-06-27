@@ -11722,9 +11722,9 @@
 	    sql_code: options["sql_code"] ? options["sql_code"] : "",
 	    type: type, 
 	    table: options["table"] ? options["table"] : "",
-	    title: options["group_by"] ? options["group_by"] : "",
+	    group_by: options["group_by"] ? options["group_by"] : "",
+	    sql_class: options["sql_class"] ? options["sql_class"] : "",
 	    title: options["title"] ? options["title"] : "",
-	    name: (options["table"] && options["title"]) ? options["table"] + "." +  options["title"] : ""
 	  }
 	} 
 
@@ -11842,19 +11842,37 @@
 	  }
 	  
 	  // Create the table from the inbuilt definitions
-	  var table_key = this.query["table"] 
-	  var table_definition = this.definitions['tables'][table_key]; 
+	  var that = this; 
+	  var table_key = that.query["table"]; 
+	  var table_definition = that.definitions['tables'][table_key]; 
 	  var sql_query = sql.define(table_definition); 
-	  
 	  // Apply the individual parts of the query to it
 	  try {
-	    _.forEach(this.query.contents, function (content_element) {
-	      sql_query = sql_query['select'](content_element.sql_code); 
-	    })
-	    
-	    // sql_query = sql_query['select']("orders.id");
-	    // var compiled_sql = sql_query.select("user.id").select("user.email")
-	    // console.log(compiled_sql.toQuery().text)
+	    var select_commands = []
+	    _.forEach(that.query.contents, function (content_element) {
+	      
+	      // We need to initialize a sql table to access distinct and various other funcs
+	      var content_table_definition = that.definitions['tables'][content_element.table]; 
+	      var content_table = sql.define(content_table_definition);
+	      var content_title = content_element.title;
+
+	      switch (content_element.sql_class) {
+	      case "count":
+	        select_commands.push(content_table[content_element.sql_code]
+	          ["count"]()
+	          ["distinct"]()
+	          .as(content_title))
+	        break;
+	      case "sum":
+	        select_commands.push(content_table[content_element.sql_code]
+	          ["sum"]()
+	          .as(content_title))
+	      default:
+	        
+	      }
+	    }); 
+	    sql_query = sql_query.select(select_commands); 
+	    // This checks makes sure that we capture if not enough is done 
 	    var compiled_sql = (typeof sql_query.toQuery == 'function') ? sql_query.toQuery().text : "Incomplete Query"
 	    return compiled_sql
 	  } catch (variable) {
@@ -34334,7 +34352,7 @@
 	    <tr><th colspan=2>Table: <%= engine.query.table %></th></tr>\
 	  <% _.forEach(engine.available_elements, function (element) { %>\
 	    <tr id='<%= element.id %>' class='element-menu-row'>\
-	      <td class='tooltip' data-tooltip='<%= element.description %>'><%= element.name %></td>\
+	      <td class='tooltip' data-tooltip='<%= element.description %>'><%= element.title %></td>\
 	      <td><%= element.type %></td>\
 	    </tr>\
 	  <% }) %>\
@@ -34348,14 +34366,14 @@
 	        <tr><th colspan=2>Columns</th></tr>\
 	        <% _.forEach(engine.query.columns, function (column) { %>\
 	          <tr id='<%= column.id %>' class='element-panel-row element-panel-column'>\
-	            <td><%= column.name %></td>\
+	            <td><%= column.title %></td>\
 	            <td><button class='btn remove-element' id='<%= column.id %>'>Remove</button></td>\
 	          </tr>\
 	        <% }) %>\
 	        <tr><th colspan=2>Contents</th></tr>\
 	        <% _.forEach(engine.query.contents, function (content) { %>\
 	          <tr id='<%= content.id %>' class='element-panel-row element-panel-content'>\
-	            <td><%= content.name %></td>\
+	            <td><%= content.title %></td>\
 	            <td><button class='btn remove-element' id='<%= content.id %>'>Remove</button></td>\
 	          </tr>\
 	        <% }) %>\
