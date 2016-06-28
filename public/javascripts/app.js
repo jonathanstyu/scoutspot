@@ -24,7 +24,7 @@ var render = function () {
   })); 
 }
 
-// select table 
+// -----  On the table and element menu ---- 
 $(document).on('click', '.table-menu', function(event) {
   engine.select_table(event.target.id); 
   render(); 
@@ -49,9 +49,19 @@ $(document).on('click', '#reset-all', function(event) {
   render(); 
 });
 
-// select column or content 
-$(document).on('click', 'tr.element-menu-row', function(event) {
-  engine.add_element(event.currentTarget.id); 
+// select column or content in the card
+$(document).on('click', '.element-menu-row', function(event) {
+  if (event.target.type != 'submit') {
+    engine.add_element(event.currentTarget.id); 
+    render();     
+  }
+});
+
+// --- On the panel ----
+
+$(document).on('click', 'button.element-filter', function(event) {
+  event.preventDefault();
+  engine.add_filter(event.currentTarget.id); 
   render(); 
 });
 
@@ -63,6 +73,11 @@ $(document).on('click', '.remove-element', function(event) {
 // actions on the sql query 
 $(document).on('click', '#copy-query', function(event) { 
   console.log("copy the query!: " + $('#sql-content').text())
+  render(); 
+});
+
+$(document).on('click', '.remove-filter', function(event) { 
+  engine.remove_filter(event.currentTarget.id);
   render(); 
 });
 

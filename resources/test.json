@@ -16,7 +16,7 @@
       "type": "content",
       "description": "Count of individual orders",
       "title": "orders.count",
-      "sql_class": "count",
+      "sql_func": "count",
       "sql_code": "id"
     },
     {
@@ -24,7 +24,7 @@
       "type": "content",
       "description": "sum of orders revenue",
       "title": "orders.sum revenue",
-      "sql_class": "sum",
+      "sql_func": "sum",
       "sql_code": "revenue"
     },
     {
@@ -32,7 +32,7 @@
       "type": "content",
       "description": "Count of individual customers",
       "title": "customers.count",
-      "sql_class": "count",
+      "sql_func": "count",
       "sql_code": "id"
     }, 
     {
@@ -40,7 +40,7 @@
       "type": "column",
       "description": "Customers email column",
       "title": "customers.email",
-      "sql_class": "field",
+      "sql_func": "field",
       "sql_code": "email",
       "group_by": ""
     }

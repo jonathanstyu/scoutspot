@@ -1,19 +1,15 @@
-var Filter = function(query_element) {
-  var filter = {}; 
-  
-  filter = Element("filter", query_element)
-  if (query_element['type'] == 'content') {
-    filter["sql_key"] = 'having'
-  } else {
-    filter["sql_key"] = 'where'
+var Filter = function(query_element, options) {
+  return {
+    id: null,
+    _element: query_element,
+    title: query_element['title'] != null ?  query_element["title"] : "filter",
+    isNotNull: options["isNotNull"],
+    equals: options['equals'],
+    greaterThan: options['greaterThan'],
+    lessThan: options['lessThan'],
+    contains: options['contains'],
+    special: options['special']
   }
-  filter.name = query_element['name'] + "-filter"
-  
-  filter.parse = function parse() {
-    return name; 
-  }
-  
-  return filter; 
 };
 
 module.exports = Filter; 
