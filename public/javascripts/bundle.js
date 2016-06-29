@@ -123,8 +123,13 @@
 	});
 
 	$(document).on('click', '.remove-filter', function(event) { 
-	  engine.remove_filter(event.currentTarget.id);
+	  engine.remove_filter(event.target.id);
 	  render(); 
+	});
+
+	// for the filter change
+	$(document).on('change', 'tr.filter-panel-row', function(event) {
+	  console.log(event.target.value); 
 	});
 
 	render(); 
@@ -11792,7 +11797,7 @@
 
 	var Filter = function(query_element, options) {
 	  return {
-	    id: null,
+	    id: query_element['id'],
 	    _element: query_element,
 	    title: query_element['title'] != null ?  query_element["title"] : "filter",
 	    isNotNull: options["isNotNull"],
@@ -34482,7 +34487,7 @@
 	        <% _.forEach(engine.query.filters, function (filter) { %>\
 	          <tr id='<%= filter.id %>' class='filter-panel-row'>\
 	            <td><%= filter.title %></td>\
-	            <td><select class='form-select'><option>Choose an option</option><option>Is Not Null</option><option>Equals</option><option>Greater Than</option><option>Less Than</option><option>Contains</option><option>Other</option></select></td>\
+	            <td><select class='form-select filter-select' id='<%= filter.id %>' ><option>Choose an option</option><option>Is Not Null</option><option>Equals</option><option>Greater Than</option><option>Less Than</option><option>Contains</option><option>Other</option></select></td>\
 	            <td><input class='filter-input' type='text' id='<%= filter.id %>' /></td>\
 	            <td><button class='btn remove-filter' id='<%= filter.id %>'>X</button></td>\
 	          </tr>\

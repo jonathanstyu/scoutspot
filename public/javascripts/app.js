@@ -77,8 +77,13 @@ $(document).on('click', '#copy-query', function(event) {
 });
 
 $(document).on('click', '.remove-filter', function(event) { 
-  engine.remove_filter(event.currentTarget.id);
+  engine.remove_filter(event.target.id);
   render(); 
+});
+
+// for the filter change
+$(document).on('change', 'tr.filter-panel-row', function(event) {
+  console.log(event.target.value); 
 });
 
 render(); 

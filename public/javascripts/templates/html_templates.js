@@ -58,7 +58,7 @@ panel_template = "<div class='container'>\
         <% _.forEach(engine.query.filters, function (filter) { %>\
           <tr id='<%= filter.id %>' class='filter-panel-row'>\
             <td><%= filter.title %></td>\
-            <td><select class='form-select'><option>Choose an option</option><option>Is Not Null</option><option>Equals</option><option>Greater Than</option><option>Less Than</option><option>Contains</option><option>Other</option></select></td>\
+            <td><select class='form-select filter-select' id='<%= filter.id %>' ><option>Choose an option</option><option>Is Not Null</option><option>Equals</option><option>Greater Than</option><option>Less Than</option><option>Contains</option><option>Other</option></select></td>\
             <td><input class='filter-input' type='text' id='<%= filter.id %>' /></td>\
             <td><button class='btn remove-filter' id='<%= filter.id %>'>X</button></td>\
           </tr>\
