@@ -17,9 +17,11 @@ table_menu = "<div class='container'>\
     <tr><th colspan=3>Table: <%= engine.query.table %></th></tr>\
   <% _.forEach(engine.available_elements, function (element) { %>\
     <tr id='<%= element.id %>' class='element-menu-row'>\
-      <td class='tooltip' data-tooltip='<%= element.description %>'><%= element.title %></td>\
+      <td class='tooltip tooltip-right' data-tooltip='<%= element.description %>'><%= element.title %></td>\
       <td><%= element.type %></td>\
-      <td><button id='<%= element.id %>' class='btn element-filter'>Filter</button></td>\
+      <% if (element.type == 'column') { %>\
+        <td><button id='<%= element.id %>' class='btn element-filter'>Filter</button></td>\
+      <% } %>\
     </tr>\
   <% }) %>\
 <% } %>\
@@ -57,7 +59,7 @@ panel_template = "<div class='container'>\
         <tr><th colspan=4>Filters</th></tr>\
         <% _.forEach(engine.query.filters, function (filter) { %>\
           <tr id='<%= filter.id %>' class='filter-panel-row'>\
-            <td><%= filter.title %></td>\
+            <td><%= filter.filter_title %></td>\
             <td><select class='form-select filter-select' id='<%= filter.id %>' ><option>Choose an option</option><option>Is Not Null</option><option>Equals</option><option>Greater Than</option><option>Less Than</option><option>Contains</option><option>Other</option></select></td>\
             <td><input class='filter-input' type='text' id='<%= filter.id %>' /></td>\
             <td><button class='btn remove-filter' id='<%= filter.id %>'>X</button></td>\

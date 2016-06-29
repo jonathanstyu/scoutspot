@@ -11735,24 +11735,54 @@
 /* 3 */
 /***/ function(module, exports) {
 
-	var Element = function (type, options, id) {  
-	  function parse() {
-	    console.log("Error. Type not defined.")
-	  }
+	var Element = function () {  
 	  // sql_func is any fancy stuff we want to do like aggregate, sum, count, etc. 
 	  // sql_code == the specific column referred 
-	  return {
-	    id: id,
-	    parse: parse,
-	    description: options["description"] ? options["description"] : "",
-	    sql_code: options["sql_code"] ? options["sql_code"] : "",
-	    type: type, 
-	    table: options["table"] ? options["table"] : "",
-	    group_by: options["group_by"] ? options["group_by"] : "",
-	    sql_func: options["sql_func"] ? options["sql_func"] : "",
-	    title: options["title"] ? options["title"] : "",
-	  }
+	  // return {
+	  //   id: id,
+	  //   description: options["description"] ? options["description"] : "",
+	  //   sql_code: options["sql_code"] ? options["sql_code"] : "",
+	  //   type: type,
+	  //   table: options["table"] ? options["table"] : "",
+	  //   group_by: options["group_by"] ? options["group_by"] : "",
+	  //   sql_func: options["sql_func"] ? options["sql_func"] : "",
+	  //   title: options["title"] ? options["title"] : "",
+	  // }
+	    this.id= "",
+	    this.description= "",
+	    this.sql_code= "",
+	    this.type= "", 
+	    this.table= "",
+	    this.group_by= "",
+	    this.sql_func= "",
+	    this.title= ""
 	} 
+
+	Element.populate = function (type, options, id) {
+	  var element = new Element();
+	  element.type = type; 
+	  element.id = id; 
+	  element.description = options["description"] ? options["description"] : ""; 
+	  element.sql_code = options["sql_code"] ? options["sql_code"] : ""; 
+	  element.table = options["table"] ? options["table"] : ""; 
+	  element.group_by = options["group_by"] ? options["group_by"] : ""; 
+	  element.sql_func = options["sql_func"] ? options["sql_func"] : ""; 
+	  element.title = options["title"] ? options["title"] : "";
+	  return element; 
+	}
+
+	Element.autogenerate_with_column = function (table_object, column, id) {
+	  var element = new Element(); 
+	  element.table = table_object.name; 
+	  element.sql_code = column; 
+	  element.title = table_object.name + "." + column; 
+	  element.sql_func = "field"; 
+	  element.description = "Column " + column + " on table " + table_object.name; 
+	  element.type = "column"; 
+	  element.id = id;  
+	  
+	  return element; 
+	}
 
 	module.exports = Element; 
 
@@ -11799,7 +11829,13 @@
 	  return {
 	    id: query_element['id'],
 	    _element: query_element,
-	    title: query_element['title'] != null ?  query_element["title"] : "filter",
+	    filter_title: query_element["title"],
+	    where_or_having: query_element['type'] == "column" ? "where" : "having",
+	    
+	    // -- tied to the sql library, 
+	    _sql_object: null,
+	    
+	    //--- Start filter exclusive elements here
 	    isNotNull: options["isNotNull"],
 	    equals: options['equals'],
 	    greaterThan: options['greaterThan'],
@@ -11832,14 +11868,23 @@
 	Engine.prototype.load_definitions = function (definitions) {
 	  this.definitions = definitions; 
 	  var that = this; 
-	  
+	  var element_index_count = 0; 
 	  // Set SQL defaults 
 	  sql.setDialect(this.definitions['dialect']); 
 	  
-	  // Populate elements and filters
-	  _.forEach(this.definitions['elements'], function (element, index) {
-	    that.elements.push(new Element(element.type, element, index)); 
-	  })
+	  // Auto generate columns from the table schema 
+	  _.forEach(this.definitions["tables"], function (table_object) {
+	    _.forEach(table_object.columns, function (column) {
+	      // For each column within the table object, auto generate an element 
+	      that.elements.push(Element.autogenerate_with_column(table_object, column, element_index_count)); 
+	      element_index_count += 1;  
+	    }); 
+	  }); 
+	  
+	  // Populate custom elements from the definitions 
+	  _.forEach(this.definitions['elements'], function (element_options, index) {
+	    that.elements.push(Element.populate(element_options.type, element_options, index + element_index_count)); 
+	  }); 
 	}
 	  
 	  // Once someone selects a table then filter out for all the available elements
@@ -11873,11 +11918,7 @@
 	    
 	    //The arrays of commands that we collect and group the query 
 	    var select_commands = []
-	    var group_by_commands = []
-	    
-	    // There are to ways to filter, having and where. We will treat them separately
-	    var filter_commands_where = []
-	    var filter_commands_having = []
+	    var group_by_commands = []    
 	    
 	    // Handle the columns, which have to go first because they are grouped. 
 	    _.forEach(that.query.columns, function (column_element) {
@@ -11922,36 +11963,36 @@
 	    // apply the select functions from the commands array 
 	    sql_query = sql_query.select(select_commands); 
 	    
+	    //Now we need to create our filters. God. 
+	    // There are to ways to filter, having and where. Throw them here and treat them separately
+	    var filter_commands = []
+	    
+	    _.forEach(that.query.filters, function (filter) {
+	      var filter_table_definition = that.definitions['tables'][filter._element.table]; 
+	      var filter_sql = sql.define(filter_table_definition);
+	      
+	      var filter_sql_object_with_column = filter_sql[filter._element.sql_code]
+	      
+	      filter._sql_object = filter_sql_object_with_column; 
+	      filter_commands.push(filter_sql_object_with_column); 
+	    }); 
+	    
+	    // We split the total filter command pool into where and having, and apply if length is greater than zero 
+	    
+	    var where_filters = _.where(that.query.filters, {"where_or_having": "where"}); 
+	    var having_filters = _.where(that.query.filters, {"where_or_having": "having"}); 
+	    if (where_filters.length > 0) {
+	      sql_query = sql_query.where(_.pluck(where_filters, '_sql_object')); 
+	    } else if (having_filters.length > 0) {
+	      sql_query = sql_query.having(_.pluck(having_filters, '_sql_object')); 
+	    }; 
+	    
 	    // If there is anything that needs to be grouped, it is applied here 
 	    if (group_by_commands.length > 0) {
 	      sql_query = sql_query.group(group_by_commands); 
 	    }
 	    
-	    //Now we need to create our filters. God. 
-	    _.forEach(that.query.filters, function (filter) {
-	      var filter_table_definition = that.definitions['tables'][filter._element.table]; 
-	      var filter_sql = sql.define(filter_table_definition);
-
-	      switch (filter.type) {
-	      case "column":
-	        filter_commands_where.push(filter_table[filter._element.sql_code]); 
-	        break;
-	      case "content":
-	        filter_commands_having.push(filter_table[filter._element.sql_code]); 
-	        break;
-	      default:
-	        
-	      }
-	    }); 
-	    
-	    // If there is anythingn to filter, we apply it here
-	    if (filter_commands_where.length > 0) {
-	      sql_query = sql_query.where(filter_commands_where); 
-	    } else if (filter_commands_having.length > 0) {
-	      sql_query = sql_query.having(filter_commands_having); 
-	    }
-	    
-	    // This checks makes sure that we capture if not enough is done 
+	    // This is a fall through to parse for 
 	    return (typeof sql_query.toQuery == 'function') ? sql_query.toQuery().text : "Incomplete Query"
 	  } catch (variable) {
 	    //
@@ -11982,6 +12023,12 @@
 
 	//  Add a filter, though in reality we are adding an element 
 	Engine.prototype.add_filter = function (element_id) {
+	  var selected_element = this.elements[element_id]; 
+	  var created_filter = new Filter(selected_element, {id: element_id}); 
+	  this.query.filters.push(created_filter); 
+	}
+
+	Engine.prototype.edit_filter = function (element_id) {
 	  var selected_element = this.elements[element_id]; 
 	  var created_filter = new Filter(selected_element, {id: element_id}); 
 	  this.query.filters.push(created_filter); 
@@ -34446,9 +34493,11 @@
 	    <tr><th colspan=3>Table: <%= engine.query.table %></th></tr>\
 	  <% _.forEach(engine.available_elements, function (element) { %>\
 	    <tr id='<%= element.id %>' class='element-menu-row'>\
-	      <td class='tooltip' data-tooltip='<%= element.description %>'><%= element.title %></td>\
+	      <td class='tooltip tooltip-right' data-tooltip='<%= element.description %>'><%= element.title %></td>\
 	      <td><%= element.type %></td>\
-	      <td><button id='<%= element.id %>' class='btn element-filter'>Filter</button></td>\
+	      <% if (element.type == 'column') { %>\
+	        <td><button id='<%= element.id %>' class='btn element-filter'>Filter</button></td>\
+	      <% } %>\
 	    </tr>\
 	  <% }) %>\
 	<% } %>\
@@ -34486,7 +34535,7 @@
 	        <tr><th colspan=4>Filters</th></tr>\
 	        <% _.forEach(engine.query.filters, function (filter) { %>\
 	          <tr id='<%= filter.id %>' class='filter-panel-row'>\
-	            <td><%= filter.title %></td>\
+	            <td><%= filter.filter_title %></td>\
 	            <td><select class='form-select filter-select' id='<%= filter.id %>' ><option>Choose an option</option><option>Is Not Null</option><option>Equals</option><option>Greater Than</option><option>Less Than</option><option>Contains</option><option>Other</option></select></td>\
 	            <td><input class='filter-input' type='text' id='<%= filter.id %>' /></td>\
 	            <td><button class='btn remove-filter' id='<%= filter.id %>'>X</button></td>\

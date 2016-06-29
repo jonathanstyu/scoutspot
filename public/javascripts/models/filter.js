@@ -2,7 +2,13 @@ var Filter = function(query_element, options) {
   return {
     id: query_element['id'],
     _element: query_element,
-    title: query_element['title'] != null ?  query_element["title"] : "filter",
+    filter_title: query_element["title"],
+    where_or_having: query_element['type'] == "column" ? "where" : "having",
+    
+    // -- tied to the sql library, 
+    _sql_object: null,
+    
+    //--- Start filter exclusive elements here
     isNotNull: options["isNotNull"],
     equals: options['equals'],
     greaterThan: options['greaterThan'],
