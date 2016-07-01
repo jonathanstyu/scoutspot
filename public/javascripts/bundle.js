@@ -129,7 +129,12 @@
 
 	// for the filter change
 	$(document).on('change', 'tr.filter-panel-row', function(event) {
-	  console.log(event.target.value); 
+	  engine.edit_filter({
+	    "filter_id": $(event.target).attr('id'),
+	    "filter_value": $(event.currentTarget).find(".filter-input").val(),
+	    "filter_method": $(event.currentTarget).find(".filter-select").val(),
+	  });
+	  render(); 
 	});
 
 	render(); 
@@ -11830,18 +11835,15 @@
 	    id: query_element['id'],
 	    _element: query_element,
 	    filter_title: query_element["title"],
+	    
 	    where_or_having: query_element['type'] == "column" ? "where" : "having",
 	    
 	    // -- tied to the sql library, 
 	    _sql_object: null,
 	    
 	    //--- Start filter exclusive elements here
-	    isNotNull: options["isNotNull"],
-	    equals: options['equals'],
-	    greaterThan: options['greaterThan'],
-	    lessThan: options['lessThan'],
-	    contains: options['contains'],
-	    special: options['special']
+	    method: "",
+	    value: ""
 	  }
 	};
 
@@ -11964,7 +11966,7 @@
 	    sql_query = sql_query.select(select_commands); 
 	    
 	    //Now we need to create our filters. God. 
-	    // There are to ways to filter, having and where. Throw them here and treat them separately
+	    // There are two ways to filter, having and where. Throw them here and treat them separately
 	    var filter_commands = []
 	    
 	    _.forEach(that.query.filters, function (filter) {
@@ -11973,6 +11975,24 @@
 	      
 	      var filter_sql_object_with_column = filter_sql[filter._element.sql_code]
 	      
+	      switch (filter.method) {
+	      case "Equals":
+	        filter_sql_object_with_column = filter_sql_object_with_column["equals"](new String(filter.value)); 
+	        break;
+	      case "Is Not Null":
+	        filter_sql_object_with_column = filter_sql_object_with_column["isNotNull"](); 
+	        break;
+	      case "Greater Than":
+	        filter_sql_object_with_column = "(" + filter._element.table + "." + filter._element.sql_code + " > " + filter.value + ")"
+	        console.log(filter_sql_object_with_column)
+	        break;
+	      case "Less Than":
+	        filter_sql_object_with_column = "(" + filter._element.table + "." + filter._element.sql_code + " < " + filter.value + ")"
+	        break;
+	      default:
+	        
+	      }
+	      // attach the sql object or custom sql command to the Filter object 
 	      filter._sql_object = filter_sql_object_with_column; 
 	      filter_commands.push(filter_sql_object_with_column); 
 	    }); 
@@ -11981,8 +12001,11 @@
 	    
 	    var where_filters = _.where(that.query.filters, {"where_or_having": "where"}); 
 	    var having_filters = _.where(that.query.filters, {"where_or_having": "having"}); 
+	    
 	    if (where_filters.length > 0) {
-	      sql_query = sql_query.where(_.pluck(where_filters, '_sql_object')); 
+	      // Use pluck to grab the values of the _sql_object, because the sql object is tied
+	      // sql_query = sql_query.where(_.pluck(where_filters, '_sql_object'));
+	      sql_query = sql_query.where(_.pluck(where_filters, '_sql_object'));
 	    } else if (having_filters.length > 0) {
 	      sql_query = sql_query.having(_.pluck(having_filters, '_sql_object')); 
 	    }; 
@@ -12028,10 +12051,15 @@
 	  this.query.filters.push(created_filter); 
 	}
 
-	Engine.prototype.edit_filter = function (element_id) {
-	  var selected_element = this.elements[element_id]; 
-	  var created_filter = new Filter(selected_element, {id: element_id}); 
-	  this.query.filters.push(created_filter); 
+	Engine.prototype.edit_filter = function (options) {
+	  _.each(this.query.filters, function (filter) {
+	    if (filter.id == options["filter_id"]) {
+	      filter["method"] = options["filter_method"]; 
+	      filter["value"] = options["filter_value"];       
+	    }
+	  }); 
+	  // now we will edit the filter in question to add 
+	  console.log(this.query.filters)
 	}
 
 	// Handling the removal of an element
@@ -34536,8 +34564,13 @@
 	        <% _.forEach(engine.query.filters, function (filter) { %>\
 	          <tr id='<%= filter.id %>' class='filter-panel-row'>\
 	            <td><%= filter.filter_title %></td>\
-	            <td><select class='form-select filter-select' id='<%= filter.id %>' ><option>Choose an option</option><option>Is Not Null</option><option>Equals</option><option>Greater Than</option><option>Less Than</option><option>Contains</option><option>Other</option></select></td>\
-	            <td><input class='filter-input' type='text' id='<%= filter.id %>' /></td>\
+	            <td>\
+	            <select class='form-select filter-select' id='<%= filter.id %>'>\
+	            <% _.each(['','Is Not Null', 'Greater Than', 'Equals', 'Less Than', 'Other'], function (method_option) { %>\
+	              <option <%= method_option == filter.method ? 'selected' : '' %> ><%= method_option %></option>\
+	            <% }) %>\
+	            </select></td>\
+	            <td><input class='filter-input' type='text' id='<%= filter.id %>' value='<%= filter.value %>' /></td>\
 	            <td><button class='btn remove-filter' id='<%= filter.id %>'>X</button></td>\
 	          </tr>\
 	        <% }) %>\

@@ -111,7 +111,7 @@ Engine.prototype.render_query = function () {
     sql_query = sql_query.select(select_commands); 
     
     //Now we need to create our filters. God. 
-    // There are to ways to filter, having and where. Throw them here and treat them separately
+    // There are two ways to filter, having and where. Throw them here and treat them separately
     var filter_commands = []
     
     _.forEach(that.query.filters, function (filter) {
@@ -120,6 +120,24 @@ Engine.prototype.render_query = function () {
       
       var filter_sql_object_with_column = filter_sql[filter._element.sql_code]
       
+      switch (filter.method) {
+      case "Equals":
+        filter_sql_object_with_column = filter_sql_object_with_column["equals"](new String(filter.value)); 
+        break;
+      case "Is Not Null":
+        filter_sql_object_with_column = filter_sql_object_with_column["isNotNull"](); 
+        break;
+      case "Greater Than":
+        filter_sql_object_with_column = "(" + filter._element.table + "." + filter._element.sql_code + " > " + filter.value + ")"
+        console.log(filter_sql_object_with_column)
+        break;
+      case "Less Than":
+        filter_sql_object_with_column = "(" + filter._element.table + "." + filter._element.sql_code + " < " + filter.value + ")"
+        break;
+      default:
+        
+      }
+      // attach the sql object or custom sql command to the Filter object 
       filter._sql_object = filter_sql_object_with_column; 
       filter_commands.push(filter_sql_object_with_column); 
     }); 
@@ -128,8 +146,11 @@ Engine.prototype.render_query = function () {
     
     var where_filters = _.where(that.query.filters, {"where_or_having": "where"}); 
     var having_filters = _.where(that.query.filters, {"where_or_having": "having"}); 
+    
     if (where_filters.length > 0) {
-      sql_query = sql_query.where(_.pluck(where_filters, '_sql_object')); 
+      // Use pluck to grab the values of the _sql_object, because the sql object is tied
+      // sql_query = sql_query.where(_.pluck(where_filters, '_sql_object'));
+      sql_query = sql_query.where(_.pluck(where_filters, '_sql_object'));
     } else if (having_filters.length > 0) {
       sql_query = sql_query.having(_.pluck(having_filters, '_sql_object')); 
     }; 
@@ -175,10 +196,15 @@ Engine.prototype.add_filter = function (element_id) {
   this.query.filters.push(created_filter); 
 }
 
-Engine.prototype.edit_filter = function (element_id) {
-  var selected_element = this.elements[element_id]; 
-  var created_filter = new Filter(selected_element, {id: element_id}); 
-  this.query.filters.push(created_filter); 
+Engine.prototype.edit_filter = function (options) {
+  _.each(this.query.filters, function (filter) {
+    if (filter.id == options["filter_id"]) {
+      filter["method"] = options["filter_method"]; 
+      filter["value"] = options["filter_value"];       
+    }
+  }); 
+  // now we will edit the filter in question to add 
+  console.log(this.query.filters)
 }
 
 // Handling the removal of an element

@@ -83,7 +83,12 @@ $(document).on('click', '.remove-filter', function(event) {
 
 // for the filter change
 $(document).on('change', 'tr.filter-panel-row', function(event) {
-  console.log(event.target.value); 
+  engine.edit_filter({
+    "filter_id": $(event.target).attr('id'),
+    "filter_value": $(event.currentTarget).find(".filter-input").val(),
+    "filter_method": $(event.currentTarget).find(".filter-select").val(),
+  });
+  render(); 
 });
 
 render(); 
