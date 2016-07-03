@@ -1,0 +1,8 @@
+<header class='navbar'>
+  <section class='navbar-section'>
+    <a href='/' class='navbar-brand'>ScoutSpot</a>
+  </section>
+  <section class='navbar-section'>
+    <a href='/definitions' class='btn btn-link'>Edit Definitions</a>
+  </section>
+</header>

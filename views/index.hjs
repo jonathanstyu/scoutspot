@@ -3,7 +3,9 @@
   <head>
     <title>{{ title }}</title>
     <link rel='stylesheet' href='/stylesheets/style.css' />
+    {{> header }}
   </head>
+  
   <body>
     <div class='container'>
       <div class='columns'>
