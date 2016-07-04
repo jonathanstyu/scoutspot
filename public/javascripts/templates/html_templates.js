@@ -1,4 +1,4 @@
-var EXPORTED_SYMBOLS = ["table_schema_template", "table_menu", "panel_template"]
+var EXPORTED_SYMBOLS = ["table_schema_template", "table_menu", "panel_card_template", "panel_table_template"]
 
 table_menu = "<div class='container'>\
 <table class='table' id='menu-list'><tbody>\
@@ -28,20 +28,21 @@ table_menu = "<div class='container'>\
 </tbody></table>\
 </div>"
 
-panel_template = "<div class='container'>\
+panel_card_template = "<div class='container'>\
     <div class='column'>\
       <div class='card'>\
-        <b><div class='card-body' id='sql-content'>\
-          <%= engine.render_query() %>\
-        </b></div>\
+        <div class='card-body' id='sql-content'>\
+          <p><%= formatter.format(engine.render_query()) %></p>\
+        </div>\
         <div class='card-footer'>\
           <div class='btn-group btn-group-block'>\
             <button class='btn' id='copy-query'>Copy</button>\
             <button class='btn'>Save</button>\
           </div>\
         </div>\
-      </div>\
-      <table class='table' id='menu-list'><tbody>\
+      </div>"
+
+panel_table_template = "<table class='table' id='menu-list'><tbody>\
         <tr><th colspan=4>Columns</th></tr>\
         <% _.forEach(engine.query.columns, function (column) { %>\
           <tr id='<%= column.id %>' class='element-panel-row element-panel-column'>\
@@ -62,7 +63,7 @@ panel_template = "<div class='container'>\
             <td><%= filter.filter_title %></td>\
             <td>\
             <select class='form-select filter-select' id='<%= filter.id %>'>\
-            <% _.each(['','Is Not Null', 'Greater Than', 'Equals', 'Less Than', 'Other'], function (method_option) { %>\
+            <% _.each(['','Is Not Null', 'Greater Than', 'Equals', 'Less Than', 'Contains', 'Other'], function (method_option) { %>\
               <option <%= method_option == filter.method ? 'selected' : '' %> ><%= method_option %></option>\
             <% }) %>\
             </select></td>\
@@ -75,11 +76,21 @@ panel_template = "<div class='container'>\
   </div>"
           
 table_schema_template = "<div class='column'>\
-  <button class='dismiss-panel'>Return</button>\
-  <table class='table'>\
-    <tr><th>Columns</th></tr>\
-    <% _.forEach(table.columns, function (column) { %>\
-      <tr><td><%= column %></td></tr>\
+  <button class='dismiss-panel btn'>Return</button>\
+  <div class='container'>\
+    <h3><%= table %> Elements</h3>\
+    <% _.forEach(available_elements, function (element) { %>\
+      <div>\
+        <form class='form-horizontal'>\
+          <% _.forEach(['table', 'type', 'description', 'title', 'sql_func', 'sql_code'], function (element_component) { %>\
+            <div class='form-group'>\
+              <label class='form-label' for='id='<%= element.title + element_component %>''><%= element_component %></label>\
+              <input class='form-label' id='<%= element.title + element_component %>' value='<%= element[element_component] %>'></input>\
+            </div>\
+          <% }) %>\
+        </form>\
+        <div class='divider'></div>\
+      </div>\
     <% })%>\
-  </table>\
+  </container>\
 </div>"

@@ -51,9 +51,11 @@
 	var EngineQuery = __webpack_require__(4); 
 	var Filter = __webpack_require__(5); 
 	var Engine = __webpack_require__(6); 
-	__webpack_require__(86); 
+	var Formatter = __webpack_require__(86); 
+	__webpack_require__(87); 
 
 	var engine = new Engine(); 
+	var formatter = new Formatter(); 
 
 	var bootstrap = JSON.parse($('#definitions').text().replace(/&quot;/g,'"'))
 	engine.load_definitions(bootstrap); 
@@ -64,10 +66,11 @@
 	    engine: engine
 	  })); 
 
-	  var panel = _.template(panel_template); 
-	  $("#panel").html(panel({
-	    engine: engine
-	  })); 
+	  var panel_card = _.template(panel_card_template);
+	  var panel_table = _.template(panel_table_template);
+	  var panel_card_compiled = panel_card({engine: engine, formatter: formatter}); 
+	  var panel_table_compiled = panel_table({engine: engine}); 
+	  $("#panel").html(panel_card_compiled + panel_table_compiled); 
 	}
 
 	// -----  On the table and element menu ---- 
@@ -79,8 +82,12 @@
 	// click on the see table schema button 
 	$(document).on('click', '.see-schema', function(event) {
 	  var compiled_schema = _.template(table_schema_template); 
+	  var selected_table = engine.definitions['tables'][event.currentTarget.id].name
+	  var available_elements = _.where(engine.elements, {"table": selected_table})
+	  
 	  $('#panel').html(compiled_schema({
-	    table: engine.definitions['tables'][event.currentTarget.id]
+	    table: selected_table,
+	    available_elements: available_elements
 	  }))
 	});
 
@@ -11904,7 +11911,8 @@
 	  this.available_elements.length = 0;
 	}
 	  
-	// Function that puts together the query and writes it
+	// --- The BBIG FUNCTION that renders --- 
+
 	Engine.prototype.render_query = function () {
 	  if (this.query.table == "") {
 	    return "Empty Query"; 
@@ -11922,7 +11930,7 @@
 	    var select_commands = []
 	    var group_by_commands = []    
 	    
-	    // Handle the columns, which have to go first because they are grouped. 
+	    // --->> COLUMNS, which have to go first <<<--- 
 	    _.forEach(that.query.columns, function (column_element) {
 	      var column_table_definition = that.definitions['tables'][column_element.table]; 
 	      var column_table = sql.define(column_table_definition);
@@ -11938,7 +11946,7 @@
 	      }
 	    }); 
 	    
-	    // Handle the Contents last after the columns so that we can group accordingly 
+	    // ------>>> CONTENTS .. Now we need to create our Contents.  <<<<----- 
 	    _.forEach(that.query.contents, function (content_element) {
 	      
 	      // We need to initialize a sql table to access distinct and various other funcs
@@ -11965,7 +11973,8 @@
 	    // apply the select functions from the commands array 
 	    sql_query = sql_query.select(select_commands); 
 	    
-	    //Now we need to create our filters. God. 
+	    // FILTERSSSSSS
+	    // ------>>> Now we need to create our filters. God.  <<<<----- 
 	    // There are two ways to filter, having and where. Throw them here and treat them separately
 	    var filter_commands = []
 	    
@@ -12016,12 +12025,14 @@
 	    }
 	    
 	    // This is a fall through to parse for 
-	    return (typeof sql_query.toQuery == 'function') ? sql_query.toQuery().text : "Incomplete Query"
+	    return (typeof sql_query.toQuery == 'function') ? sql_query.toString() : "Incomplete Query"
 	  } catch (variable) {
 	    //
 	    return variable
 	  } // closes try/catch statement
 	} // closes render function 
+
+	//  ---- Prototype functions for maninpulating the columns ----
 
 	// Handling the addition of an element Column or Content
 	Engine.prototype.add_element = function (element_id) {
@@ -12051,6 +12062,7 @@
 	  this.query.filters.push(created_filter); 
 	}
 
+	// now we will edit the filter in question to add 
 	Engine.prototype.edit_filter = function (options) {
 	  _.each(this.query.filters, function (filter) {
 	    if (filter.id == options["filter_id"]) {
@@ -12058,8 +12070,6 @@
 	      filter["value"] = options["filter_value"];       
 	    }
 	  }); 
-	  // now we will edit the filter in question to add 
-	  console.log(this.query.filters)
 	}
 
 	// Handling the removal of an element
@@ -34500,9 +34510,33 @@
 
 /***/ },
 /* 86 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var _ = __webpack_require__(2); 
+
+	var Formatter = function () {
+	  this.settings = {}; 
+	}
+
+	Formatter.prototype.format = function (unformatted_query) {
+	  var formatted = ""
+	  _.each(unformatted_query.split(" "), function (string) {
+	    if (string != 'FROM' || string != 'WHERE' || string != 'GROUP') {
+	      formatted = formatted + " " + '\n' + string; 
+	    } else {
+	      formatted = formatted + " " + string; 
+	    }
+	  });
+	  return formatted; 
+	}
+
+	module.exports = Formatter; 
+
+/***/ },
+/* 87 */
 /***/ function(module, exports) {
 
-	var EXPORTED_SYMBOLS = ["table_schema_template", "table_menu", "panel_template"]
+	var EXPORTED_SYMBOLS = ["table_schema_template", "table_menu", "panel_card_template", "panel_table_template"]
 
 	table_menu = "<div class='container'>\
 	<table class='table' id='menu-list'><tbody>\
@@ -34532,20 +34566,21 @@
 	</tbody></table>\
 	</div>"
 
-	panel_template = "<div class='container'>\
+	panel_card_template = "<div class='container'>\
 	    <div class='column'>\
 	      <div class='card'>\
-	        <b><div class='card-body' id='sql-content'>\
-	          <%= engine.render_query() %>\
-	        </b></div>\
+	        <div class='card-body' id='sql-content'>\
+	          <p><%= formatter.format(engine.render_query()) %></p>\
+	        </div>\
 	        <div class='card-footer'>\
 	          <div class='btn-group btn-group-block'>\
 	            <button class='btn' id='copy-query'>Copy</button>\
 	            <button class='btn'>Save</button>\
 	          </div>\
 	        </div>\
-	      </div>\
-	      <table class='table' id='menu-list'><tbody>\
+	      </div>"
+
+	panel_table_template = "<table class='table' id='menu-list'><tbody>\
 	        <tr><th colspan=4>Columns</th></tr>\
 	        <% _.forEach(engine.query.columns, function (column) { %>\
 	          <tr id='<%= column.id %>' class='element-panel-row element-panel-column'>\
@@ -34566,7 +34601,7 @@
 	            <td><%= filter.filter_title %></td>\
 	            <td>\
 	            <select class='form-select filter-select' id='<%= filter.id %>'>\
-	            <% _.each(['','Is Not Null', 'Greater Than', 'Equals', 'Less Than', 'Other'], function (method_option) { %>\
+	            <% _.each(['','Is Not Null', 'Greater Than', 'Equals', 'Less Than', 'Contains', 'Other'], function (method_option) { %>\
 	              <option <%= method_option == filter.method ? 'selected' : '' %> ><%= method_option %></option>\
 	            <% }) %>\
 	            </select></td>\
@@ -34579,13 +34614,23 @@
 	  </div>"
 	          
 	table_schema_template = "<div class='column'>\
-	  <button class='dismiss-panel'>Return</button>\
-	  <table class='table'>\
-	    <tr><th>Columns</th></tr>\
-	    <% _.forEach(table.columns, function (column) { %>\
-	      <tr><td><%= column %></td></tr>\
+	  <button class='dismiss-panel btn'>Return</button>\
+	  <div class='container'>\
+	    <h3><%= table %> Elements</h3>\
+	    <% _.forEach(available_elements, function (element) { %>\
+	      <div>\
+	        <form class='form-horizontal'>\
+	          <% _.forEach(['table', 'type', 'description', 'title', 'sql_func', 'sql_code'], function (element_component) { %>\
+	            <div class='form-group'>\
+	              <label class='form-label' for='id='<%= element.title + element_component %>''><%= element_component %></label>\
+	              <input class='form-label' id='<%= element.title + element_component %>' value='<%= element[element_component] %>'></input>\
+	            </div>\
+	          <% }) %>\
+	        </form>\
+	        <div class='divider'></div>\
+	      </div>\
 	    <% })%>\
-	  </table>\
+	  </container>\
 	</div>"
 
 /***/ }

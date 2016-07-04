@@ -3,14 +3,13 @@
   <head>
     <title>{{ title }}</title>
     <link rel='stylesheet' href='/stylesheets/style.css' />
-    {{> header }}
   </head>
   
   <body>
     <div class='container'>
-      <div class='columns'>
-        <div class='column col-8' id='panel'></div>
-        <div class='column col-4' id='menu'></div>
+      <div class='columns col-gapless'>
+        <div class='column col-md-8' id='panel'></div>
+        <div class='column col-md-4' id='menu'></div>
       </div>
     </div>
   </body>

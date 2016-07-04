@@ -49,7 +49,8 @@ Engine.prototype.reset_all = function () {
   this.available_elements.length = 0;
 }
   
-// Function that puts together the query and writes it
+// --- The BBIG FUNCTION that renders --- 
+
 Engine.prototype.render_query = function () {
   if (this.query.table == "") {
     return "Empty Query"; 
@@ -67,7 +68,7 @@ Engine.prototype.render_query = function () {
     var select_commands = []
     var group_by_commands = []    
     
-    // Handle the columns, which have to go first because they are grouped. 
+    // --->> COLUMNS, which have to go first <<<--- 
     _.forEach(that.query.columns, function (column_element) {
       var column_table_definition = that.definitions['tables'][column_element.table]; 
       var column_table = sql.define(column_table_definition);
@@ -83,7 +84,7 @@ Engine.prototype.render_query = function () {
       }
     }); 
     
-    // Handle the Contents last after the columns so that we can group accordingly 
+    // ------>>> CONTENTS .. Now we need to create our Contents.  <<<<----- 
     _.forEach(that.query.contents, function (content_element) {
       
       // We need to initialize a sql table to access distinct and various other funcs
@@ -110,7 +111,8 @@ Engine.prototype.render_query = function () {
     // apply the select functions from the commands array 
     sql_query = sql_query.select(select_commands); 
     
-    //Now we need to create our filters. God. 
+    // FILTERSSSSSS
+    // ------>>> Now we need to create our filters. God.  <<<<----- 
     // There are two ways to filter, having and where. Throw them here and treat them separately
     var filter_commands = []
     
@@ -161,12 +163,14 @@ Engine.prototype.render_query = function () {
     }
     
     // This is a fall through to parse for 
-    return (typeof sql_query.toQuery == 'function') ? sql_query.toQuery().text : "Incomplete Query"
+    return (typeof sql_query.toQuery == 'function') ? sql_query.toString() : "Incomplete Query"
   } catch (variable) {
     //
     return variable
   } // closes try/catch statement
 } // closes render function 
+
+//  ---- Prototype functions for maninpulating the columns ----
 
 // Handling the addition of an element Column or Content
 Engine.prototype.add_element = function (element_id) {
@@ -196,6 +200,7 @@ Engine.prototype.add_filter = function (element_id) {
   this.query.filters.push(created_filter); 
 }
 
+// now we will edit the filter in question to add 
 Engine.prototype.edit_filter = function (options) {
   _.each(this.query.filters, function (filter) {
     if (filter.id == options["filter_id"]) {
@@ -203,8 +208,6 @@ Engine.prototype.edit_filter = function (options) {
       filter["value"] = options["filter_value"];       
     }
   }); 
-  // now we will edit the filter in question to add 
-  console.log(this.query.filters)
 }
 
 // Handling the removal of an element

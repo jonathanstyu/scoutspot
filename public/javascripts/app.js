@@ -5,9 +5,11 @@ var Element = require('./models/element');
 var EngineQuery = require('./models/engine_query'); 
 var Filter = require('./models/filter'); 
 var Engine = require('./models/engine'); 
+var Formatter = require('./models/formatter'); 
 require('./templates/html_templates'); 
 
 var engine = new Engine(); 
+var formatter = new Formatter(); 
 
 var bootstrap = JSON.parse($('#definitions').text().replace(/&quot;/g,'"'))
 engine.load_definitions(bootstrap); 
@@ -18,10 +20,11 @@ var render = function () {
     engine: engine
   })); 
 
-  var panel = _.template(panel_template); 
-  $("#panel").html(panel({
-    engine: engine
-  })); 
+  var panel_card = _.template(panel_card_template);
+  var panel_table = _.template(panel_table_template);
+  var panel_card_compiled = panel_card({engine: engine, formatter: formatter}); 
+  var panel_table_compiled = panel_table({engine: engine}); 
+  $("#panel").html(panel_card_compiled + panel_table_compiled); 
 }
 
 // -----  On the table and element menu ---- 
@@ -33,8 +36,12 @@ $(document).on('click', '.table-menu', function(event) {
 // click on the see table schema button 
 $(document).on('click', '.see-schema', function(event) {
   var compiled_schema = _.template(table_schema_template); 
+  var selected_table = engine.definitions['tables'][event.currentTarget.id].name
+  var available_elements = _.where(engine.elements, {"table": selected_table})
+  
   $('#panel').html(compiled_schema({
-    table: engine.definitions['tables'][event.currentTarget.id]
+    table: selected_table,
+    available_elements: available_elements
   }))
 });
 
