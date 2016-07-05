@@ -6,7 +6,9 @@ var Filter = require('./filter');
 
 var Engine = function () {
   this.definitions = {},
+  this.relevant_joins = [],
   this.available_elements = [],
+  this.joined_available_elements = [],
   this.elements = [],
   this.filters = [],
   this.query = new EngineQuery()
@@ -34,19 +36,39 @@ Engine.prototype.load_definitions = function (definitions) {
   }); 
 }
   
-  // Once someone selects a table then filter out for all the available elements
+// Once someone selects a table then filter out for all the available elements
 Engine.prototype.select_table = function (selected_table) {
   var that = this; 
   this.reset_all()
-  this.query.table = selected_table; 
+  this.query.table = selected_table;
+  
+  this.relevant_joins = _.filter(this.definitions['joins'], function (join) {
+    return (join.primary_key_table == selected_table || join.foreign_key_table == selected_table)
+  }); 
   
   // Create content items from content_mappings 
   this.available_elements = _.where(this.elements, {"table": selected_table}); 
+  
+  // Select the applicable elements from the possible joins
+  _.each(this.elements, function (element) {
+    // for each element, search joins that are adjacent 
+    _.each(that.relevant_joins, function (join) {
+      // if the join i s
+      if (element.table == join.primary_key_table || element.table == join.foreign_key_table) {
+        // Only add to joined_available_elements if the element is unique 
+        if (!(_.contains(that.available_elements, element)) && !(_.contains(that.joined_available_elements, element))) {
+          that.joined_available_elements.push(element); 
+        }
+      }; // closes the if statement 
+    }); // closes relevant joins each statement 
+  }); // closes the joined_avail_elements each statement
 }
   
 Engine.prototype.reset_all = function () {
   this.query.reset_all(); 
   this.available_elements.length = 0;
+  this.joined_available_elements.length = 0;
+  this.relevant_joins.length = 0;
 }
   
 // --- The BBIG FUNCTION that renders --- 
@@ -107,9 +129,36 @@ Engine.prototype.render_query = function () {
         
       }
     });
-     
+         
     // apply the select functions from the commands array 
     sql_query = sql_query.select(select_commands); 
+    
+    // ------ JOINS! -----
+    //A FOREIGN KEY in one table points to a PRIMARY KEY in another table.
+    var joined_tables = [that.query.table]
+    
+    _.each(that.query.contents.concat(that.query.columns), function (element) {
+      if (!_.contains(joined_tables, element.table)) {
+        var join_schema = _.findWhere(that.relevant_joins, {
+          "primary_key_table": element.table,
+          "foreign_key_table": that.query.table
+        })
+        
+        var primary_join_table_definition = that.definitions['tables'][element.table]; 
+        var primary_join_table = sql.define(primary_join_table_definition);
+        var foreign_join_table_definition = that.definitions['tables'][that.query.table]; 
+        var foreign_join_table = sql.define(foreign_join_table_definition);
+        
+        // Create the join schema separately 
+        var join = foreign_join_table.join(primary_join_table)
+        .on(foreign_join_table[join_schema['foreign_key']]
+        .equals(primary_join_table[join_schema['primary_key']]))
+        
+        sql_query = sql_query.from(join); 
+        // make sure that we don't accidentially rejoin already-joined tables
+        joined_tables.push(element.table); 
+      }; 
+    });
     
     // FILTERSSSSSS
     // ------>>> Now we need to create our filters. God.  <<<<----- 

@@ -1,4 +1,4 @@
-var EXPORTED_SYMBOLS = ["table_schema_template", "table_menu", "panel_card_template", "panel_table_template"]
+var EXPORTED_SYMBOLS = ["table_schema_template", "table_menu", "panel_card_template", "panel_table_template", "join_schema_template"]
 
 table_menu = "<div class='container'>\
 <table class='table' id='menu-list'><tbody>\
@@ -24,6 +24,16 @@ table_menu = "<div class='container'>\
       <% } %>\
     </tr>\
   <% }) %>\
+  <tr><th colspan=3>Joined Elements</th></tr>\
+  <% _.forEach(engine.joined_available_elements, function (element) { %>\
+    <tr id='<%= element.id %>' class='element-menu-row'>\
+      <td class='tooltip tooltip-right' data-tooltip='<%= element.description %>'><%= element.title %></td>\
+      <td><%= element.type %></td>\
+      <% if (element.type == 'column') { %>\
+        <td><button id='<%= element.id %>' class='btn element-filter'>Filter</button></td>\
+      <% } %>\
+    </tr>\
+  <% }) %>\
 <% } %>\
 </tbody></table>\
 </div>"
@@ -32,7 +42,7 @@ panel_card_template = "<div class='container'>\
     <div class='column'>\
       <div class='card'>\
         <div class='card-body' id='sql-content'>\
-          <p><%= formatter.format(engine.render_query()) %></p>\
+          <p><%= engine.render_query() %></p>\
         </div>\
         <div class='card-footer'>\
           <div class='btn-group btn-group-block'>\
@@ -94,3 +104,23 @@ table_schema_template = "<div class='column'>\
     <% })%>\
   </container>\
 </div>"
+            
+join_schema_template = "<div class='column'>\
+          <button class='dismiss-panel btn'>Return</button>\
+          <div class='container'>\
+            <h3><%= table %> Joins</h3>\
+            <% _.forEach(available_elements, function (element) { %>\
+              <div>\
+                <form class='form-horizontal'>\
+                  <% _.forEach(['table', 'type', 'description', 'title', 'sql_func', 'sql_code'], function (element_component) { %>\
+                    <div class='form-group'>\
+                      <label class='form-label' for='id='<%= element.title + element_component %>''><%= element_component %></label>\
+                      <input class='form-label' id='<%= element.title + element_component %>' value='<%= element[element_component] %>'></input>\
+                    </div>\
+                  <% }) %>\
+                </form>\
+                <div class='divider'></div>\
+              </div>\
+            <% })%>\
+          </container>\
+        </div>"

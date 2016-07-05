@@ -8,8 +8,32 @@
     "customers": {
       "name": "customers",
       "columns": ["id", "created_at", "email"]
+    },
+    "order_items": {
+      "name": "order_items",
+      "columns": ["created_at", "id", "order_id", "revenue", "cost", "sale"]
+    },
+    "purchase_orders": {
+      "name": "purchase_orders",
+      "columns": ["id", "created_at", "vendor", "product_name"]
     }
   },
+  "joins": [
+    {
+      "primary_key_table": "orders",
+      "foreign_key_table": "order_items",
+      "primary_key": "id",
+      "foreign_key": "order_id",
+      "join_type": "join"
+    },
+    {
+      "primary_key_table": "orders",
+      "foreign_key_table": "customers",
+      "primary_key": "customer_id",
+      "foreign_key": "id",
+      "join_type": "join"
+    }
+  ],
   "elements": [
     {
       "table": "orders",

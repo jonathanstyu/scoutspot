@@ -51,8 +51,8 @@
 	var EngineQuery = __webpack_require__(4); 
 	var Filter = __webpack_require__(5); 
 	var Engine = __webpack_require__(6); 
-	var Formatter = __webpack_require__(86); 
-	__webpack_require__(87); 
+	var Formatter = __webpack_require__(7); 
+	__webpack_require__(8); 
 
 	var engine = new Engine(); 
 	var formatter = new Formatter(); 
@@ -11861,14 +11861,16 @@
 /***/ function(module, exports, __webpack_require__) {
 
 	var _ = __webpack_require__(2); 
-	var sql = __webpack_require__(7);
+	var sql = __webpack_require__(9);
 	var Element = __webpack_require__(3); 
 	var EngineQuery = __webpack_require__(4); 
 	var Filter = __webpack_require__(5); 
 
 	var Engine = function () {
 	  this.definitions = {},
+	  this.relevant_joins = [],
 	  this.available_elements = [],
+	  this.joined_available_elements = [],
 	  this.elements = [],
 	  this.filters = [],
 	  this.query = new EngineQuery()
@@ -11896,19 +11898,39 @@
 	  }); 
 	}
 	  
-	  // Once someone selects a table then filter out for all the available elements
+	// Once someone selects a table then filter out for all the available elements
 	Engine.prototype.select_table = function (selected_table) {
 	  var that = this; 
 	  this.reset_all()
-	  this.query.table = selected_table; 
+	  this.query.table = selected_table;
+	  
+	  this.relevant_joins = _.filter(this.definitions['joins'], function (join) {
+	    return (join.primary_key_table == selected_table || join.foreign_key_table == selected_table)
+	  }); 
 	  
 	  // Create content items from content_mappings 
 	  this.available_elements = _.where(this.elements, {"table": selected_table}); 
+	  
+	  // Select the applicable elements from the possible joins
+	  _.each(this.elements, function (element) {
+	    // for each element, search joins that are adjacent 
+	    _.each(that.relevant_joins, function (join) {
+	      // if the join i s
+	      if (element.table == join.primary_key_table || element.table == join.foreign_key_table) {
+	        // Only add to joined_available_elements if the element is unique 
+	        if (!(_.contains(that.available_elements, element)) && !(_.contains(that.joined_available_elements, element))) {
+	          that.joined_available_elements.push(element); 
+	        }
+	      }; // closes the if statement 
+	    }); // closes relevant joins each statement 
+	  }); // closes the joined_avail_elements each statement
 	}
 	  
 	Engine.prototype.reset_all = function () {
 	  this.query.reset_all(); 
 	  this.available_elements.length = 0;
+	  this.joined_available_elements.length = 0;
+	  this.relevant_joins.length = 0;
 	}
 	  
 	// --- The BBIG FUNCTION that renders --- 
@@ -11969,9 +11991,36 @@
 	        
 	      }
 	    });
-	     
+	         
 	    // apply the select functions from the commands array 
 	    sql_query = sql_query.select(select_commands); 
+	    
+	    // ------ JOINS! -----
+	    //A FOREIGN KEY in one table points to a PRIMARY KEY in another table.
+	    var joined_tables = [that.query.table]
+	    
+	    _.each(that.query.contents.concat(that.query.columns), function (element) {
+	      if (!_.contains(joined_tables, element.table)) {
+	        var join_schema = _.findWhere(that.relevant_joins, {
+	          "primary_key_table": element.table,
+	          "foreign_key_table": that.query.table
+	        })
+	        
+	        var primary_join_table_definition = that.definitions['tables'][element.table]; 
+	        var primary_join_table = sql.define(primary_join_table_definition);
+	        var foreign_join_table_definition = that.definitions['tables'][that.query.table]; 
+	        var foreign_join_table = sql.define(foreign_join_table_definition);
+	        
+	        // Create the join schema separately 
+	        var join = foreign_join_table.join(primary_join_table)
+	        .on(foreign_join_table[join_schema['foreign_key']]
+	        .equals(primary_join_table[join_schema['primary_key']]))
+	        
+	        sql_query = sql_query.from(join); 
+	        // make sure that we don't accidentially rejoin already-joined tables
+	        joined_tables.push(element.table); 
+	      }; 
+	    });
 	    
 	    // FILTERSSSSSS
 	    // ------>>> Now we need to create our filters. God.  <<<<----- 
@@ -12086,16 +12135,171 @@
 /* 7 */
 /***/ function(module, exports, __webpack_require__) {
 
+	var _ = __webpack_require__(2); 
+
+	var Formatter = function () {
+	  this.settings = {}; 
+	}
+
+	Formatter.prototype.format = function (unformatted_query) {
+	  var formatted = ""
+	  _.each(unformatted_query.split(" "), function (string) {
+	    if (string != 'FROM' || string != 'WHERE' || string != 'GROUP') {
+	      formatted = formatted + " " + '\n' + string; 
+	    } else {
+	      formatted = formatted + " " + string; 
+	    }
+	  });
+	  return formatted; 
+	}
+
+	module.exports = Formatter; 
+
+/***/ },
+/* 8 */
+/***/ function(module, exports) {
+
+	var EXPORTED_SYMBOLS = ["table_schema_template", "table_menu", "panel_card_template", "panel_table_template", "join_schema_template"]
+
+	table_menu = "<div class='container'>\
+	<table class='table' id='menu-list'><tbody>\
+	<% if (engine.query.table == '') { %>\
+	    <% _.forEach(engine.definitions['tables'], function (table) { %>\
+	      <tr>\
+	      <td id='<%= table.name %>' class='table-menu'><%= table.name %></td>\
+	      <td><button class='see-schema btn' id='<%= table.name %>'>See Schema</button></td>\
+	      </tr>\
+	    <% }) %>\
+	<% } else { %>\
+	  <div class='btn-group btn-group-block'>\
+	    <button class='btn' id='reset-all'>Reset All</button>\
+	    <button class='see-schema btn' id='<%= engine.query.table %>'>See Schema</button>\
+	  </div>\
+	    <tr><th colspan=3>Table: <%= engine.query.table %></th></tr>\
+	  <% _.forEach(engine.available_elements, function (element) { %>\
+	    <tr id='<%= element.id %>' class='element-menu-row'>\
+	      <td class='tooltip tooltip-right' data-tooltip='<%= element.description %>'><%= element.title %></td>\
+	      <td><%= element.type %></td>\
+	      <% if (element.type == 'column') { %>\
+	        <td><button id='<%= element.id %>' class='btn element-filter'>Filter</button></td>\
+	      <% } %>\
+	    </tr>\
+	  <% }) %>\
+	  <tr><th colspan=3>Joined Elements</th></tr>\
+	  <% _.forEach(engine.joined_available_elements, function (element) { %>\
+	    <tr id='<%= element.id %>' class='element-menu-row'>\
+	      <td class='tooltip tooltip-right' data-tooltip='<%= element.description %>'><%= element.title %></td>\
+	      <td><%= element.type %></td>\
+	      <% if (element.type == 'column') { %>\
+	        <td><button id='<%= element.id %>' class='btn element-filter'>Filter</button></td>\
+	      <% } %>\
+	    </tr>\
+	  <% }) %>\
+	<% } %>\
+	</tbody></table>\
+	</div>"
+
+	panel_card_template = "<div class='container'>\
+	    <div class='column'>\
+	      <div class='card'>\
+	        <div class='card-body' id='sql-content'>\
+	          <p><%= engine.render_query() %></p>\
+	        </div>\
+	        <div class='card-footer'>\
+	          <div class='btn-group btn-group-block'>\
+	            <button class='btn' id='copy-query'>Copy</button>\
+	            <button class='btn'>Save</button>\
+	          </div>\
+	        </div>\
+	      </div>"
+
+	panel_table_template = "<table class='table' id='menu-list'><tbody>\
+	        <tr><th colspan=4>Columns</th></tr>\
+	        <% _.forEach(engine.query.columns, function (column) { %>\
+	          <tr id='<%= column.id %>' class='element-panel-row element-panel-column'>\
+	            <td><%= column.title %></td>\
+	            <td><button class='btn remove-element' id='<%= column.id %>'>X</button></td>\
+	          </tr>\
+	        <% }) %>\
+	        <tr><th colspan=4>Contents</th></tr>\
+	        <% _.forEach(engine.query.contents, function (content) { %>\
+	          <tr id='<%= content.id %>' class='element-panel-row element-panel-content'>\
+	            <td><%= content.title %></td>\
+	            <td><button class='btn remove-element' id='<%= content.id %>'>X</button></td>\
+	          </tr>\
+	        <% }) %>\
+	        <tr><th colspan=4>Filters</th></tr>\
+	        <% _.forEach(engine.query.filters, function (filter) { %>\
+	          <tr id='<%= filter.id %>' class='filter-panel-row'>\
+	            <td><%= filter.filter_title %></td>\
+	            <td>\
+	            <select class='form-select filter-select' id='<%= filter.id %>'>\
+	            <% _.each(['','Is Not Null', 'Greater Than', 'Equals', 'Less Than', 'Contains', 'Other'], function (method_option) { %>\
+	              <option <%= method_option == filter.method ? 'selected' : '' %> ><%= method_option %></option>\
+	            <% }) %>\
+	            </select></td>\
+	            <td><input class='filter-input' type='text' id='<%= filter.id %>' value='<%= filter.value %>' /></td>\
+	            <td><button class='btn remove-filter' id='<%= filter.id %>'>X</button></td>\
+	          </tr>\
+	        <% }) %>\
+	      </tbody></table>\
+	    </div>\
+	  </div>"
+	          
+	table_schema_template = "<div class='column'>\
+	  <button class='dismiss-panel btn'>Return</button>\
+	  <div class='container'>\
+	    <h3><%= table %> Elements</h3>\
+	    <% _.forEach(available_elements, function (element) { %>\
+	      <div>\
+	        <form class='form-horizontal'>\
+	          <% _.forEach(['table', 'type', 'description', 'title', 'sql_func', 'sql_code'], function (element_component) { %>\
+	            <div class='form-group'>\
+	              <label class='form-label' for='id='<%= element.title + element_component %>''><%= element_component %></label>\
+	              <input class='form-label' id='<%= element.title + element_component %>' value='<%= element[element_component] %>'></input>\
+	            </div>\
+	          <% }) %>\
+	        </form>\
+	        <div class='divider'></div>\
+	      </div>\
+	    <% })%>\
+	  </container>\
+	</div>"
+	            
+	join_schema_template = "<div class='column'>\
+	          <button class='dismiss-panel btn'>Return</button>\
+	          <div class='container'>\
+	            <h3><%= table %> Joins</h3>\
+	            <% _.forEach(available_elements, function (element) { %>\
+	              <div>\
+	                <form class='form-horizontal'>\
+	                  <% _.forEach(['table', 'type', 'description', 'title', 'sql_func', 'sql_code'], function (element_component) { %>\
+	                    <div class='form-group'>\
+	                      <label class='form-label' for='id='<%= element.title + element_component %>''><%= element_component %></label>\
+	                      <input class='form-label' id='<%= element.title + element_component %>' value='<%= element[element_component] %>'></input>\
+	                    </div>\
+	                  <% }) %>\
+	                </form>\
+	                <div class='divider'></div>\
+	              </div>\
+	            <% })%>\
+	          </container>\
+	        </div>"
+
+/***/ },
+/* 9 */
+/***/ function(module, exports, __webpack_require__) {
+
 	'use strict';
 
-	var _            = __webpack_require__(8);
-	var FunctionCall = __webpack_require__(10);
-	var ArrayCall    = __webpack_require__(84);
-	var functions    = __webpack_require__(85);
-	var getDialect   = __webpack_require__(17);
-	var Query        = __webpack_require__(26);
-	var sliced       = __webpack_require__(27);
-	var Table        = __webpack_require__(25);
+	var _            = __webpack_require__(10);
+	var FunctionCall = __webpack_require__(12);
+	var ArrayCall    = __webpack_require__(86);
+	var functions    = __webpack_require__(87);
+	var getDialect   = __webpack_require__(19);
+	var Query        = __webpack_require__(28);
+	var sliced       = __webpack_require__(29);
+	var Table        = __webpack_require__(27);
 
 	// default dialect is postgres
 	var DEFAULT_DIALECT = 'postgres';
@@ -12158,7 +12362,7 @@
 
 
 /***/ },
-/* 8 */
+/* 10 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* WEBPACK VAR INJECTION */(function(module, global) {/**
@@ -26713,10 +26917,10 @@
 	  }
 	}.call(this));
 
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(9)(module), (function() { return this; }())))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(11)(module), (function() { return this; }())))
 
 /***/ },
-/* 9 */
+/* 11 */
 /***/ function(module, exports) {
 
 	module.exports = function(module) {
@@ -26732,15 +26936,15 @@
 
 
 /***/ },
-/* 10 */
+/* 12 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var _                    = __webpack_require__(8);
-	var Node                 = __webpack_require__(11);
-	var ParameterNode        = __webpack_require__(30);
-	var valueExpressionMixin = __webpack_require__(28);
+	var _                    = __webpack_require__(10);
+	var Node                 = __webpack_require__(13);
+	var ParameterNode        = __webpack_require__(32);
+	var valueExpressionMixin = __webpack_require__(30);
 
 	var FunctionCallNode = Node.define({
 	  type: 'FUNCTION CALL',
@@ -26755,21 +26959,21 @@
 	_.extend(FunctionCallNode.prototype, valueExpressionMixin());
 
 	// allow aliasing
-	var AliasNode = __webpack_require__(33);
+	var AliasNode = __webpack_require__(35);
 	_.extend(FunctionCallNode.prototype, AliasNode.AliasMixin);
 
 	module.exports = FunctionCallNode;
 
 
 /***/ },
-/* 11 */
+/* 13 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var assert     = __webpack_require__(12);
-	var getDialect = __webpack_require__(17);
-	var util       = __webpack_require__(13);
+	var assert     = __webpack_require__(14);
+	var getDialect = __webpack_require__(19);
+	var util       = __webpack_require__(15);
 
 	var Node = function(type) {
 	  /* jshint unused: false */
@@ -26811,7 +27015,7 @@
 	    Dialect = sql.dialect;
 	  } else {
 	    // dialect is not specified, use the default dialect
-	    Dialect = __webpack_require__(7).dialect;
+	    Dialect = __webpack_require__(9).dialect;
 	  }
 	  return Dialect;
 	};
@@ -26865,11 +27069,11 @@
 	};
 
 	module.exports = Node;
-	var TextNode = __webpack_require__(31);
+	var TextNode = __webpack_require__(33);
 
 
 /***/ },
-/* 12 */
+/* 14 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// http://wiki.commonjs.org/wiki/Unit_Testing/1.0
@@ -26899,7 +27103,7 @@
 	// when used in node, this will actually load the util module we depend on
 	// versus loading the builtin util module as happens otherwise
 	// this is a bug in node module loading as far as I am concerned
-	var util = __webpack_require__(13);
+	var util = __webpack_require__(15);
 
 	var pSlice = Array.prototype.slice;
 	var hasOwn = Object.prototype.hasOwnProperty;
@@ -27234,7 +27438,7 @@
 
 
 /***/ },
-/* 13 */
+/* 15 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(global, process) {// Copyright Joyent, Inc. and other Node contributors.
@@ -27762,7 +27966,7 @@
 	}
 	exports.isPrimitive = isPrimitive;
 
-	exports.isBuffer = __webpack_require__(15);
+	exports.isBuffer = __webpack_require__(17);
 
 	function objectToString(o) {
 	  return Object.prototype.toString.call(o);
@@ -27806,7 +28010,7 @@
 	 *     prototype.
 	 * @param {function} superCtor Constructor function to inherit prototype from.
 	 */
-	exports.inherits = __webpack_require__(16);
+	exports.inherits = __webpack_require__(18);
 
 	exports._extend = function(origin, add) {
 	  // Don't do anything if add isn't an object
@@ -27824,10 +28028,10 @@
 	  return Object.prototype.hasOwnProperty.call(obj, prop);
 	}
 
-	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }()), __webpack_require__(14)))
+	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }()), __webpack_require__(16)))
 
 /***/ },
-/* 14 */
+/* 16 */
 /***/ function(module, exports) {
 
 	// shim for using process in browser
@@ -27952,7 +28156,7 @@
 
 
 /***/ },
-/* 15 */
+/* 17 */
 /***/ function(module, exports) {
 
 	module.exports = function isBuffer(arg) {
@@ -27963,7 +28167,7 @@
 	}
 
 /***/ },
-/* 16 */
+/* 18 */
 /***/ function(module, exports) {
 
 	if (typeof Object.create === 'function') {
@@ -27992,7 +28196,7 @@
 
 
 /***/ },
-/* 17 */
+/* 19 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -28001,15 +28205,15 @@
 	var getDialect = function(dialect) {
 	  switch (dialect.toLowerCase()) {
 	    case 'postgres':
-	      return __webpack_require__(18);
+	      return __webpack_require__(20);
 	    case 'mysql':
-	      return __webpack_require__(80);
-	    case 'sqlite':
-	      return __webpack_require__(81);
-	    case 'mssql':
 	      return __webpack_require__(82);
-	    case 'oracle':
+	    case 'sqlite':
 	      return __webpack_require__(83);
+	    case 'mssql':
+	      return __webpack_require__(84);
+	    case 'oracle':
+	      return __webpack_require__(85);
 	    default:
 	      throw new Error(dialect + ' is unsupported');
 	  }
@@ -28019,16 +28223,16 @@
 
 
 /***/ },
-/* 18 */
+/* 20 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {'use strict';
 
-	var _      = __webpack_require__(8);
-	var assert = __webpack_require__(12);
-	var From   = __webpack_require__(23);
-	var Select = __webpack_require__(24);
-	var Table  = __webpack_require__(25);
+	var _      = __webpack_require__(10);
+	var assert = __webpack_require__(14);
+	var From   = __webpack_require__(25);
+	var Select = __webpack_require__(26);
+	var Table  = __webpack_require__(27);
 
 	var Postgres = function(config) {
 	  this.output = [];
@@ -29171,10 +29375,10 @@
 
 	module.exports = Postgres;
 
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(19).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(21).Buffer))
 
 /***/ },
-/* 19 */
+/* 21 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer, global) {/*!
@@ -29187,9 +29391,9 @@
 
 	'use strict'
 
-	var base64 = __webpack_require__(20)
-	var ieee754 = __webpack_require__(21)
-	var isArray = __webpack_require__(22)
+	var base64 = __webpack_require__(22)
+	var ieee754 = __webpack_require__(23)
+	var isArray = __webpack_require__(24)
 
 	exports.Buffer = Buffer
 	exports.SlowBuffer = SlowBuffer
@@ -30726,10 +30930,10 @@
 	  return i
 	}
 
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(19).Buffer, (function() { return this; }())))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(21).Buffer, (function() { return this; }())))
 
 /***/ },
-/* 20 */
+/* 22 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var lookup = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
@@ -30859,7 +31063,7 @@
 
 
 /***/ },
-/* 21 */
+/* 23 */
 /***/ function(module, exports) {
 
 	exports.read = function (buffer, offset, isLE, mLen, nBytes) {
@@ -30949,7 +31153,7 @@
 
 
 /***/ },
-/* 22 */
+/* 24 */
 /***/ function(module, exports) {
 
 	var toString = {}.toString;
@@ -30960,12 +31164,12 @@
 
 
 /***/ },
-/* 23 */
+/* 25 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var Node = __webpack_require__(11);
+	var Node = __webpack_require__(13);
 
 	var From = Node.define({
 	  type: 'FROM'
@@ -30975,12 +31179,12 @@
 
 
 /***/ },
-/* 24 */
+/* 26 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var Node = __webpack_require__(11);
+	var Node = __webpack_require__(13);
 
 	module.exports = Node.define({
 	  type: 'SELECT',
@@ -30998,21 +31202,21 @@
 
 
 /***/ },
-/* 25 */
+/* 27 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(process) {'use strict';
 
-	var util = __webpack_require__(13);
-	var lodash = __webpack_require__(8);
+	var util = __webpack_require__(15);
+	var lodash = __webpack_require__(10);
 
-	var Query = __webpack_require__(26);
-	var Column = __webpack_require__(64);
-	var TableNode = __webpack_require__(74);
-	var JoinNode = __webpack_require__(76);
-	var LiteralNode = __webpack_require__(77);
-	var Joiner = __webpack_require__(78);
-	var ForeignKeyNode = __webpack_require__(79);
+	var Query = __webpack_require__(28);
+	var Column = __webpack_require__(66);
+	var TableNode = __webpack_require__(76);
+	var JoinNode = __webpack_require__(78);
+	var LiteralNode = __webpack_require__(79);
+	var Joiner = __webpack_require__(80);
+	var ForeignKeyNode = __webpack_require__(81);
 
 	var Table = function(config) {
 	  this._schema = config.schema;
@@ -31025,7 +31229,7 @@
 	  this.foreignKeys = [];
 	  this.table = this;
 	  if (!config.sql) {
-	    config.sql = __webpack_require__(7);
+	    config.sql = __webpack_require__(9);
 	  }
 	  this.sql = config.sql;
 	};
@@ -31284,57 +31488,57 @@
 
 	module.exports = Table;
 
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(14)))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(16)))
 
 /***/ },
-/* 26 */
+/* 28 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var _ = __webpack_require__(8);
-	var assert = __webpack_require__(12);
-	var sliced = __webpack_require__(27);
-	var util   = __webpack_require__(13);
-	var valueExpressionMixin = __webpack_require__(28);
+	var _ = __webpack_require__(10);
+	var assert = __webpack_require__(14);
+	var sliced = __webpack_require__(29);
+	var util   = __webpack_require__(15);
+	var valueExpressionMixin = __webpack_require__(30);
 
-	var Node            = __webpack_require__(11);
-	var Select          = __webpack_require__(24);
-	var From            = __webpack_require__(23);
-	var Where           = __webpack_require__(42);
-	var OrderBy         = __webpack_require__(43);
-	var GroupBy         = __webpack_require__(44);
-	var Having          = __webpack_require__(45);
-	var Insert          = __webpack_require__(46);
-	var Update          = __webpack_require__(48);
-	var Delete          = __webpack_require__(49);
-	var Returning       = __webpack_require__(50);
-	var OnDuplicate     = __webpack_require__(51);
-	var ForUpdate       = __webpack_require__(52);
-	var ForShare        = __webpack_require__(53);
-	var Create          = __webpack_require__(54);
-	var Drop            = __webpack_require__(55);
-	var Truncate        = __webpack_require__(56);
-	var Distinct        = __webpack_require__(57);
-	var DistinctOn      = __webpack_require__(58);
-	var Alter           = __webpack_require__(59);
-	var AddColumn       = __webpack_require__(60);
-	var DropColumn      = __webpack_require__(61);
-	var RenameColumn    = __webpack_require__(62);
-	var Rename          = __webpack_require__(63);
-	var Column          = __webpack_require__(64);
-	var ParameterNode   = __webpack_require__(30);
-	var PrefixUnaryNode = __webpack_require__(66);
-	var IfExists        = __webpack_require__(67);
-	var IfNotExists     = __webpack_require__(68);
-	var Cascade         = __webpack_require__(69);
-	var Restrict        = __webpack_require__(70);
-	var Indexes         = __webpack_require__(71);
-	var CreateIndex     = __webpack_require__(72);
-	var DropIndex       = __webpack_require__(73);
-	var Table           = __webpack_require__(74);
-	var CreateView     = __webpack_require__(75);
-	var JoinNode        = __webpack_require__(76);
+	var Node            = __webpack_require__(13);
+	var Select          = __webpack_require__(26);
+	var From            = __webpack_require__(25);
+	var Where           = __webpack_require__(44);
+	var OrderBy         = __webpack_require__(45);
+	var GroupBy         = __webpack_require__(46);
+	var Having          = __webpack_require__(47);
+	var Insert          = __webpack_require__(48);
+	var Update          = __webpack_require__(50);
+	var Delete          = __webpack_require__(51);
+	var Returning       = __webpack_require__(52);
+	var OnDuplicate     = __webpack_require__(53);
+	var ForUpdate       = __webpack_require__(54);
+	var ForShare        = __webpack_require__(55);
+	var Create          = __webpack_require__(56);
+	var Drop            = __webpack_require__(57);
+	var Truncate        = __webpack_require__(58);
+	var Distinct        = __webpack_require__(59);
+	var DistinctOn      = __webpack_require__(60);
+	var Alter           = __webpack_require__(61);
+	var AddColumn       = __webpack_require__(62);
+	var DropColumn      = __webpack_require__(63);
+	var RenameColumn    = __webpack_require__(64);
+	var Rename          = __webpack_require__(65);
+	var Column          = __webpack_require__(66);
+	var ParameterNode   = __webpack_require__(32);
+	var PrefixUnaryNode = __webpack_require__(68);
+	var IfExists        = __webpack_require__(69);
+	var IfNotExists     = __webpack_require__(70);
+	var Cascade         = __webpack_require__(71);
+	var Restrict        = __webpack_require__(72);
+	var Indexes         = __webpack_require__(73);
+	var CreateIndex     = __webpack_require__(74);
+	var DropIndex       = __webpack_require__(75);
+	var Table           = __webpack_require__(76);
+	var CreateView     = __webpack_require__(77);
+	var JoinNode        = __webpack_require__(78);
 
 	var Modifier = Node.define({
 	  constructor: function(table, type, count) {
@@ -31535,7 +31739,7 @@
 	  delete: function(params) {
 	    var result;
 	    if (params) {
-	      var TableDefinition = __webpack_require__(25);
+	      var TableDefinition = __webpack_require__(27);
 	      if (params instanceof TableDefinition || Array.isArray(params)) {
 	        //handle explicit delete queries:
 	        // e.g. post.delete(post).from(post) -> DELETE post FROM post
@@ -31788,7 +31992,7 @@
 
 
 /***/ },
-/* 27 */
+/* 29 */
 /***/ function(module, exports) {
 
 	
@@ -31827,14 +32031,14 @@
 
 
 /***/ },
-/* 28 */
+/* 30 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var OrderByValueNode = __webpack_require__(29);
-	var ParameterNode    = __webpack_require__(30);
-	var TextNode         = __webpack_require__(31);
+	var OrderByValueNode = __webpack_require__(31);
+	var ParameterNode    = __webpack_require__(32);
+	var TextNode         = __webpack_require__(33);
 
 	// Process values, wrapping them in ParameterNode if necessary.
 	var processParams = function(val) {
@@ -31845,15 +32049,15 @@
 	// ValueExpressionMixin is evaluated at runtime, hence the
 	// "thunk" around it.
 	var ValueExpressionMixin = function() {
-	  var BinaryNode       = __webpack_require__(32);
-	  var InNode           = __webpack_require__(34);
-	  var NotInNode        = __webpack_require__(35);
-	  var CastNode         = __webpack_require__(36);
-	  var PostfixUnaryNode = __webpack_require__(37);
-	  var TernaryNode      = __webpack_require__(38);
-	  var CaseNode         = __webpack_require__(39);
-	  var AtNode           = __webpack_require__(40);
-	  var SliceNode        = __webpack_require__(41);
+	  var BinaryNode       = __webpack_require__(34);
+	  var InNode           = __webpack_require__(36);
+	  var NotInNode        = __webpack_require__(37);
+	  var CastNode         = __webpack_require__(38);
+	  var PostfixUnaryNode = __webpack_require__(39);
+	  var TernaryNode      = __webpack_require__(40);
+	  var CaseNode         = __webpack_require__(41);
+	  var AtNode           = __webpack_require__(42);
+	  var SliceNode        = __webpack_require__(43);
 
 	  var postfixUnaryMethod = function(operator) {
 	    /*jshint unused: false */
@@ -31992,12 +32196,12 @@
 
 
 /***/ },
-/* 29 */
+/* 31 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var Node = __webpack_require__(11);
+	var Node = __webpack_require__(13);
 
 	var OrderByColumn = Node.define({
 	  type: 'ORDER BY VALUE',
@@ -32015,12 +32219,12 @@
 
 
 /***/ },
-/* 30 */
+/* 32 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var Node = __webpack_require__(11);
+	var Node = __webpack_require__(13);
 
 	var ParameterNode = module.exports = Node.define({
 	  type: 'PARAMETER',
@@ -32047,12 +32251,12 @@
 
 
 /***/ },
-/* 31 */
+/* 33 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var Node = __webpack_require__(11);
+	var Node = __webpack_require__(13);
 
 	module.exports = Node.define({
 	  type: 'TEXT',
@@ -32064,14 +32268,14 @@
 
 
 /***/ },
-/* 32 */
+/* 34 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var _                    = __webpack_require__(8);
-	var Node                 = __webpack_require__(11);
-	var valueExpressionMixin = __webpack_require__(28);
+	var _                    = __webpack_require__(10);
+	var Node                 = __webpack_require__(13);
+	var valueExpressionMixin = __webpack_require__(30);
 
 	var valueExpressionMixed = false;
 	var BinaryNode = Node.define(_.extend({
@@ -32092,20 +32296,20 @@
 	}));
 
 	// allow aliasing
-	var AliasNode = __webpack_require__(33);
+	var AliasNode = __webpack_require__(35);
 	_.extend(BinaryNode.prototype, AliasNode.AliasMixin);
 
 	module.exports = BinaryNode;
 
 
 /***/ },
-/* 33 */
+/* 35 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var _ = __webpack_require__(8);
-	var Node = __webpack_require__(11);
+	var _ = __webpack_require__(10);
+	var Node = __webpack_require__(13);
 
 	var AliasNode = Node.define({
 	  type: 'ALIAS',
@@ -32134,14 +32338,14 @@
 
 
 /***/ },
-/* 34 */
+/* 36 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var _                    = __webpack_require__(8);
-	var Node                 = __webpack_require__(11);
-	var valueExpressionMixin = __webpack_require__(28);
+	var _                    = __webpack_require__(10);
+	var Node                 = __webpack_require__(13);
+	var valueExpressionMixin = __webpack_require__(30);
 
 	var valueExpressionMixed = false;
 	var InNode = Node.define(_.extend({
@@ -32161,21 +32365,21 @@
 	}));
 
 	// allow aliasing
-	var AliasNode = __webpack_require__(33);
+	var AliasNode = __webpack_require__(35);
 	_.extend(InNode.prototype, AliasNode.AliasMixin);
 
 	module.exports = InNode;
 
 
 /***/ },
-/* 35 */
+/* 37 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var _                    = __webpack_require__(8);
-	var Node                 = __webpack_require__(11);
-	var valueExpressionMixin = __webpack_require__(28);
+	var _                    = __webpack_require__(10);
+	var Node                 = __webpack_require__(13);
+	var valueExpressionMixin = __webpack_require__(30);
 
 	var valueExpressionMixed = false;
 	var NotInNode = Node.define(_.extend({
@@ -32195,21 +32399,21 @@
 	}));
 
 	// allow aliasing
-	var AliasNode = __webpack_require__(33);
+	var AliasNode = __webpack_require__(35);
 	_.extend(NotInNode.prototype, AliasNode.AliasMixin);
 
 	module.exports = NotInNode;
 
 
 /***/ },
-/* 36 */
+/* 38 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var _                    = __webpack_require__(8);
-	var Node                 = __webpack_require__(11);
-	var valueExpressionMixin = __webpack_require__(28);
+	var _                    = __webpack_require__(10);
+	var Node                 = __webpack_require__(13);
+	var valueExpressionMixin = __webpack_require__(30);
 
 	var valueExpressionMixed = false;
 	var CastNode = Node.define({
@@ -32228,21 +32432,21 @@
 	});
 
 	// allow aliasing
-	var AliasNode = __webpack_require__(33);
+	var AliasNode = __webpack_require__(35);
 	_.extend(CastNode.prototype, AliasNode.AliasMixin);
 
 	module.exports = CastNode;
 
 
 /***/ },
-/* 37 */
+/* 39 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var _                    = __webpack_require__(8);
-	var Node                 = __webpack_require__(11);
-	var valueExpressionMixin = __webpack_require__(28);
+	var _                    = __webpack_require__(10);
+	var Node                 = __webpack_require__(13);
+	var valueExpressionMixin = __webpack_require__(30);
 
 	var valueExpressionMixed = false;
 	var PostfixUnaryNode = Node.define({
@@ -32262,21 +32466,21 @@
 	});
 
 	// allow aliasing
-	var AliasNode = __webpack_require__(33);
+	var AliasNode = __webpack_require__(35);
 	_.extend(PostfixUnaryNode.prototype, AliasNode.AliasMixin);
 
 	module.exports = PostfixUnaryNode;
 
 
 /***/ },
-/* 38 */
+/* 40 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var _                    = __webpack_require__(8);
-	var Node                 = __webpack_require__(11);
-	var valueExpressionMixin = __webpack_require__(28);
+	var _                    = __webpack_require__(10);
+	var Node                 = __webpack_require__(13);
+	var valueExpressionMixin = __webpack_require__(30);
 
 	var valueExpressionMixed = false;
 	var TernaryNode = Node.define(_.extend({
@@ -32299,21 +32503,21 @@
 	}));
 
 	// allow aliasing
-	var AliasNode = __webpack_require__(33);
+	var AliasNode = __webpack_require__(35);
 	_.extend(TernaryNode.prototype, AliasNode.AliasMixin);
 
 	module.exports = TernaryNode;
 
 
 /***/ },
-/* 39 */
+/* 41 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var _                    = __webpack_require__(8);
-	var Node                 = __webpack_require__(11);
-	var valueExpressionMixin = __webpack_require__(28);
+	var _                    = __webpack_require__(10);
+	var Node                 = __webpack_require__(13);
+	var valueExpressionMixin = __webpack_require__(30);
 
 	var valueExpressionMixed = false;
 	var CaseNode = Node.define(_.extend({
@@ -32334,21 +32538,21 @@
 	}));
 
 	// allow aliasing
-	var AliasNode = __webpack_require__(33);
+	var AliasNode = __webpack_require__(35);
 	_.extend(CaseNode.prototype, AliasNode.AliasMixin);
 
 	module.exports = CaseNode;
 
 
 /***/ },
-/* 40 */
+/* 42 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var _                    = __webpack_require__(8);
-	var Node                 = __webpack_require__(11);
-	var valueExpressionMixin = __webpack_require__(28);
+	var _                    = __webpack_require__(10);
+	var Node                 = __webpack_require__(13);
+	var valueExpressionMixin = __webpack_require__(30);
 
 	var valueExpressionMixed = false;
 	var AtNode = Node.define({
@@ -32367,21 +32571,21 @@
 	});
 
 	// allow aliasing
-	var AliasNode = __webpack_require__(33);
+	var AliasNode = __webpack_require__(35);
 	_.extend(AtNode.prototype, AliasNode.AliasMixin);
 
 	module.exports = AtNode;
 
 
 /***/ },
-/* 41 */
+/* 43 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var _                    = __webpack_require__(8);
-	var Node                 = __webpack_require__(11);
-	var valueExpressionMixin = __webpack_require__(28);
+	var _                    = __webpack_require__(10);
+	var Node                 = __webpack_require__(13);
+	var valueExpressionMixin = __webpack_require__(30);
 
 	var valueExpressionMixed = false;
 	var SliceNode = Node.define({
@@ -32401,21 +32605,21 @@
 	});
 
 	// allow aliasing
-	var AliasNode = __webpack_require__(33);
+	var AliasNode = __webpack_require__(35);
 	_.extend(SliceNode.prototype, AliasNode.AliasMixin);
 
 	module.exports = SliceNode;
 
 
 /***/ },
-/* 42 */
+/* 44 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var Node = __webpack_require__(11);
-	var BinaryNode = __webpack_require__(32);
-	var TextNode = __webpack_require__(31);
+	var Node = __webpack_require__(13);
+	var BinaryNode = __webpack_require__(34);
+	var TextNode = __webpack_require__(33);
 
 	var normalizeNode = function(table, node) {
 	  var result = node;
@@ -32488,41 +32692,15 @@
 
 
 /***/ },
-/* 43 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var Node = __webpack_require__(11);
-
-	module.exports = Node.define({
-	  type: 'ORDER BY'
-	});
-
-
-/***/ },
-/* 44 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var Node = __webpack_require__(11);
-
-	module.exports = Node.define({
-	  type: 'GROUP BY'
-	});
-
-
-/***/ },
 /* 45 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var Node = __webpack_require__(11);
+	var Node = __webpack_require__(13);
 
 	module.exports = Node.define({
-	  type: 'HAVING'
+	  type: 'ORDER BY'
 	});
 
 
@@ -32532,9 +32710,35 @@
 
 	'use strict';
 
-	var DefaultNode   = __webpack_require__(47);
-	var Node          = __webpack_require__(11);
-	var ParameterNode = __webpack_require__(30);
+	var Node = __webpack_require__(13);
+
+	module.exports = Node.define({
+	  type: 'GROUP BY'
+	});
+
+
+/***/ },
+/* 47 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var Node = __webpack_require__(13);
+
+	module.exports = Node.define({
+	  type: 'HAVING'
+	});
+
+
+/***/ },
+/* 48 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var DefaultNode   = __webpack_require__(49);
+	var Node          = __webpack_require__(13);
+	var ParameterNode = __webpack_require__(32);
 
 	var Insert = Node.define({
 	  type: 'INSERT',
@@ -32603,42 +32807,16 @@
 
 
 /***/ },
-/* 47 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	module.exports = __webpack_require__(11).define({
-	  type: 'DEFAULT',
-	  value: function() {
-	    return;
-	  }
-	});
-
-
-/***/ },
-/* 48 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var Node = __webpack_require__(11);
-
-	module.exports = Node.define({
-	  type: 'UPDATE'
-	});
-
-
-/***/ },
 /* 49 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var Node = __webpack_require__(11);
-
-	module.exports = Node.define({
-	  type: 'DELETE'
+	module.exports = __webpack_require__(13).define({
+	  type: 'DEFAULT',
+	  value: function() {
+	    return;
+	  }
 	});
 
 
@@ -32648,10 +32826,10 @@
 
 	'use strict';
 
-	var Node = __webpack_require__(11);
+	var Node = __webpack_require__(13);
 
 	module.exports = Node.define({
-	  type: 'RETURNING'
+	  type: 'UPDATE'
 	});
 
 
@@ -32661,10 +32839,10 @@
 
 	'use strict';
 
-	var Node = __webpack_require__(11);
+	var Node = __webpack_require__(13);
 
 	module.exports = Node.define({
-	  type: 'ONDUPLICATE'
+	  type: 'DELETE'
 	});
 
 
@@ -32674,10 +32852,10 @@
 
 	'use strict';
 
-	var Node = __webpack_require__(11);
+	var Node = __webpack_require__(13);
 
 	module.exports = Node.define({
-	  type: 'FOR UPDATE'
+	  type: 'RETURNING'
 	});
 
 
@@ -32687,10 +32865,10 @@
 
 	'use strict';
 
-	var Node = __webpack_require__(11);
+	var Node = __webpack_require__(13);
 
 	module.exports = Node.define({
-	  type: 'FOR SHARE'
+	  type: 'ONDUPLICATE'
 	});
 
 
@@ -32700,7 +32878,33 @@
 
 	'use strict';
 
-	var Node = __webpack_require__(11);
+	var Node = __webpack_require__(13);
+
+	module.exports = Node.define({
+	  type: 'FOR UPDATE'
+	});
+
+
+/***/ },
+/* 55 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var Node = __webpack_require__(13);
+
+	module.exports = Node.define({
+	  type: 'FOR SHARE'
+	});
+
+
+/***/ },
+/* 56 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var Node = __webpack_require__(13);
 
 	module.exports = Node.define({
 	  type: 'CREATE',
@@ -32715,12 +32919,12 @@
 
 
 /***/ },
-/* 55 */
+/* 57 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var Node = __webpack_require__(11);
+	var Node = __webpack_require__(13);
 
 	module.exports = Node.define({
 	  type: 'DROP',
@@ -32733,12 +32937,12 @@
 
 
 /***/ },
-/* 56 */
+/* 58 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var Node = __webpack_require__(11);
+	var Node = __webpack_require__(13);
 
 	module.exports = Node.define({
 	  type: 'TRUNCATE',
@@ -32751,41 +32955,15 @@
 
 
 /***/ },
-/* 57 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var Node = __webpack_require__(11);
-
-	module.exports = Node.define({
-	  type: 'DISTINCT',
-	});
-
-
-/***/ },
-/* 58 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var Node = __webpack_require__(11);
-
-	module.exports = Node.define({
-	  type: 'DISTINCT ON',
-	});
-
-
-/***/ },
 /* 59 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var Node = __webpack_require__(11);
+	var Node = __webpack_require__(13);
 
 	module.exports = Node.define({
-	  type: 'ALTER'
+	  type: 'DISTINCT',
 	});
 
 
@@ -32795,10 +32973,10 @@
 
 	'use strict';
 
-	var Node = __webpack_require__(11);
+	var Node = __webpack_require__(13);
 
 	module.exports = Node.define({
-	  type: 'ADD COLUMN'
+	  type: 'DISTINCT ON',
 	});
 
 
@@ -32808,10 +32986,10 @@
 
 	'use strict';
 
-	var Node = __webpack_require__(11);
+	var Node = __webpack_require__(13);
 
 	module.exports = Node.define({
-	  type: 'DROP COLUMN'
+	  type: 'ALTER'
 	});
 
 
@@ -32821,10 +32999,10 @@
 
 	'use strict';
 
-	var Node = __webpack_require__(11);
+	var Node = __webpack_require__(13);
 
 	module.exports = Node.define({
-	  type: 'RENAME COLUMN'
+	  type: 'ADD COLUMN'
 	});
 
 
@@ -32834,10 +33012,10 @@
 
 	'use strict';
 
-	var Node = __webpack_require__(11);
+	var Node = __webpack_require__(13);
 
 	module.exports = Node.define({
-	  type: 'RENAME'
+	  type: 'DROP COLUMN'
 	});
 
 
@@ -32847,11 +33025,37 @@
 
 	'use strict';
 
-	var _                    = __webpack_require__(8);
-	var ColumnNode           = __webpack_require__(65);
-	var OrderByValueNode     = __webpack_require__(29);
-	var TextNode             = __webpack_require__(31);
-	var valueExpressionMixin = __webpack_require__(28);
+	var Node = __webpack_require__(13);
+
+	module.exports = Node.define({
+	  type: 'RENAME COLUMN'
+	});
+
+
+/***/ },
+/* 65 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var Node = __webpack_require__(13);
+
+	module.exports = Node.define({
+	  type: 'RENAME'
+	});
+
+
+/***/ },
+/* 66 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var _                    = __webpack_require__(10);
+	var ColumnNode           = __webpack_require__(67);
+	var OrderByValueNode     = __webpack_require__(31);
+	var TextNode             = __webpack_require__(33);
+	var valueExpressionMixin = __webpack_require__(30);
 
 	var Column = function(config) {
 	  this.table = config.table;
@@ -32949,12 +33153,12 @@
 
 
 /***/ },
-/* 65 */
+/* 67 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var Node = __webpack_require__(11);
+	var Node = __webpack_require__(13);
 
 	module.exports = Node.define({
 	  type: 'COLUMN',
@@ -32988,14 +33192,14 @@
 
 
 /***/ },
-/* 66 */
+/* 68 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var _                    = __webpack_require__(8);
-	var Node                 = __webpack_require__(11);
-	var valueExpressionMixin = __webpack_require__(28);
+	var _                    = __webpack_require__(10);
+	var Node                 = __webpack_require__(13);
+	var valueExpressionMixin = __webpack_require__(30);
 
 	var valueExpressionMixed = false;
 	var PrefixUnaryNode = Node.define({
@@ -33015,36 +33219,10 @@
 	});
 
 	// allow aliasing
-	var AliasNode = __webpack_require__(33);
+	var AliasNode = __webpack_require__(35);
 	_.extend(PrefixUnaryNode.prototype, AliasNode.AliasMixin);
 
 	module.exports = PrefixUnaryNode;
-
-
-/***/ },
-/* 67 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var Node = __webpack_require__(11);
-
-	module.exports = Node.define({
-	  type: 'IF EXISTS'
-	});
-
-
-/***/ },
-/* 68 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var Node = __webpack_require__(11);
-
-	module.exports = Node.define({
-	  type: 'IF NOT EXISTS'
-	});
 
 
 /***/ },
@@ -33053,10 +33231,10 @@
 
 	'use strict';
 
-	var Node = __webpack_require__(11);
+	var Node = __webpack_require__(13);
 
 	module.exports = Node.define({
-	  type: 'CASCADE'
+	  type: 'IF EXISTS'
 	});
 
 
@@ -33066,10 +33244,10 @@
 
 	'use strict';
 
-	var Node = __webpack_require__(11);
+	var Node = __webpack_require__(13);
 
 	module.exports = Node.define({
-	  type: 'RESTRICT'
+	  type: 'IF NOT EXISTS'
 	});
 
 
@@ -33079,7 +33257,33 @@
 
 	'use strict';
 
-	var Node = __webpack_require__(11);
+	var Node = __webpack_require__(13);
+
+	module.exports = Node.define({
+	  type: 'CASCADE'
+	});
+
+
+/***/ },
+/* 72 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var Node = __webpack_require__(13);
+
+	module.exports = Node.define({
+	  type: 'RESTRICT'
+	});
+
+
+/***/ },
+/* 73 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var Node = __webpack_require__(13);
 
 	var IndexesNode  = Node.define({
 	  type: 'INDEXES',
@@ -33095,13 +33299,13 @@
 
 
 /***/ },
-/* 72 */
+/* 74 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var Node   = __webpack_require__(11);
-	var sliced = __webpack_require__(27);
+	var Node   = __webpack_require__(13);
+	var sliced = __webpack_require__(29);
 
 	module.exports = Node.define({
 	  type: 'CREATE INDEX',
@@ -33164,12 +33368,12 @@
 
 
 /***/ },
-/* 73 */
+/* 75 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var Node = __webpack_require__(11);
+	var Node = __webpack_require__(13);
 
 	module.exports = Node.define({
 	  type: 'DROP INDEX',
@@ -33209,12 +33413,12 @@
 
 
 /***/ },
-/* 74 */
+/* 76 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var Node = __webpack_require__(11);
+	var Node = __webpack_require__(13);
 	module.exports = Node.define({
 	  type: 'TABLE',
 	  constructor: function(table) {
@@ -33225,12 +33429,12 @@
 
 
 /***/ },
-/* 75 */
+/* 77 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var Node = __webpack_require__(11);
+	var Node = __webpack_require__(13);
 
 	module.exports = Node.define({
 	  type: 'CREATE VIEW',
@@ -33244,12 +33448,12 @@
 
 
 /***/ },
-/* 76 */
+/* 78 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var Node = __webpack_require__(11);
+	var Node = __webpack_require__(13);
 	var JoinNode = module.exports = Node.define({
 	  type: 'JOIN',
 	  constructor: function(subType, from, to) {
@@ -33273,12 +33477,12 @@
 
 
 /***/ },
-/* 77 */
+/* 79 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var Node = __webpack_require__(11);
+	var Node = __webpack_require__(13);
 
 	module.exports = Node.define({
 	  type: 'LITERAL',
@@ -33295,7 +33499,7 @@
 
 
 /***/ },
-/* 78 */
+/* 80 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -33341,12 +33545,12 @@
 
 
 /***/ },
-/* 79 */
+/* 81 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var Node = __webpack_require__(11);
+	var Node = __webpack_require__(13);
 
 	module.exports = Node.define({
 	  type: 'FOREIGN KEY',
@@ -33366,13 +33570,13 @@
 
 
 /***/ },
-/* 80 */
+/* 82 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {'use strict';
 
-	var util = __webpack_require__(13);
-	var assert = __webpack_require__(12);
+	var util = __webpack_require__(15);
+	var assert = __webpack_require__(14);
 
 	var Mysql = function(config) {
 	  this.output = [];
@@ -33380,7 +33584,7 @@
 	  this.config = config || {};
 	};
 
-	var Postgres = __webpack_require__(18);
+	var Postgres = __webpack_require__(20);
 
 	util.inherits(Mysql, Postgres);
 
@@ -33500,17 +33704,17 @@
 
 	module.exports = Mysql;
 
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(19).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(21).Buffer))
 
 /***/ },
-/* 81 */
+/* 83 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {'use strict';
 
-	var _ = __webpack_require__(8);
-	var util = __webpack_require__(13);
-	var assert = __webpack_require__(12);
+	var _ = __webpack_require__(10);
+	var util = __webpack_require__(15);
+	var assert = __webpack_require__(14);
 
 	var Sqlite = function(config) {
 	  this.output = [];
@@ -33519,7 +33723,7 @@
 	  this.config = config || {};
 	};
 
-	var Postgres = __webpack_require__(18);
+	var Postgres = __webpack_require__(20);
 
 	util.inherits(Sqlite, Postgres);
 
@@ -33671,10 +33875,10 @@
 
 	module.exports = Sqlite;
 
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(19).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(21).Buffer))
 
 /***/ },
-/* 82 */
+/* 84 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// TODO: visitCreate needs to support schemas
@@ -33682,8 +33886,8 @@
 
 	'use strict';
 
-	var util = __webpack_require__(13);
-	var assert = __webpack_require__(12);
+	var util = __webpack_require__(15);
+	var assert = __webpack_require__(14);
 
 	/**
 	 * Config can contain:
@@ -33699,7 +33903,7 @@
 	  this.config = config || {};
 	};
 
-	var Postgres = __webpack_require__(18);
+	var Postgres = __webpack_require__(20);
 
 	util.inherits(Mssql, Postgres);
 
@@ -34139,13 +34343,13 @@
 
 
 /***/ },
-/* 83 */
+/* 85 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {'use strict';
 
-	var util = __webpack_require__(13);
-	var assert = __webpack_require__(12);
+	var util = __webpack_require__(15);
+	var assert = __webpack_require__(14);
 
 	var Oracle = function(config) {
 	  this.output = [];
@@ -34153,9 +34357,9 @@
 	  this.config = config || {};
 	};
 
-	var Postgres = __webpack_require__(18);
+	var Postgres = __webpack_require__(20);
 
-	var Mssql = __webpack_require__(82);
+	var Mssql = __webpack_require__(84);
 
 	util.inherits(Oracle, Postgres);
 
@@ -34399,18 +34603,18 @@
 
 	module.exports = Oracle;
 
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(19).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(21).Buffer))
 
 /***/ },
-/* 84 */
+/* 86 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var _                    = __webpack_require__(8);
-	var Node                 = __webpack_require__(11);
-	var ParameterNode        = __webpack_require__(30);
-	var valueExpressionMixin = __webpack_require__(28);
+	var _                    = __webpack_require__(10);
+	var Node                 = __webpack_require__(13);
+	var ParameterNode        = __webpack_require__(32);
+	var valueExpressionMixin = __webpack_require__(30);
 
 	var ArrayCallNode = Node.define({
 	  type: 'ARRAY CALL',
@@ -34425,20 +34629,20 @@
 	_.extend(ArrayCallNode.prototype, valueExpressionMixin());
 
 	// allow aliasing
-	var AliasNode = __webpack_require__(33);
+	var AliasNode = __webpack_require__(35);
 	_.extend(ArrayCallNode.prototype, AliasNode.AliasMixin);
 
 	module.exports = ArrayCallNode;
 
 
 /***/ },
-/* 85 */
+/* 87 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
-	var _ = __webpack_require__(8);
-	var sliced = __webpack_require__(27);
-	var FunctionCall = __webpack_require__(10);
+	var _ = __webpack_require__(10);
+	var sliced = __webpack_require__(29);
+	var FunctionCall = __webpack_require__(12);
 
 	// create a function that creates a function call of the specific name, using the specified sql instance
 	var getFunctionCallCreator = function(name) {
@@ -34507,131 +34711,6 @@
 
 	module.exports.getStandardFunctions = getStandardFunctions;
 
-
-/***/ },
-/* 86 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var _ = __webpack_require__(2); 
-
-	var Formatter = function () {
-	  this.settings = {}; 
-	}
-
-	Formatter.prototype.format = function (unformatted_query) {
-	  var formatted = ""
-	  _.each(unformatted_query.split(" "), function (string) {
-	    if (string != 'FROM' || string != 'WHERE' || string != 'GROUP') {
-	      formatted = formatted + " " + '\n' + string; 
-	    } else {
-	      formatted = formatted + " " + string; 
-	    }
-	  });
-	  return formatted; 
-	}
-
-	module.exports = Formatter; 
-
-/***/ },
-/* 87 */
-/***/ function(module, exports) {
-
-	var EXPORTED_SYMBOLS = ["table_schema_template", "table_menu", "panel_card_template", "panel_table_template"]
-
-	table_menu = "<div class='container'>\
-	<table class='table' id='menu-list'><tbody>\
-	<% if (engine.query.table == '') { %>\
-	    <% _.forEach(engine.definitions['tables'], function (table) { %>\
-	      <tr>\
-	      <td id='<%= table.name %>' class='table-menu'><%= table.name %></td>\
-	      <td><button class='see-schema btn' id='<%= table.name %>'>See Schema</button></td>\
-	      </tr>\
-	    <% }) %>\
-	<% } else { %>\
-	  <div class='btn-group btn-group-block'>\
-	    <button class='btn' id='reset-all'>Reset All</button>\
-	    <button class='see-schema btn' id='<%= engine.query.table %>'>See Schema</button>\
-	  </div>\
-	    <tr><th colspan=3>Table: <%= engine.query.table %></th></tr>\
-	  <% _.forEach(engine.available_elements, function (element) { %>\
-	    <tr id='<%= element.id %>' class='element-menu-row'>\
-	      <td class='tooltip tooltip-right' data-tooltip='<%= element.description %>'><%= element.title %></td>\
-	      <td><%= element.type %></td>\
-	      <% if (element.type == 'column') { %>\
-	        <td><button id='<%= element.id %>' class='btn element-filter'>Filter</button></td>\
-	      <% } %>\
-	    </tr>\
-	  <% }) %>\
-	<% } %>\
-	</tbody></table>\
-	</div>"
-
-	panel_card_template = "<div class='container'>\
-	    <div class='column'>\
-	      <div class='card'>\
-	        <div class='card-body' id='sql-content'>\
-	          <p><%= formatter.format(engine.render_query()) %></p>\
-	        </div>\
-	        <div class='card-footer'>\
-	          <div class='btn-group btn-group-block'>\
-	            <button class='btn' id='copy-query'>Copy</button>\
-	            <button class='btn'>Save</button>\
-	          </div>\
-	        </div>\
-	      </div>"
-
-	panel_table_template = "<table class='table' id='menu-list'><tbody>\
-	        <tr><th colspan=4>Columns</th></tr>\
-	        <% _.forEach(engine.query.columns, function (column) { %>\
-	          <tr id='<%= column.id %>' class='element-panel-row element-panel-column'>\
-	            <td><%= column.title %></td>\
-	            <td><button class='btn remove-element' id='<%= column.id %>'>X</button></td>\
-	          </tr>\
-	        <% }) %>\
-	        <tr><th colspan=4>Contents</th></tr>\
-	        <% _.forEach(engine.query.contents, function (content) { %>\
-	          <tr id='<%= content.id %>' class='element-panel-row element-panel-content'>\
-	            <td><%= content.title %></td>\
-	            <td><button class='btn remove-element' id='<%= content.id %>'>X</button></td>\
-	          </tr>\
-	        <% }) %>\
-	        <tr><th colspan=4>Filters</th></tr>\
-	        <% _.forEach(engine.query.filters, function (filter) { %>\
-	          <tr id='<%= filter.id %>' class='filter-panel-row'>\
-	            <td><%= filter.filter_title %></td>\
-	            <td>\
-	            <select class='form-select filter-select' id='<%= filter.id %>'>\
-	            <% _.each(['','Is Not Null', 'Greater Than', 'Equals', 'Less Than', 'Contains', 'Other'], function (method_option) { %>\
-	              <option <%= method_option == filter.method ? 'selected' : '' %> ><%= method_option %></option>\
-	            <% }) %>\
-	            </select></td>\
-	            <td><input class='filter-input' type='text' id='<%= filter.id %>' value='<%= filter.value %>' /></td>\
-	            <td><button class='btn remove-filter' id='<%= filter.id %>'>X</button></td>\
-	          </tr>\
-	        <% }) %>\
-	      </tbody></table>\
-	    </div>\
-	  </div>"
-	          
-	table_schema_template = "<div class='column'>\
-	  <button class='dismiss-panel btn'>Return</button>\
-	  <div class='container'>\
-	    <h3><%= table %> Elements</h3>\
-	    <% _.forEach(available_elements, function (element) { %>\
-	      <div>\
-	        <form class='form-horizontal'>\
-	          <% _.forEach(['table', 'type', 'description', 'title', 'sql_func', 'sql_code'], function (element_component) { %>\
-	            <div class='form-group'>\
-	              <label class='form-label' for='id='<%= element.title + element_component %>''><%= element_component %></label>\
-	              <input class='form-label' id='<%= element.title + element_component %>' value='<%= element[element_component] %>'></input>\
-	            </div>\
-	          <% }) %>\
-	        </form>\
-	        <div class='divider'></div>\
-	      </div>\
-	    <% })%>\
-	  </container>\
-	</div>"
 
 /***/ }
 /******/ ]);
