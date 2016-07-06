@@ -13,13 +13,19 @@ var Engine = function () {
   this.filters = [],
   this.query = new EngineQuery()
 }
-  // Load the definitions file, defining the data 
+
+// Load the definitions file, defining the data 
 Engine.prototype.load_definitions = function (definitions) {
   this.definitions = definitions; 
   var that = this; 
-  var element_index_count = 0; 
   // Set SQL defaults 
-  sql.setDialect(this.definitions['dialect']); 
+  sql.setDialect(this.definitions['dialect']);
+  this.create_elements(); 
+}
+
+Engine.prototype.create_elements = function () {
+  var that = this; 
+  var element_index_count = 0; 
   
   // Auto generate columns from the table schema 
   _.forEach(this.definitions["tables"], function (table_object) {
@@ -35,25 +41,31 @@ Engine.prototype.load_definitions = function (definitions) {
     that.elements.push(Element.populate(element_options.type, element_options, index + element_index_count)); 
   }); 
 }
-  
+
 // Once someone selects a table then filter out for all the available elements
 Engine.prototype.select_table = function (selected_table) {
   var that = this; 
   this.reset_all()
   this.query.table = selected_table;
-  
-  this.relevant_joins = _.filter(this.definitions['joins'], function (join) {
-    return (join.primary_key_table == selected_table || join.foreign_key_table == selected_table)
-  }); 
-  
+    
   // Create content items from content_mappings 
-  this.available_elements = _.where(this.elements, {"table": selected_table}); 
+  this.available_elements = _.where(this.elements, {"table": selected_table});
+  this.select_join_elements(); 
+}
+
+// Helper function for select_table
+Engine.prototype.select_join_elements = function () {
+  var that = this; 
+  // Select joins that apply to the currently selected table. 
+  this.relevant_joins = _.filter(this.definitions['joins'], function (join) {
+    return (join.foreign_key_table == that.query.table); 
+  });
   
   // Select the applicable elements from the possible joins
   _.each(this.elements, function (element) {
     // for each element, search joins that are adjacent 
     _.each(that.relevant_joins, function (join) {
-      // if the join i s
+      // the element holds the primary key. the selected table here holds the foreign key
       if (element.table == join.primary_key_table || element.table == join.foreign_key_table) {
         // Only add to joined_available_elements if the element is unique 
         if (!(_.contains(that.available_elements, element)) && !(_.contains(that.joined_available_elements, element))) {
@@ -63,14 +75,20 @@ Engine.prototype.select_table = function (selected_table) {
     }); // closes relevant joins each statement 
   }); // closes the joined_avail_elements each statement
 }
-  
+
 Engine.prototype.reset_all = function () {
   this.query.reset_all(); 
   this.available_elements.length = 0;
   this.joined_available_elements.length = 0;
   this.relevant_joins.length = 0;
 }
-  
+
+// helper function that initializes a fresh sql object
+Engine.prototype.create_sql_object = function (table_name) {
+  var table_definition = this.definitions['tables'][table_name]; 
+  return sql.define(table_definition);
+}
+
 // --- The BBIG FUNCTION that renders --- 
 
 Engine.prototype.render_query = function () {
@@ -81,125 +99,31 @@ Engine.prototype.render_query = function () {
   // Create the table from the inbuilt definitions
   var that = this; 
   var table_key = that.query["table"]; 
-  var table_definition = that.definitions['tables'][table_key]; 
-  var sql_query = sql.define(table_definition); 
+  var sql_query = that.create_sql_object(table_key); 
   // Apply the individual parts of the query to it
   try {
+    // The arrays of commands that we collect and group the query
+    var translated_column_output = that.translate_columns()
+    var select_commands = translated_column_output[0]
+    var group_by_commands = translated_column_output[1]
     
-    //The arrays of commands that we collect and group the query 
-    var select_commands = []
-    var group_by_commands = []    
+    select_commands = select_commands.concat(that.translate_contents());
     
-    // --->> COLUMNS, which have to go first <<<--- 
-    _.forEach(that.query.columns, function (column_element) {
-      var column_table_definition = that.definitions['tables'][column_element.table]; 
-      var column_table = sql.define(column_table_definition);
-      var column_title = column_element.title;
-      switch (column_element.sql_func) {
-      case "field":
-        select_commands.push(column_table[column_element.sql_code]
-          .as(column_title)); 
-        group_by_commands.push(column_table[column_element.sql_code]); 
-        break;
-      default:
-        
-      }
-    }); 
-    
-    // ------>>> CONTENTS .. Now we need to create our Contents.  <<<<----- 
-    _.forEach(that.query.contents, function (content_element) {
-      
-      // We need to initialize a sql table to access distinct and various other funcs
-      var content_table_definition = that.definitions['tables'][content_element.table]; 
-      var content_table = sql.define(content_table_definition);
-      var content_title = content_element.title;
-
-      switch (content_element.sql_func) {
-      case "count":
-        select_commands.push(content_table[content_element.sql_code]
-          ["count"]()
-          ["distinct"]()
-          .as(content_title))
-        break;
-      case "sum":
-        select_commands.push(content_table[content_element.sql_code]
-          ["sum"]()
-          .as(content_title))
-      default:
-        
-      }
-    });
-         
-    // apply the select functions from the commands array 
+    // apply the select_commands first. 
     sql_query = sql_query.select(select_commands); 
     
-    // ------ JOINS! -----
-    //A FOREIGN KEY in one table points to a PRIMARY KEY in another table.
-    var joined_tables = [that.query.table]
+    // Use the helper function to create the WHERE elements that are tacked later on
+    that.translate_filters(); 
     
-    _.each(that.query.contents.concat(that.query.columns), function (element) {
-      if (!_.contains(joined_tables, element.table)) {
-        var join_schema = _.findWhere(that.relevant_joins, {
-          "primary_key_table": element.table,
-          "foreign_key_table": that.query.table
-        })
-        
-        var primary_join_table_definition = that.definitions['tables'][element.table]; 
-        var primary_join_table = sql.define(primary_join_table_definition);
-        var foreign_join_table_definition = that.definitions['tables'][that.query.table]; 
-        var foreign_join_table = sql.define(foreign_join_table_definition);
-        
-        // Create the join schema separately 
-        var join = foreign_join_table.join(primary_join_table)
-        .on(foreign_join_table[join_schema['foreign_key']]
-        .equals(primary_join_table[join_schema['primary_key']]))
-        
-        sql_query = sql_query.from(join); 
-        // make sure that we don't accidentially rejoin already-joined tables
-        joined_tables.push(element.table); 
-      }; 
-    });
-    
-    // FILTERSSSSSS
-    // ------>>> Now we need to create our filters. God.  <<<<----- 
-    // There are two ways to filter, having and where. Throw them here and treat them separately
-    var filter_commands = []
-    
-    _.forEach(that.query.filters, function (filter) {
-      var filter_table_definition = that.definitions['tables'][filter._element.table]; 
-      var filter_sql = sql.define(filter_table_definition);
-      
-      var filter_sql_object_with_column = filter_sql[filter._element.sql_code]
-      
-      switch (filter.method) {
-      case "Equals":
-        filter_sql_object_with_column = filter_sql_object_with_column["equals"](new String(filter.value)); 
-        break;
-      case "Is Not Null":
-        filter_sql_object_with_column = filter_sql_object_with_column["isNotNull"](); 
-        break;
-      case "Greater Than":
-        filter_sql_object_with_column = "(" + filter._element.table + "." + filter._element.sql_code + " > " + filter.value + ")"
-        console.log(filter_sql_object_with_column)
-        break;
-      case "Less Than":
-        filter_sql_object_with_column = "(" + filter._element.table + "." + filter._element.sql_code + " < " + filter.value + ")"
-        break;
-      default:
-        
-      }
-      // attach the sql object or custom sql command to the Filter object 
-      filter._sql_object = filter_sql_object_with_column; 
-      filter_commands.push(filter_sql_object_with_column); 
-    }); 
-    
+    // Apply joins after filters. 
+    sql_query = that.translate_joins(sql_query);
     // We split the total filter command pool into where and having, and apply if length is greater than zero 
     
     var where_filters = _.where(that.query.filters, {"where_or_having": "where"}); 
     var having_filters = _.where(that.query.filters, {"where_or_having": "having"}); 
     
     if (where_filters.length > 0) {
-      // Use pluck to grab the values of the _sql_object, because the sql object is tied
+      // Use pluck to grab the values of the _sql_object, because the sql object is tied to the filter object
       // sql_query = sql_query.where(_.pluck(where_filters, '_sql_object'));
       sql_query = sql_query.where(_.pluck(where_filters, '_sql_object'));
     } else if (having_filters.length > 0) {
@@ -218,6 +142,125 @@ Engine.prototype.render_query = function () {
     return variable
   } // closes try/catch statement
 } // closes render function 
+
+// Helper function for render.
+Engine.prototype.translate_columns = function () { 
+  var that = this; 
+  
+  //The arrays of commands that we collect and group the query
+  var select_commands = []
+  var group_by_commands = []
+
+  _.forEach(that.query.columns, function (column_element) {
+    var column_table = that.create_sql_object(column_element.table)
+    var column_title = column_element.title;
+    switch (column_element.sql_func) {
+    case "field":
+      select_commands.push(column_table[column_element.sql_code]
+        .as(column_title));
+      group_by_commands.push(column_table[column_element.sql_code]);
+      break;
+    default:
+
+    }
+  });
+  return [select_commands, group_by_commands]; 
+}
+
+// Helper function for render
+Engine.prototype.translate_contents = function () {
+  var that = this; 
+  var commands = []; 
+  
+// ------>>> CONTENTS .. Now we need to create our Contents.  <<<<-----
+  _.forEach(that.query.contents, function (content_element) {
+
+// We need to initialize a sql table to access distinct and various other funcs
+    var content_table = that.create_sql_object(content_element.table)
+    var content_title = content_element.title;
+
+    switch (content_element.sql_func) {
+    case "count":
+      commands.push(content_table[content_element.sql_code]
+        ["count"]()
+        ["distinct"]()
+        .as(content_title))
+      break;
+    case "sum":
+      commands.push(content_table[content_element.sql_code]
+        ["sum"]()
+        .as(content_title))
+    default:
+
+    }
+  });
+  return commands; 
+}
+
+// Helper function that translates JOINS
+Engine.prototype.translate_joins = function (sql_object) {
+  var sql_object = sql_object; 
+  var that = this; 
+  //A FOREIGN KEY in one table points to a PRIMARY KEY in another table.
+  var joined_tables = [that.query.table]
+  
+  // Use pluck to grab the core filter elements because concatting filters breaks
+  var stripped_filter_elements = _.pluck(that.query.filters, '_element'); 
+  var joined_elements = that.query.contents.concat(that.query.columns, stripped_filter_elements); 
+  
+  _.each(joined_elements, function (element) {
+    if (!_.contains(joined_tables, element.table)) {
+      var join_schema = _.findWhere(that.relevant_joins, {
+        "primary_key_table": element.table,
+        "foreign_key_table": that.query.table
+      });         
+      
+      var primary_join_table = that.create_sql_object(element.table); 
+      var foreign_join_table = that.create_sql_object(that.query.table); 
+      
+      // Create the join schema separately 
+      var join = foreign_join_table.join(primary_join_table)
+      .on(foreign_join_table[join_schema['foreign_key']]
+      .equals(primary_join_table[join_schema['primary_key']]))
+      
+      sql_object = sql_object.from(join); 
+      // make sure that we don't accidentially rejoin already-joined tables
+      joined_tables.push(element.table); 
+    }; 
+  });
+  return sql_object; 
+}
+
+Engine.prototype.translate_filters = function () {
+  var that = this; 
+  // FILTERSSSSSS
+  // ------>>> Now we need to create our filters. God.  <<<<----- 
+  // There are two ways to filter, having and where. Throw them here and treat them separately
+  
+  _.forEach(that.query.filters, function (filter) {
+    var filter_sql = that.create_sql_object(filter._element.table)      
+    var filter_sql_object_with_column = filter_sql[filter._element.sql_code]
+    
+    switch (filter.method) {
+    case "Equals":
+      filter_sql_object_with_column = filter_sql_object_with_column["equals"](new String(filter.value)); 
+      break;
+    case "Is Not Null":
+      filter_sql_object_with_column = filter_sql_object_with_column["isNotNull"](); 
+      break;
+    case "Greater Than":
+      filter_sql_object_with_column = "(" + filter._element.table + "." + filter._element.sql_code + " > " + filter.value + ")"
+      break;
+    case "Less Than":
+      filter_sql_object_with_column = "(" + filter._element.table + "." + filter._element.sql_code + " < " + filter.value + ")"
+      break;
+    default:
+      
+    }
+    // attach the sql object or custom sql command to the Filter object 
+    filter._sql_object = filter_sql_object_with_column; 
+  }); 
+}
 
 //  ---- Prototype functions for maninpulating the columns ----
 
