@@ -4,17 +4,16 @@
     <title>{{ title }}</title>
     <link rel='stylesheet' href='/stylesheets/style.css' />
   </head>
-  
   <body>
-    <div class='container'>
-      <div class='columns col-gapless'>
-        <div class='column col-md-8' id='panel'></div>
-        <div class='column col-md-4' id='menu'></div>
-      </div>
+    <!-- <div id="content">{{{markup}}}</div> -->
+    <div class='columns col-gapless'>
+      <div class='column col-md-8' id='panel'></div>
+      <div class='column col-md-4' id='menu'></div>
     </div>
+
   </body>
   <footer>
     <script type="text" id='definitions'>{{ definitions }}</script>
-    <script src="./javascripts/bundle.js" charset="utf-8"></script>
+    <script src="javascripts/bundle.js"></script>
   </footer>
 </html>

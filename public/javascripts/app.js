@@ -1,44 +1,50 @@
-var $ = require('jquery'); 
-var _ = require('underscore'); 
+import React from "react";
+import ReactDOM from "react-dom";
+// import App from "./components/app";
+//
+// ReactDOM.render(<App />, document.getElementById("content"));
 
-var Element = require('./models/element'); 
-var EngineQuery = require('./models/engine_query'); 
-var Filter = require('./models/filter'); 
-var Engine = require('./models/engine'); 
-var Formatter = require('./models/formatter'); 
-require('./templates/html_templates'); 
+var $ = require('jquery');
+var _ = require('underscore');
 
-var engine = new Engine(); 
-var formatter = new Formatter(); 
+var Element = require('./models/element');
+var EngineQuery = require('./models/engine_query');
+var Filter = require('./models/filter');
+var Engine = require('./models/engine');
+var Formatter = require('./models/formatter');
+require('./templates/html_templates');
+
+var engine = new Engine();
+var formatter = new Formatter();
 
 var bootstrap = JSON.parse($('#definitions').text().replace(/&quot;/g,'"'))
-engine.load_definitions(bootstrap); 
+engine.load_definitions(bootstrap);
 
 var render = function () {
-  var menu = _.template(table_menu); 
+  var menu = _.template(table_menu);
   $("#menu").html(menu({
     engine: engine
-  })); 
+  }));
 
   var panel_card = _.template(panel_card_template);
   var panel_table = _.template(panel_table_template);
-  var panel_card_compiled = panel_card({engine: engine, formatter: formatter}); 
-  var panel_table_compiled = panel_table({engine: engine}); 
-  $("#panel").html(panel_card_compiled + panel_table_compiled); 
+  var panel_card_compiled = panel_card({engine: engine, formatter: formatter});
+  var panel_table_compiled = panel_table({engine: engine});
+  $("#panel").html(panel_card_compiled + panel_table_compiled);
 }
 
-// -----  On the table and element menu ---- 
+// -----  On the table and element menu ----
 $(document).on('click', '.table-menu', function(event) {
-  engine.select_table(event.target.id); 
-  render(); 
+  engine.select_table(event.target.id);
+  render();
 });
 
-// click on the see table schema button 
+// click on the see table schema button
 $(document).on('click', '.see-schema', function(event) {
-  var compiled_schema = _.template(table_schema_template); 
+  var compiled_schema = _.template(table_schema_template);
   var selected_table = engine.definitions['tables'][event.currentTarget.id].name
   var available_elements = _.where(engine.elements, {"table": selected_table})
-  
+
   $('#panel').html(compiled_schema({
     table: selected_table,
     available_elements: available_elements
@@ -50,17 +56,17 @@ $(document).on('click', '.dismiss-panel', function(event) {
   render();
 });
 
-// reset everything 
+// reset everything
 $(document).on('click', '#reset-all', function(event) {
   engine.reset_all();
-  render(); 
+  render();
 });
 
 // select column or content in the card
 $(document).on('click', '.element-menu-row', function(event) {
   if (event.target.type != 'submit') {
-    engine.add_element(event.currentTarget.id); 
-    render();     
+    engine.add_element(event.currentTarget.id);
+    render();
   }
 });
 
@@ -68,24 +74,24 @@ $(document).on('click', '.element-menu-row', function(event) {
 
 $(document).on('click', 'button.element-filter', function(event) {
   event.preventDefault();
-  engine.add_filter(event.currentTarget.id); 
-  render(); 
+  engine.add_filter(event.currentTarget.id);
+  render();
 });
 
-$(document).on('click', '.remove-element', function(event) { 
+$(document).on('click', '.remove-element', function(event) {
   engine.remove_element(event.currentTarget.id);
-  render(); 
+  render();
 });
 
-// actions on the sql query 
-$(document).on('click', '#copy-query', function(event) { 
+// actions on the sql query
+$(document).on('click', '#copy-query', function(event) {
   console.log("copy the query!: " + $('#sql-content').text())
-  render(); 
+  render();
 });
 
-$(document).on('click', '.remove-filter', function(event) { 
+$(document).on('click', '.remove-filter', function(event) {
   engine.remove_filter(event.target.id);
-  render(); 
+  render();
 });
 
 // for the filter change
@@ -95,7 +101,7 @@ $(document).on('change', 'tr.filter-panel-row', function(event) {
     "filter_value": $(event.currentTarget).find(".filter-input").val(),
     "filter_method": $(event.currentTarget).find(".filter-select").val(),
   });
-  render(); 
+  render();
 });
 
-render(); 
+render();

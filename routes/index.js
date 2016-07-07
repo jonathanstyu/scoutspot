@@ -1,25 +1,20 @@
-var express = require('express');
-var router = express.Router();
+const express = require("express");
+const router = express.Router();
 
-// require("node-jsx").install({
-//     harmony: true,
-//     extension: ".jsx"
-// });
-// var React = require("react"),
-//     App = React.createFactory(require("../public/javascripts/components/app"));
-
-
-// Load the definitions from table 
-
+import { renderToString } from "react-dom/server";
+import App from "../public/javascripts/components/app";
+import React from "react";
 
 /* GET home page. */
-router.get('/', function(req, res) {
+router.get("/", function(req, res) {
   var jsonDefinitions = require('../resources/test.json')
-  
-  res.render('index', { 
+  const markup = renderToString(<App />);
+
+  res.render("index", {
     title: 'ScoutSpot',
     definitions: JSON.stringify(jsonDefinitions),
-    partials: {header: 'header'}
+    partials: {header: 'header'},
+    markup: markup
   });
 });
 
