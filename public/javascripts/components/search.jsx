@@ -1,21 +1,19 @@
-import React from "react";
+var React = require("react");
 
-export default class Search extends React.Component {
-  constructor() {
-    super();
-
-    this.state = {
+var Search = React.createClass({
+  getInitialState() {
+    return {
       search: ""
     };
-  }
+  },
   render() {
     return (
       <div className="search-component">
-        <input type="text" onChange={this.changeSearch.bind(this)} />
+        <input type="text" onChange={this.changeSearch} />
         <p><span>You are searching for: {this.state.search}</span></p>
       </div>
     );
-  }
+  },
   changeSearch(event) {
     var text = event.target.value;
 
@@ -23,4 +21,6 @@ export default class Search extends React.Component {
       search: text
     });
   }
-}
+});
+
+module.exports = Search;

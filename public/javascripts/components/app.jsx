@@ -1,8 +1,12 @@
-import React from "react";
-import Search from "./search";
+var React = require("react"),
+    Search = require("./search");
 
-export default function App () {
-  return (
-    <div>Hello</div>
-  );
-}
+var App = React.createClass({
+  render() {
+    return (
+      <Search />
+    );
+  }
+});
+
+module.exports = App;
