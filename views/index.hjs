@@ -5,8 +5,8 @@
     <link rel='stylesheet' href='/stylesheets/style.css' />
   </head>
   <body>
-    <!-- <div id="content">{{{markup}}}</div> -->
-    <div class='columns col-gapless'>
+
+    <div class='columns col-gapless' id='container'>
       <div class='column col-md-8' id='panel'></div>
       <div class='column col-md-4' id='menu'></div>
     </div>

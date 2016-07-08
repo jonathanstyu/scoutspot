@@ -1,32 +1,38 @@
-// import React from "react";
-// import ReactDOM from "react-dom";
-// import App from "./components/app";
+// React elements
+
 var React = require("react");
 var ReactDOM = require("react-dom");
-var App = require("./components/app");
+// var App = require("./components/app");
+var Menu = require("./components/menu"),
+    Panel = require("./components/panel");
 
-// import React from "react";
-// import ReactDOM from "react-dom";
-// import App from "./components/app";
+// Model elements
+var $ = require('jquery');
+var _ = require('underscore');
 
-ReactDOM.render(<App />, document.getElementById("content"));
-
-// var $ = require('jquery');
-// var _ = require('underscore');
-//
-// var Element = require('./models/element');
-// var EngineQuery = require('./models/engine_query');
-// var Filter = require('./models/filter');
-// var Engine = require('./models/engine');
-// var Formatter = require('./models/formatter');
+var Element = require('./models/element');
+var EngineQuery = require('./models/engine_query');
+var Filter = require('./models/filter');
+var Engine = require('./models/engine');
+var Formatter = require('./models/formatter');
 // require('./templates/html_templates');
-//
-// var engine = new Engine();
-// var formatter = new Formatter();
-//
-// var bootstrap = JSON.parse($('#definitions').text().replace(/&quot;/g,'"'))
-// engine.load_definitions(bootstrap);
-//
+
+var engine = new Engine();
+var formatter = new Formatter();
+
+var bootstrap = JSON.parse($('#definitions').text().replace(/&quot;/g,'"'))
+engine.load_definitions(bootstrap);
+
+ReactDOM.render(
+  <Menu header={"header"} tables={engine.definitions["tables"]} />,
+  document.getElementById("menu")
+);
+
+ReactDOM.render(
+  <Panel />,
+  document.getElementById("panel")
+);
+
 // var render = function () {
 //   var menu = _.template(table_menu);
 //   $("#menu").html(menu({

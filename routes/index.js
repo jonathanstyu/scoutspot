@@ -8,13 +8,11 @@ import React from "react";
 /* GET home page. */
 router.get("/", function(req, res) {
   var jsonDefinitions = require('../resources/test.json')
-  const markup = renderToString(<App />);
 
   res.render("index", {
     title: 'ScoutSpot',
     definitions: JSON.stringify(jsonDefinitions),
-    partials: {header: 'header'},
-    markup: markup
+    partials: {header: 'header'}
   });
 });
 
