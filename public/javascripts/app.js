@@ -2,7 +2,7 @@
 
 var React = require("react");
 var ReactDOM = require("react-dom");
-// var App = require("./components/app");
+var App = require("./components/app");
 var Menu = require("./components/menu"),
     Panel = require("./components/panel");
 
@@ -10,111 +10,15 @@ var Menu = require("./components/menu"),
 var $ = require('jquery');
 var _ = require('underscore');
 
-var Element = require('./models/element');
-var EngineQuery = require('./models/engine_query');
-var Filter = require('./models/filter');
 var Engine = require('./models/engine');
-var Formatter = require('./models/formatter');
 // require('./templates/html_templates');
 
 var engine = new Engine();
-var formatter = new Formatter();
 
 var bootstrap = JSON.parse($('#definitions').text().replace(/&quot;/g,'"'))
 engine.load_definitions(bootstrap);
 
 ReactDOM.render(
-  <Menu header={"header"} tables={engine.definitions["tables"]} />,
-  document.getElementById("menu")
+  <App engine={engine} />,
+  document.getElementById("container")
 );
-
-ReactDOM.render(
-  <Panel />,
-  document.getElementById("panel")
-);
-
-// var render = function () {
-//   var menu = _.template(table_menu);
-//   $("#menu").html(menu({
-//     engine: engine
-//   }));
-//
-//   var panel_card = _.template(panel_card_template);
-//   var panel_table = _.template(panel_table_template);
-//   var panel_card_compiled = panel_card({engine: engine, formatter: formatter});
-//   var panel_table_compiled = panel_table({engine: engine});
-//   $("#panel").html(panel_card_compiled + panel_table_compiled);
-// }
-//
-// // -----  On the table and element menu ----
-// $(document).on('click', '.table-menu', function(event) {
-//   engine.select_table(event.target.id);
-//   render();
-// });
-//
-// // click on the see table schema button
-// $(document).on('click', '.see-schema', function(event) {
-//   var compiled_schema = _.template(table_schema_template);
-//   var selected_table = engine.definitions['tables'][event.currentTarget.id].name
-//   var available_elements = _.where(engine.elements, {"table": selected_table})
-//
-//   $('#panel').html(compiled_schema({
-//     table: selected_table,
-//     available_elements: available_elements
-//   }))
-// });
-//
-// // dismiss and go back to the standard panel. Just rerun the render
-// $(document).on('click', '.dismiss-panel', function(event) {
-//   render();
-// });
-//
-// // reset everything
-// $(document).on('click', '#reset-all', function(event) {
-//   engine.reset_all();
-//   render();
-// });
-//
-// // select column or content in the card
-// $(document).on('click', '.element-menu-row', function(event) {
-//   if (event.target.type != 'submit') {
-//     engine.add_element(event.currentTarget.id);
-//     render();
-//   }
-// });
-//
-// // --- On the panel ----
-//
-// $(document).on('click', 'button.element-filter', function(event) {
-//   event.preventDefault();
-//   engine.add_filter(event.currentTarget.id);
-//   render();
-// });
-//
-// $(document).on('click', '.remove-element', function(event) {
-//   engine.remove_element(event.currentTarget.id);
-//   render();
-// });
-//
-// // actions on the sql query
-// $(document).on('click', '#copy-query', function(event) {
-//   console.log("copy the query!: " + $('#sql-content').text())
-//   render();
-// });
-//
-// $(document).on('click', '.remove-filter', function(event) {
-//   engine.remove_filter(event.target.id);
-//   render();
-// });
-//
-// // for the filter change
-// $(document).on('change', 'tr.filter-panel-row', function(event) {
-//   engine.edit_filter({
-//     "filter_id": $(event.target).attr('id'),
-//     "filter_value": $(event.currentTarget).find(".filter-input").val(),
-//     "filter_method": $(event.currentTarget).find(".filter-select").val(),
-//   });
-//   render();
-// });
-//
-// render();

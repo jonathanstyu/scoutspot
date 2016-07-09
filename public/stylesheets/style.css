@@ -1,8 +1,7 @@
-@import './spectre.min.css'; 
+@import './spectre.min.css';
 
 body {
   padding: 10px;
-  font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
 }
 
 a {

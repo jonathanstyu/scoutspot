@@ -48,116 +48,23 @@
 
 	var React = __webpack_require__(1);
 	var ReactDOM = __webpack_require__(33);
-	// var App = require("./components/app");
-	var Menu = __webpack_require__(170),
-	    Panel = __webpack_require__(172);
+	var App = __webpack_require__(170);
+	var Menu = __webpack_require__(173),
+	    Panel = __webpack_require__(262);
 
 	// Model elements
-	var $ = __webpack_require__(175);
-	var _ = __webpack_require__(176);
+	var $ = __webpack_require__(171);
+	var _ = __webpack_require__(180);
 
-	var Element = __webpack_require__(177);
-	var EngineQuery = __webpack_require__(178);
-	var Filter = __webpack_require__(179);
-	var Engine = __webpack_require__(180);
-	var Formatter = __webpack_require__(259);
+	var Engine = __webpack_require__(179);
 	// require('./templates/html_templates');
 
 	var engine = new Engine();
-	var formatter = new Formatter();
 
 	var bootstrap = JSON.parse($('#definitions').text().replace(/&quot;/g, '"'));
 	engine.load_definitions(bootstrap);
 
-	ReactDOM.render(React.createElement(Menu, { header: "header", tables: engine.definitions["tables"] }), document.getElementById("menu"));
-
-	ReactDOM.render(React.createElement(Panel, null), document.getElementById("panel"));
-
-	// var render = function () {
-	//   var menu = _.template(table_menu);
-	//   $("#menu").html(menu({
-	//     engine: engine
-	//   }));
-	//
-	//   var panel_card = _.template(panel_card_template);
-	//   var panel_table = _.template(panel_table_template);
-	//   var panel_card_compiled = panel_card({engine: engine, formatter: formatter});
-	//   var panel_table_compiled = panel_table({engine: engine});
-	//   $("#panel").html(panel_card_compiled + panel_table_compiled);
-	// }
-	//
-	// // -----  On the table and element menu ----
-	// $(document).on('click', '.table-menu', function(event) {
-	//   engine.select_table(event.target.id);
-	//   render();
-	// });
-	//
-	// // click on the see table schema button
-	// $(document).on('click', '.see-schema', function(event) {
-	//   var compiled_schema = _.template(table_schema_template);
-	//   var selected_table = engine.definitions['tables'][event.currentTarget.id].name
-	//   var available_elements = _.where(engine.elements, {"table": selected_table})
-	//
-	//   $('#panel').html(compiled_schema({
-	//     table: selected_table,
-	//     available_elements: available_elements
-	//   }))
-	// });
-	//
-	// // dismiss and go back to the standard panel. Just rerun the render
-	// $(document).on('click', '.dismiss-panel', function(event) {
-	//   render();
-	// });
-	//
-	// // reset everything
-	// $(document).on('click', '#reset-all', function(event) {
-	//   engine.reset_all();
-	//   render();
-	// });
-	//
-	// // select column or content in the card
-	// $(document).on('click', '.element-menu-row', function(event) {
-	//   if (event.target.type != 'submit') {
-	//     engine.add_element(event.currentTarget.id);
-	//     render();
-	//   }
-	// });
-	//
-	// // --- On the panel ----
-	//
-	// $(document).on('click', 'button.element-filter', function(event) {
-	//   event.preventDefault();
-	//   engine.add_filter(event.currentTarget.id);
-	//   render();
-	// });
-	//
-	// $(document).on('click', '.remove-element', function(event) {
-	//   engine.remove_element(event.currentTarget.id);
-	//   render();
-	// });
-	//
-	// // actions on the sql query
-	// $(document).on('click', '#copy-query', function(event) {
-	//   console.log("copy the query!: " + $('#sql-content').text())
-	//   render();
-	// });
-	//
-	// $(document).on('click', '.remove-filter', function(event) {
-	//   engine.remove_filter(event.target.id);
-	//   render();
-	// });
-	//
-	// // for the filter change
-	// $(document).on('change', 'tr.filter-panel-row', function(event) {
-	//   engine.edit_filter({
-	//     "filter_id": $(event.target).attr('id'),
-	//     "filter_value": $(event.currentTarget).find(".filter-input").val(),
-	//     "filter_method": $(event.currentTarget).find(".filter-select").val(),
-	//   });
-	//   render();
-	// });
-	//
-	// render();
+	ReactDOM.render(React.createElement(App, { engine: engine }), document.getElementById("container"));
 
 /***/ },
 /* 1 */
@@ -21080,131 +20987,135 @@
 /* 170 */
 /***/ function(module, exports, __webpack_require__) {
 
+	// Libraries
+	var $ = __webpack_require__(171);
+
+	// React + components
 	var React = __webpack_require__(1),
-	    MenuRow = __webpack_require__(260);
+	    Search = __webpack_require__(172),
+	    Menu = __webpack_require__(173),
+	    PanelCard = __webpack_require__(175),
+	    ElementTable = __webpack_require__(176);
 
-	var Menu = React.createClass({
-	  displayName: "Menu",
+	// Engine elements
+	var Engine = __webpack_require__(179);
 
-
-	  render: function () {
-	    var tableHeader = this.props.header;
-	    var tables = this.props.tables;
-
-	    return React.createElement(
-	      "table",
-	      { className: "table", id: "menu-list" },
-	      React.createElement(
-	        "tbody",
-	        null,
-	        React.createElement(
-	          "tr",
-	          null,
-	          React.createElement(
-	            "th",
-	            null,
-	            tableHeader
-	          )
-	        )
-	      )
-	    );
-	  }
-	});
-
-	module.exports = Menu;
-
-/***/ },
-/* 171 */,
-/* 172 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var React = __webpack_require__(1),
-	    PanelCard = __webpack_require__(173),
-	    ElementTable = __webpack_require__(!(function webpackMissingModule() { var e = new Error("Cannot find module \"./panel_table\""); e.code = 'MODULE_NOT_FOUND'; throw e; }()));
-
-	var Panel = React.createClass({
-	  displayName: 'Panel',
-
-
-	  render: function () {
-	    return React.createElement(
-	      'div',
-	      null,
-	      React.createElement(PanelCard, null),
-	      React.createElement(ElementTable, null)
-	    );
-	  }
-	});
-
-	module.exports = Panel;
-
-/***/ },
-/* 173 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var React = __webpack_require__(1);
-
-	var PanelCard = React.createClass({
-	  displayName: "PanelCard",
+	var App = React.createClass({
+	  displayName: "App",
 
 	  getInitialState: function () {
+	    var engine = this.props.engine;
+	    var query = engine.query;
+	    var available_tables = [];
+	    for (var key in engine.definitions['tables']) {
+	      if (engine.definitions['tables'].hasOwnProperty(key)) {
+	        available_tables.push(key);
+	      }
+	    };
+
 	    return {
-	      queryContent: "unknown"
+	      engine: engine,
+	      tableSelected: false,
+	      available_tables: available_tables,
+	      available_elements: [],
+	      joined_available_elements: [],
+	      renderedQuery: engine.render_query()
 	    };
 	  },
 
-	  copyQuery: function () {
-	    console.log("Hello. Copying query" + this.state.queryContent);
+	  selectTable: function (event) {
+	    var that = this;
+	    var selectedTable = event.target.id;
+	    this.state.engine.select_table(selectedTable);
+	    this.setState({
+	      tableSelected: true,
+	      available_elements: that.state.engine.available_elements,
+	      joined_available_elements: that.state.engine.joined_available_elements
+	    });
 	  },
 
-	  saveQuery: function () {
-	    console.log("Save query!");
+	  selectElement: function (event) {
+	    var that = this;
+	    this.state.engine.add_element(event.target.id);
+	    var query = this.state.engine.render_query();
+	    this.setState({
+	      renderedQuery: query
+	    });
 	  },
 
-	  render: function () {
+	  removeElement: function (event) {
+	    this.state.engine.remove_element(event.target.id);
+	    var query = this.state.engine.render_query();
+	    this.setState({
+	      renderedQuery: query
+	    });
+	  },
+
+	  selectFilter: function (event) {
+	    this.state.engine.add_filter(event.target.id);
+	    var query = this.state.engine.render_query();
+	    this.setState({
+	      renderedQuery: query
+	    });
+	  },
+
+	  editFilter: function (filterData) {
+	    this.state.engine.edit_filter(filterData);
+	    var query = this.state.engine.render_query();
+	    this.setState({
+	      renderedQuery: query
+	    });
+	  },
+
+	  removeFilter: function (event) {
+	    this.state.engine.remove_filter(event.target.id);
+	    var query = this.state.engine.render_query();
+	    this.setState({
+	      renderedQuery: query
+	    });
+	  },
+
+	  render() {
+	    // Pre render the menu
+	    var menu = !this.state.tableSelected ? React.createElement(Menu, { available_tables: this.state.available_tables,
+	      clickRowCallback: this.selectTable
+	    }) : React.createElement(Menu, { available_elements: this.state.available_elements,
+	      joined_available_elements: this.state.joined_available_elements,
+	      clickRowCallback: this.selectElement,
+	      clickButtonCallback: this.selectFilter
+	    });
+
+	    //  Pre-render and attach callbacks to the filters/elements
+	    var panelElementTable = React.createElement(ElementTable, { columns: this.state.engine.query.columns,
+	      contents: this.state.engine.query.contents,
+	      filters: this.state.engine.query.filters,
+	      removeElementCallback: this.removeElement,
+	      editFilterCallback: this.editFilter,
+	      removeFilterCallback: this.removeFilter
+	    });
+
 	    return React.createElement(
 	      "div",
-	      null,
+	      { className: "columns" },
 	      React.createElement(
 	        "div",
-	        { className: "card" },
-	        React.createElement(
-	          "div",
-	          { className: "card-body", id: "sql-content" },
-	          React.createElement(
-	            "p",
-	            null,
-	            this.state.queryContent
-	          )
-	        ),
-	        React.createElement(
-	          "div",
-	          { className: "card-footer" },
-	          React.createElement(
-	            "div",
-	            { className: "btn-group btn-group-block" },
-	            React.createElement(
-	              "button",
-	              { className: "btn", onClick: this.copyQuery },
-	              "Copy"
-	            ),
-	            React.createElement(
-	              "button",
-	              { className: "btn", onClick: this.saveQuery },
-	              "Save"
-	            )
-	          )
-	        )
+	        { className: "column col-md-4" },
+	        menu
+	      ),
+	      React.createElement(
+	        "div",
+	        { className: "column col-md-8" },
+	        React.createElement(PanelCard, { renderedQuery: this.state.renderedQuery }),
+	        panelElementTable
 	      )
-	    );
-	  }
-	});
+	    ); // closes return
+	  } // closes render function
+	}); // closes React class
 
-	module.exports = PanelCard;
+	module.exports = App;
 
 /***/ },
-/* 174 */,
-/* 175 */
+/* 171 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/*!
@@ -22826,7 +22737,725 @@
 	if(!noGlobal){window.jQuery=window.$=jQuery;}return jQuery;});
 
 /***/ },
+/* 172 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var React = __webpack_require__(1);
+
+	var Search = React.createClass({
+	  displayName: "Search",
+
+	  getInitialState() {
+	    return {
+	      search: ""
+	    };
+	  },
+	  render() {
+	    return React.createElement(
+	      "div",
+	      { className: "search-component" },
+	      React.createElement("input", { type: "text", onChange: this.changeSearch }),
+	      React.createElement(
+	        "p",
+	        null,
+	        React.createElement(
+	          "span",
+	          null,
+	          "You are searching for: ",
+	          this.state.search
+	        )
+	      )
+	    );
+	  },
+	  changeSearch(event) {
+	    var text = event.target.value;
+
+	    this.setState({
+	      search: text
+	    });
+	  }
+	});
+
+	module.exports = Search;
+
+/***/ },
+/* 173 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var React = __webpack_require__(1),
+	    MenuRow = __webpack_require__(174);
+
+	var Menu = React.createClass({
+	  displayName: "Menu",
+
+	  buttonClicked: function (event) {
+	    this.props.clickButtonCallback(event);
+	  },
+
+	  rowClicked: function (event) {
+	    this.props.clickRowCallback(event);
+	  },
+
+	  render: function () {
+	    var that = this;
+	    var tableHeader = "";
+
+	    var menu_components = [];
+	    var joined_components = [];
+
+	    if (this.props.available_tables) {
+	      tableHeader = "Tables";
+	      menu_components = this.props.available_tables.map(function (table) {
+	        return React.createElement(MenuRow, { name: table, key: table, tableMode: true, clickButtonCallback: that.buttonClicked, clickRowCallback: that.rowClicked });
+	      });
+	    } else {
+	      tableHeader = "Selected Table";
+	      menu_components = this.props.available_elements.map(function (element) {
+	        return React.createElement(MenuRow, { element: element, key: element.id, id: element.id, tableMode: false, clickButtonCallback: that.buttonClicked, clickRowCallback: that.rowClicked });
+	      });
+
+	      joined_components = this.props.joined_available_elements.map(function (element) {
+	        return React.createElement(MenuRow, { element: element, key: element.id, id: element.id, tableMode: false, clickButtonCallback: that.buttonClicked, clickRowCallback: that.rowClicked });
+	      });
+	    }
+
+	    return React.createElement(
+	      "table",
+	      { className: "table", id: "menu-list" },
+	      React.createElement(
+	        "tbody",
+	        null,
+	        React.createElement(
+	          "tr",
+	          null,
+	          React.createElement(
+	            "th",
+	            { colSpan: "3" },
+	            tableHeader
+	          )
+	        ),
+	        menu_components,
+	        joined_components
+	      )
+	    );
+	  }
+	});
+
+	module.exports = Menu;
+
+/***/ },
+/* 174 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var React = __webpack_require__(1);
+
+	var MenuRow = React.createClass({
+	  displayName: "MenuRow",
+
+	  getInitialState: function () {
+	    // tableMode means we are just showing tables
+	    if (this.props.tableMode) {
+	      return {
+	        name: this.props.name,
+	        classification: "",
+	        buttonTitle: "See Schema",
+	        id: this.props.name
+	      };
+	    } else {
+	      return {
+	        name: this.props.element.title,
+	        classification: this.props.element.type,
+	        id: this.props.element.id,
+	        buttonTitle: "Filter"
+	      };
+	    } // close else statement
+	  },
+
+	  render: function () {
+	    return React.createElement(
+	      "tr",
+	      null,
+	      React.createElement(
+	        "td",
+	        { onClick: this.props.clickRowCallback, id: this.state.id },
+	        this.state.name
+	      ),
+	      React.createElement(
+	        "td",
+	        null,
+	        this.state.classification
+	      ),
+	      React.createElement(
+	        "td",
+	        null,
+	        React.createElement(
+	          "button",
+	          { className: "btn btn-sm", onClick: this.props.clickButtonCallback, id: this.state.id },
+	          this.state.buttonTitle
+	        )
+	      )
+	    );
+	  }
+	});
+
+	module.exports = MenuRow;
+
+/***/ },
+/* 175 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var React = __webpack_require__(1);
+
+	var PanelCard = React.createClass({
+	  displayName: "PanelCard",
+
+	  copyQuery: function () {
+	    console.log("Copying query " + "\n" + this.props.renderedQuery);
+	  },
+
+	  saveQuery: function () {
+	    console.log("Save query!");
+	  },
+
+	  render: function () {
+	    return React.createElement(
+	      "div",
+	      null,
+	      React.createElement(
+	        "div",
+	        { className: "card" },
+	        React.createElement(
+	          "div",
+	          { className: "card-body", id: "sql-content" },
+	          React.createElement(
+	            "p",
+	            null,
+	            this.props.renderedQuery
+	          )
+	        ),
+	        React.createElement(
+	          "div",
+	          { className: "card-footer" },
+	          React.createElement(
+	            "div",
+	            { className: "btn-group btn-group-block" },
+	            React.createElement(
+	              "button",
+	              { className: "btn", onClick: this.copyQuery },
+	              "Copy"
+	            ),
+	            React.createElement(
+	              "button",
+	              { className: "btn", onClick: this.saveQuery },
+	              "Save"
+	            )
+	          )
+	        )
+	      )
+	    );
+	  }
+	});
+
+	module.exports = PanelCard;
+
+/***/ },
 /* 176 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var React = __webpack_require__(1),
+	    ElementRow = __webpack_require__(177),
+	    FilterRow = __webpack_require__(178);
+
+	var ElementTable = React.createClass({
+	  displayName: 'ElementTable',
+
+	  render: function () {
+	    var that = this;
+	    var columns = this.props.columns.map(function (column) {
+	      return React.createElement(ElementRow, { element: column, key: column.id,
+	        removeElementCallback: that.props.removeElementCallback
+	      });
+	    });
+	    var contents = this.props.contents.map(function (content) {
+	      return React.createElement(ElementRow, { element: content, key: content.id,
+	        removeElementCallback: that.props.removeElementCallback
+	      });
+	    });
+	    var filters = this.props.filters.map(function (filter) {
+	      return React.createElement(FilterRow, { filter: filter, key: filter.id + filter.filter_title,
+	        editFilterCallback: that.props.editFilterCallback,
+	        removeFilterCallback: that.props.removeFilterCallback
+	      });
+	    });
+
+	    return React.createElement(
+	      'table',
+	      { className: 'table' },
+	      React.createElement(
+	        'tbody',
+	        null,
+	        React.createElement(
+	          'tr',
+	          null,
+	          React.createElement(
+	            'th',
+	            { colSpan: '4' },
+	            'Columns'
+	          )
+	        ),
+	        columns,
+	        React.createElement(
+	          'tr',
+	          null,
+	          React.createElement(
+	            'th',
+	            { colSpan: '4' },
+	            'Contents'
+	          )
+	        ),
+	        contents,
+	        React.createElement(
+	          'tr',
+	          null,
+	          React.createElement(
+	            'th',
+	            { colSpan: '4' },
+	            'Filters'
+	          )
+	        ),
+	        filters
+	      )
+	    );
+	  }
+	});
+
+	module.exports = ElementTable;
+
+/***/ },
+/* 177 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var React = __webpack_require__(1);
+
+	var ElementRow = React.createClass({
+	  displayName: 'ElementRow',
+
+	  closeButtonClicked: function (event) {
+	    this.props.removeElementCallback(event);
+	  },
+
+	  render: function () {
+	    var element = this.props.element;
+	    return React.createElement(
+	      'tr',
+	      { id: element.id, className: 'element-panel-row' },
+	      React.createElement(
+	        'td',
+	        { colSpan: '3' },
+	        element.title
+	      ),
+	      React.createElement(
+	        'td',
+	        null,
+	        React.createElement(
+	          'button',
+	          { className: 'btn', id: element.id, onClick: this.closeButtonClicked },
+	          'X'
+	        )
+	      )
+	    );
+	  }
+	});
+
+	module.exports = ElementRow;
+
+/***/ },
+/* 178 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var React = __webpack_require__(1);
+
+	var FilterRow = React.createClass({
+	  displayName: "FilterRow",
+
+	  getInitialState: function () {
+	    return {
+	      filter_id: this.props.filter.id,
+	      filter_method: "",
+	      filter_value: ""
+	    };
+	  },
+
+	  selectMethod: function (event) {
+	    this.setState({
+	      filter_method: event.target.value
+	    });
+	    this.props.editFilterCallback(this.state);
+	  },
+
+	  selectValue: function (event) {
+	    this.setState({
+	      filter_value: event.target.value
+	    });
+	    this.props.editFilterCallback(this.state);
+	  },
+
+	  closeButtonClicked: function (event) {
+	    this.props.removeFilterCallback(event);
+	  },
+
+	  render: function () {
+	    var that = this;
+	    var filter = this.props.filter;
+	    selectOptions = ['', 'Is Not Null', 'Greater Than', 'Equals', 'Less Than', 'Contains', 'Other'].map(function (option) {
+	      return React.createElement(
+	        "option",
+	        { key: option },
+	        option
+	      );
+	    });
+	    return React.createElement(
+	      "tr",
+	      { id: this.state.id, className: "element-panel-row" },
+	      React.createElement(
+	        "td",
+	        null,
+	        filter.filter_title
+	      ),
+	      React.createElement(
+	        "td",
+	        null,
+	        React.createElement(
+	          "select",
+	          { value: this.state.filter_method, onChange: this.selectMethod },
+	          selectOptions
+	        )
+	      ),
+	      React.createElement(
+	        "td",
+	        null,
+	        React.createElement("input", { value: this.state.filter_value, onChange: this.selectValue })
+	      ),
+	      React.createElement(
+	        "td",
+	        null,
+	        React.createElement(
+	          "button",
+	          { className: "btn", id: this.state.filter_id, onClick: this.closeButtonClicked },
+	          "X"
+	        )
+	      )
+	    );
+	  }
+	});
+
+	module.exports = FilterRow;
+
+/***/ },
+/* 179 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var _ = __webpack_require__(180);
+	var sql = __webpack_require__(181);
+	var Element = __webpack_require__(259);
+	var EngineQuery = __webpack_require__(260);
+	var Filter = __webpack_require__(261);
+
+	var Engine = function () {
+	  this.definitions = {}, this.relevant_joins = [], this.available_elements = [], this.joined_available_elements = [], this.elements = [], this.filters = [], this.query = new EngineQuery();
+	};
+
+	// Load the definitions file, defining the data
+	Engine.prototype.load_definitions = function (definitions) {
+	  this.definitions = definitions;
+	  var that = this;
+	  // Set SQL defaults
+	  sql.setDialect(this.definitions['dialect']);
+	  this.create_elements();
+	};
+
+	Engine.prototype.create_elements = function () {
+	  var that = this;
+	  var element_index_count = 0;
+
+	  // Auto generate columns from the table schema
+	  _.forEach(this.definitions["tables"], function (table_object) {
+	    _.forEach(table_object.columns, function (column) {
+	      // For each column within the table object, auto generate an element
+	      that.elements.push(Element.autogenerate_with_column(table_object, column, element_index_count));
+	      element_index_count += 1;
+	    });
+	  });
+
+	  // Populate custom elements from the definitions
+	  _.forEach(this.definitions['elements'], function (element_options, index) {
+	    that.elements.push(Element.populate(element_options.type, element_options, index + element_index_count));
+	  });
+	};
+
+	// Once someone selects a table then filter out for all the available elements
+	Engine.prototype.select_table = function (selected_table) {
+	  var that = this;
+	  this.reset_all();
+	  this.query.table = selected_table;
+
+	  // Create content items from content_mappings
+	  this.available_elements = _.where(this.elements, { "table": selected_table });
+	  this.select_join_elements();
+	};
+
+	// Helper function for select_table
+	Engine.prototype.select_join_elements = function () {
+	  var that = this;
+	  // Select joins that apply to the currently selected table.
+	  this.relevant_joins = _.filter(this.definitions['joins'], function (join) {
+	    return join.foreign_key_table == that.query.table;
+	  });
+
+	  // Select the applicable elements from the possible joins
+	  _.each(this.elements, function (element) {
+	    // for each element, search joins that are adjacent
+	    _.each(that.relevant_joins, function (join) {
+	      // the element holds the primary key. the selected table here holds the foreign key
+	      if (element.table == join.primary_key_table || element.table == join.foreign_key_table) {
+	        // Only add to joined_available_elements if the element is unique
+	        if (!_.contains(that.available_elements, element) && !_.contains(that.joined_available_elements, element)) {
+	          that.joined_available_elements.push(element);
+	        }
+	      }; // closes the if statement
+	    }); // closes relevant joins each statement
+	  }); // closes the joined_avail_elements each statement
+	};
+
+	Engine.prototype.reset_all = function () {
+	  this.query.reset_all();
+	  this.available_elements.length = 0;
+	  this.joined_available_elements.length = 0;
+	  this.relevant_joins.length = 0;
+	};
+
+	// helper function that initializes a fresh sql object
+	Engine.prototype.create_sql_object = function (table_name) {
+	  var table_definition = this.definitions['tables'][table_name];
+	  return sql.define(table_definition);
+	};
+
+	// --- The BBIG FUNCTION that renders ---
+
+	Engine.prototype.render_query = function () {
+	  if (this.query.table == "") {
+	    return "Empty Query";
+	  }
+
+	  // Create the table from the inbuilt definitions
+	  var that = this;
+	  var table_key = that.query["table"];
+	  var sql_query = that.create_sql_object(table_key);
+	  // Apply the individual parts of the query to it
+	  try {
+	    // The arrays of commands that we collect and group the query
+	    var translated_column_output = that.translate_columns();
+	    var select_commands = translated_column_output[0];
+	    var group_by_commands = translated_column_output[1];
+
+	    select_commands = select_commands.concat(that.translate_contents());
+
+	    // apply the select_commands first.
+	    sql_query = sql_query.select(select_commands);
+
+	    // Use the helper function to create the WHERE elements that are tacked later on
+	    that.translate_filters();
+
+	    // Apply joins after filters.
+	    sql_query = that.translate_joins(sql_query);
+	    // We split the total filter command pool into where and having, and apply if length is greater than zero
+
+	    var where_filters = _.where(that.query.filters, { "where_or_having": "where" });
+	    var having_filters = _.where(that.query.filters, { "where_or_having": "having" });
+
+	    if (where_filters.length > 0) {
+	      // Use pluck to grab the values of the _sql_object, because the sql object is tied to the filter object
+	      // sql_query = sql_query.where(_.pluck(where_filters, '_sql_object'));
+	      sql_query = sql_query.where(_.pluck(where_filters, '_sql_object'));
+	    } else if (having_filters.length > 0) {
+	      sql_query = sql_query.having(_.pluck(having_filters, '_sql_object'));
+	    };
+
+	    // If there is anything that needs to be grouped, it is applied here
+	    if (group_by_commands.length > 0) {
+	      sql_query = sql_query.group(group_by_commands);
+	    }
+
+	    // This is a fall through to parse for
+	    return typeof sql_query.toQuery == 'function' ? sql_query.toString() : "Incomplete Query";
+	  } catch (variable) {
+	    //
+	    return variable;
+	  } // closes try/catch statement
+	}; // closes render function
+
+	// Helper function for render.
+	Engine.prototype.translate_columns = function () {
+	  var that = this;
+
+	  //The arrays of commands that we collect and group the query
+	  var select_commands = [];
+	  var group_by_commands = [];
+
+	  _.forEach(that.query.columns, function (column_element) {
+	    var column_table = that.create_sql_object(column_element.table);
+	    var column_title = column_element.title;
+	    switch (column_element.sql_func) {
+	      case "field":
+	        select_commands.push(column_table[column_element.sql_code].as(column_title));
+	        group_by_commands.push(column_table[column_element.sql_code]);
+	        break;
+	      default:
+
+	    }
+	  });
+	  return [select_commands, group_by_commands];
+	};
+
+	// Helper function for render
+	Engine.prototype.translate_contents = function () {
+	  var that = this;
+	  var commands = [];
+
+	  // ------>>> CONTENTS .. Now we need to create our Contents.  <<<<-----
+	  _.forEach(that.query.contents, function (content_element) {
+
+	    // We need to initialize a sql table to access distinct and various other funcs
+	    var content_table = that.create_sql_object(content_element.table);
+	    var content_title = content_element.title;
+
+	    switch (content_element.sql_func) {
+	      case "count":
+	        commands.push(content_table[content_element.sql_code]["count"]()["distinct"]().as(content_title));
+	        break;
+	      case "sum":
+	        commands.push(content_table[content_element.sql_code]["sum"]().as(content_title));
+	      default:
+
+	    }
+	  });
+	  return commands;
+	};
+
+	// Helper function that translates JOINS
+	Engine.prototype.translate_joins = function (sql_object) {
+	  var sql_object = sql_object;
+	  var that = this;
+	  //A FOREIGN KEY in one table points to a PRIMARY KEY in another table.
+	  var joined_tables = [that.query.table];
+
+	  // Use pluck to grab the core filter elements because concatting filters breaks
+	  var stripped_filter_elements = _.pluck(that.query.filters, '_element');
+	  var joined_elements = that.query.contents.concat(that.query.columns, stripped_filter_elements);
+
+	  _.each(joined_elements, function (element) {
+	    if (!_.contains(joined_tables, element.table)) {
+	      var join_schema = _.findWhere(that.relevant_joins, {
+	        "primary_key_table": element.table,
+	        "foreign_key_table": that.query.table
+	      });
+
+	      var primary_join_table = that.create_sql_object(element.table);
+	      var foreign_join_table = that.create_sql_object(that.query.table);
+
+	      // Create the join schema separately
+	      var join = foreign_join_table.join(primary_join_table).on(foreign_join_table[join_schema['foreign_key']].equals(primary_join_table[join_schema['primary_key']]));
+
+	      sql_object = sql_object.from(join);
+	      // make sure that we don't accidentially rejoin already-joined tables
+	      joined_tables.push(element.table);
+	    };
+	  });
+	  return sql_object;
+	};
+
+	Engine.prototype.translate_filters = function () {
+	  var that = this;
+	  // FILTERSSSSSS
+	  // ------>>> Now we need to create our filters. God.  <<<<-----
+	  // There are two ways to filter, having and where. Throw them here and treat them separately
+
+	  _.forEach(that.query.filters, function (filter) {
+	    var filter_sql = that.create_sql_object(filter._element.table);
+	    var filter_sql_object_with_column = filter_sql[filter._element.sql_code];
+
+	    switch (filter.method) {
+	      case "Equals":
+	        filter_sql_object_with_column = filter_sql_object_with_column["equals"](new String(filter.value));
+	        break;
+	      case "Is Not Null":
+	        filter_sql_object_with_column = filter_sql_object_with_column["isNotNull"]();
+	        break;
+	      case "Greater Than":
+	        filter_sql_object_with_column = "(" + filter._element.table + "." + filter._element.sql_code + " > " + filter.value + ")";
+	        break;
+	      case "Less Than":
+	        filter_sql_object_with_column = "(" + filter._element.table + "." + filter._element.sql_code + " < " + filter.value + ")";
+	        break;
+	      default:
+
+	    }
+	    // attach the sql object or custom sql command to the Filter object
+	    filter._sql_object = filter_sql_object_with_column;
+	  });
+	};
+
+	//  ---- Prototype functions for maninpulating the columns ----
+
+	// Handling the addition of an element Column or Content
+	Engine.prototype.add_element = function (element_id) {
+	  var selected_element = this.elements[element_id];
+	  if (selected_element.type == "content") {
+	    this.query.contents.push(selected_element);
+	  } else {
+	    this.query.columns.push(selected_element);
+	  }
+	};
+
+	// Handling the removal of an element
+	Engine.prototype.remove_element = function (element_id) {
+	  this.query.contents = _.reject(this.query.contents, function (content) {
+	    return content.id == element_id;
+	  });
+
+	  this.query.columns = _.reject(this.query.columns, function (column) {
+	    return column.id == element_id;
+	  });
+	};
+
+	//  Add a filter, though in reality we are adding an element
+	Engine.prototype.add_filter = function (element_id) {
+	  var selected_element = this.elements[element_id];
+	  var created_filter = new Filter(selected_element, { id: element_id });
+	  this.query.filters.push(created_filter);
+	};
+
+	// now we will edit the filter in question to add
+	Engine.prototype.edit_filter = function (options) {
+	  _.each(this.query.filters, function (filter) {
+	    if (filter.id == options["filter_id"]) {
+	      filter["method"] = options["filter_method"];
+	      filter["value"] = options["filter_value"];
+	    }
+	  });
+	};
+
+	// Handling the removal of an element
+	Engine.prototype.remove_filter = function (element_id) {
+	  this.query.filters = _.reject(this.query.filters, function (filter) {
+	    return filter.id == element_id;
+	  });
+	};
+
+	module.exports = Engine;
+
+/***/ },
+/* 180 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;//     Underscore.js 1.8.3
@@ -24392,414 +25021,6 @@
 	    }.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
 	  }
 	}).call(this);
-
-/***/ },
-/* 177 */
-/***/ function(module, exports) {
-
-	var Element = function () {
-	  // sql_func is any fancy stuff we want to do like aggregate, sum, count, etc.
-	  // sql_code == the specific column referred
-	  // return {
-	  //   id: id,
-	  //   description: options["description"] ? options["description"] : "",
-	  //   sql_code: options["sql_code"] ? options["sql_code"] : "",
-	  //   type: type,
-	  //   table: options["table"] ? options["table"] : "",
-	  //   group_by: options["group_by"] ? options["group_by"] : "",
-	  //   sql_func: options["sql_func"] ? options["sql_func"] : "",
-	  //   title: options["title"] ? options["title"] : "",
-	  // }
-	  this.id = "", this.description = "", this.sql_code = "", this.type = "", this.table = "", this.group_by = "", this.sql_func = "", this.title = "";
-	};
-
-	Element.populate = function (type, options, id) {
-	  var element = new Element();
-	  element.type = type;
-	  element.id = id;
-	  element.description = options["description"] ? options["description"] : "";
-	  element.sql_code = options["sql_code"] ? options["sql_code"] : "";
-	  element.table = options["table"] ? options["table"] : "";
-	  element.group_by = options["group_by"] ? options["group_by"] : "";
-	  element.sql_func = options["sql_func"] ? options["sql_func"] : "";
-	  element.title = options["title"] ? options["title"] : "";
-	  return element;
-	};
-
-	Element.autogenerate_with_column = function (table_object, column, id) {
-	  var element = new Element();
-	  element.table = table_object.name;
-	  element.sql_code = column;
-	  element.title = table_object.name + "." + column;
-	  element.sql_func = "field";
-	  element.description = "Column " + column + " on table " + table_object.name;
-	  element.type = "column";
-	  element.id = id;
-
-	  return element;
-	};
-
-	module.exports = Element;
-
-/***/ },
-/* 178 */
-/***/ function(module, exports, __webpack_require__) {
-
-	// import { Element } from './elements';
-	// import { Filter } from './element_filter';
-	__webpack_require__(177);
-	__webpack_require__(179);
-
-	var EngineQuery = function (schema) {
-	  if (schema) {
-	    this.table = schema.table == null ? "" : schema.table;
-	    this.contents = schema.contents == null ? [] : schema.contents;
-	    this.columns = schema.columns == null ? [] : schema.columns;
-	    this.filters = schema.filters == null ? [] : schema.filters;
-	    this._initialSchema = schema;
-	  } else {
-	    this.table = "";
-	    this.contents = [];
-	    this.columns = [];
-	    this.filters = [];
-	    this._initialSchema = null;
-	  }
-	};
-
-	EngineQuery.prototype.reset_all = function () {
-	  this.table = "";
-	  this.contents = [];
-	  this.columns = [];
-	  this.filters = [];
-	};
-
-	module.exports = EngineQuery;
-
-/***/ },
-/* 179 */
-/***/ function(module, exports) {
-
-	var Filter = function (query_element, options) {
-	  return {
-	    id: query_element['id'],
-	    _element: query_element,
-	    filter_title: query_element["title"],
-
-	    where_or_having: query_element['type'] == "column" ? "where" : "having",
-
-	    // -- tied to the sql library,
-	    _sql_object: null,
-
-	    //--- Start filter exclusive elements here
-	    method: "",
-	    value: ""
-	  };
-	};
-
-	module.exports = Filter;
-
-/***/ },
-/* 180 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var _ = __webpack_require__(176);
-	var sql = __webpack_require__(181);
-	var Element = __webpack_require__(177);
-	var EngineQuery = __webpack_require__(178);
-	var Filter = __webpack_require__(179);
-
-	var Engine = function () {
-	  this.definitions = {}, this.relevant_joins = [], this.available_elements = [], this.joined_available_elements = [], this.elements = [], this.filters = [], this.query = new EngineQuery();
-	};
-
-	// Load the definitions file, defining the data
-	Engine.prototype.load_definitions = function (definitions) {
-	  this.definitions = definitions;
-	  var that = this;
-	  // Set SQL defaults
-	  sql.setDialect(this.definitions['dialect']);
-	  this.create_elements();
-	};
-
-	Engine.prototype.create_elements = function () {
-	  var that = this;
-	  var element_index_count = 0;
-
-	  // Auto generate columns from the table schema
-	  _.forEach(this.definitions["tables"], function (table_object) {
-	    _.forEach(table_object.columns, function (column) {
-	      // For each column within the table object, auto generate an element
-	      that.elements.push(Element.autogenerate_with_column(table_object, column, element_index_count));
-	      element_index_count += 1;
-	    });
-	  });
-
-	  // Populate custom elements from the definitions
-	  _.forEach(this.definitions['elements'], function (element_options, index) {
-	    that.elements.push(Element.populate(element_options.type, element_options, index + element_index_count));
-	  });
-	};
-
-	// Once someone selects a table then filter out for all the available elements
-	Engine.prototype.select_table = function (selected_table) {
-	  var that = this;
-	  this.reset_all();
-	  this.query.table = selected_table;
-
-	  // Create content items from content_mappings
-	  this.available_elements = _.where(this.elements, { "table": selected_table });
-	  this.select_join_elements();
-	};
-
-	// Helper function for select_table
-	Engine.prototype.select_join_elements = function () {
-	  var that = this;
-	  // Select joins that apply to the currently selected table.
-	  this.relevant_joins = _.filter(this.definitions['joins'], function (join) {
-	    return join.foreign_key_table == that.query.table;
-	  });
-
-	  // Select the applicable elements from the possible joins
-	  _.each(this.elements, function (element) {
-	    // for each element, search joins that are adjacent
-	    _.each(that.relevant_joins, function (join) {
-	      // the element holds the primary key. the selected table here holds the foreign key
-	      if (element.table == join.primary_key_table || element.table == join.foreign_key_table) {
-	        // Only add to joined_available_elements if the element is unique
-	        if (!_.contains(that.available_elements, element) && !_.contains(that.joined_available_elements, element)) {
-	          that.joined_available_elements.push(element);
-	        }
-	      }; // closes the if statement
-	    }); // closes relevant joins each statement
-	  }); // closes the joined_avail_elements each statement
-	};
-
-	Engine.prototype.reset_all = function () {
-	  this.query.reset_all();
-	  this.available_elements.length = 0;
-	  this.joined_available_elements.length = 0;
-	  this.relevant_joins.length = 0;
-	};
-
-	// helper function that initializes a fresh sql object
-	Engine.prototype.create_sql_object = function (table_name) {
-	  var table_definition = this.definitions['tables'][table_name];
-	  return sql.define(table_definition);
-	};
-
-	// --- The BBIG FUNCTION that renders ---
-
-	Engine.prototype.render_query = function () {
-	  if (this.query.table == "") {
-	    return "Empty Query";
-	  }
-
-	  // Create the table from the inbuilt definitions
-	  var that = this;
-	  var table_key = that.query["table"];
-	  var sql_query = that.create_sql_object(table_key);
-	  // Apply the individual parts of the query to it
-	  try {
-	    // The arrays of commands that we collect and group the query
-	    var translated_column_output = that.translate_columns();
-	    var select_commands = translated_column_output[0];
-	    var group_by_commands = translated_column_output[1];
-
-	    select_commands = select_commands.concat(that.translate_contents());
-
-	    // apply the select_commands first.
-	    sql_query = sql_query.select(select_commands);
-
-	    // Use the helper function to create the WHERE elements that are tacked later on
-	    that.translate_filters();
-
-	    // Apply joins after filters.
-	    sql_query = that.translate_joins(sql_query);
-	    // We split the total filter command pool into where and having, and apply if length is greater than zero
-
-	    var where_filters = _.where(that.query.filters, { "where_or_having": "where" });
-	    var having_filters = _.where(that.query.filters, { "where_or_having": "having" });
-
-	    if (where_filters.length > 0) {
-	      // Use pluck to grab the values of the _sql_object, because the sql object is tied to the filter object
-	      // sql_query = sql_query.where(_.pluck(where_filters, '_sql_object'));
-	      sql_query = sql_query.where(_.pluck(where_filters, '_sql_object'));
-	    } else if (having_filters.length > 0) {
-	      sql_query = sql_query.having(_.pluck(having_filters, '_sql_object'));
-	    };
-
-	    // If there is anything that needs to be grouped, it is applied here
-	    if (group_by_commands.length > 0) {
-	      sql_query = sql_query.group(group_by_commands);
-	    }
-
-	    // This is a fall through to parse for
-	    return typeof sql_query.toQuery == 'function' ? sql_query.toString() : "Incomplete Query";
-	  } catch (variable) {
-	    //
-	    return variable;
-	  } // closes try/catch statement
-	}; // closes render function
-
-	// Helper function for render.
-	Engine.prototype.translate_columns = function () {
-	  var that = this;
-
-	  //The arrays of commands that we collect and group the query
-	  var select_commands = [];
-	  var group_by_commands = [];
-
-	  _.forEach(that.query.columns, function (column_element) {
-	    var column_table = that.create_sql_object(column_element.table);
-	    var column_title = column_element.title;
-	    switch (column_element.sql_func) {
-	      case "field":
-	        select_commands.push(column_table[column_element.sql_code].as(column_title));
-	        group_by_commands.push(column_table[column_element.sql_code]);
-	        break;
-	      default:
-
-	    }
-	  });
-	  return [select_commands, group_by_commands];
-	};
-
-	// Helper function for render
-	Engine.prototype.translate_contents = function () {
-	  var that = this;
-	  var commands = [];
-
-	  // ------>>> CONTENTS .. Now we need to create our Contents.  <<<<-----
-	  _.forEach(that.query.contents, function (content_element) {
-
-	    // We need to initialize a sql table to access distinct and various other funcs
-	    var content_table = that.create_sql_object(content_element.table);
-	    var content_title = content_element.title;
-
-	    switch (content_element.sql_func) {
-	      case "count":
-	        commands.push(content_table[content_element.sql_code]["count"]()["distinct"]().as(content_title));
-	        break;
-	      case "sum":
-	        commands.push(content_table[content_element.sql_code]["sum"]().as(content_title));
-	      default:
-
-	    }
-	  });
-	  return commands;
-	};
-
-	// Helper function that translates JOINS
-	Engine.prototype.translate_joins = function (sql_object) {
-	  var sql_object = sql_object;
-	  var that = this;
-	  //A FOREIGN KEY in one table points to a PRIMARY KEY in another table.
-	  var joined_tables = [that.query.table];
-
-	  // Use pluck to grab the core filter elements because concatting filters breaks
-	  var stripped_filter_elements = _.pluck(that.query.filters, '_element');
-	  var joined_elements = that.query.contents.concat(that.query.columns, stripped_filter_elements);
-
-	  _.each(joined_elements, function (element) {
-	    if (!_.contains(joined_tables, element.table)) {
-	      var join_schema = _.findWhere(that.relevant_joins, {
-	        "primary_key_table": element.table,
-	        "foreign_key_table": that.query.table
-	      });
-
-	      var primary_join_table = that.create_sql_object(element.table);
-	      var foreign_join_table = that.create_sql_object(that.query.table);
-
-	      // Create the join schema separately
-	      var join = foreign_join_table.join(primary_join_table).on(foreign_join_table[join_schema['foreign_key']].equals(primary_join_table[join_schema['primary_key']]));
-
-	      sql_object = sql_object.from(join);
-	      // make sure that we don't accidentially rejoin already-joined tables
-	      joined_tables.push(element.table);
-	    };
-	  });
-	  return sql_object;
-	};
-
-	Engine.prototype.translate_filters = function () {
-	  var that = this;
-	  // FILTERSSSSSS
-	  // ------>>> Now we need to create our filters. God.  <<<<-----
-	  // There are two ways to filter, having and where. Throw them here and treat them separately
-
-	  _.forEach(that.query.filters, function (filter) {
-	    var filter_sql = that.create_sql_object(filter._element.table);
-	    var filter_sql_object_with_column = filter_sql[filter._element.sql_code];
-
-	    switch (filter.method) {
-	      case "Equals":
-	        filter_sql_object_with_column = filter_sql_object_with_column["equals"](new String(filter.value));
-	        break;
-	      case "Is Not Null":
-	        filter_sql_object_with_column = filter_sql_object_with_column["isNotNull"]();
-	        break;
-	      case "Greater Than":
-	        filter_sql_object_with_column = "(" + filter._element.table + "." + filter._element.sql_code + " > " + filter.value + ")";
-	        break;
-	      case "Less Than":
-	        filter_sql_object_with_column = "(" + filter._element.table + "." + filter._element.sql_code + " < " + filter.value + ")";
-	        break;
-	      default:
-
-	    }
-	    // attach the sql object or custom sql command to the Filter object
-	    filter._sql_object = filter_sql_object_with_column;
-	  });
-	};
-
-	//  ---- Prototype functions for maninpulating the columns ----
-
-	// Handling the addition of an element Column or Content
-	Engine.prototype.add_element = function (element_id) {
-	  var selected_element = this.elements[element_id];
-	  if (selected_element.type == "content") {
-	    this.query.contents.push(selected_element);
-	  } else {
-	    this.query.columns.push(selected_element);
-	  }
-	};
-
-	// Handling the removal of an element
-	Engine.prototype.remove_element = function (element_id) {
-	  this.query.contents = _.reject(this.query.contents, function (content) {
-	    return content.id == element_id;
-	  });
-
-	  this.query.columns = _.reject(this.query.columns, function (column) {
-	    return column.id == element_id;
-	  });
-	};
-
-	//  Add a filter, though in reality we are adding an element
-	Engine.prototype.add_filter = function (element_id) {
-	  var selected_element = this.elements[element_id];
-	  var created_filter = new Filter(selected_element, { id: element_id });
-	  this.query.filters.push(created_filter);
-	};
-
-	// now we will edit the filter in question to add
-	Engine.prototype.edit_filter = function (options) {
-	  _.each(this.query.filters, function (filter) {
-	    if (filter.id == options["filter_id"]) {
-	      filter["method"] = options["filter_method"];
-	      filter["value"] = options["filter_value"];
-	    }
-	  });
-	};
-
-	// Handling the removal of an element
-	Engine.prototype.remove_filter = function (element_id) {
-	  this.query.filters = _.reject(this.query.filters, function (filter) {
-	    return filter.id == element_id;
-	  });
-	};
-
-	module.exports = Engine;
 
 /***/ },
 /* 181 */
@@ -41596,68 +41817,131 @@
 
 /***/ },
 /* 259 */
-/***/ function(module, exports, __webpack_require__) {
+/***/ function(module, exports) {
 
-	var _ = __webpack_require__(176);
-
-	var Formatter = function () {
-	  this.settings = {};
+	var Element = function () {
+	  // sql_func is any fancy stuff we want to do like aggregate, sum, count, etc.
+	  // sql_code == the specific column referred
+	  // return {
+	  //   id: id,
+	  //   description: options["description"] ? options["description"] : "",
+	  //   sql_code: options["sql_code"] ? options["sql_code"] : "",
+	  //   type: type,
+	  //   table: options["table"] ? options["table"] : "",
+	  //   group_by: options["group_by"] ? options["group_by"] : "",
+	  //   sql_func: options["sql_func"] ? options["sql_func"] : "",
+	  //   title: options["title"] ? options["title"] : "",
+	  // }
+	  this.id = "", this.description = "", this.sql_code = "", this.type = "", this.table = "", this.group_by = "", this.sql_func = "", this.title = "";
 	};
 
-	Formatter.prototype.format = function (unformatted_query) {
-	  var formatted = "";
-	  _.each(unformatted_query.split(" "), function (string) {
-	    if (string != 'FROM' || string != 'WHERE' || string != 'GROUP') {
-	      formatted = formatted + " " + '\n' + string;
-	    } else {
-	      formatted = formatted + " " + string;
-	    }
-	  });
-	  return formatted;
+	Element.populate = function (type, options, id) {
+	  var element = new Element();
+	  element.type = type;
+	  element.id = id;
+	  element.description = options["description"] ? options["description"] : "";
+	  element.sql_code = options["sql_code"] ? options["sql_code"] : "";
+	  element.table = options["table"] ? options["table"] : "";
+	  element.group_by = options["group_by"] ? options["group_by"] : "";
+	  element.sql_func = options["sql_func"] ? options["sql_func"] : "";
+	  element.title = options["title"] ? options["title"] : "";
+	  return element;
 	};
 
-	module.exports = Formatter;
+	Element.autogenerate_with_column = function (table_object, column, id) {
+	  var element = new Element();
+	  element.table = table_object.name;
+	  element.sql_code = column;
+	  element.title = table_object.name + "." + column;
+	  element.sql_func = "field";
+	  element.description = "Column " + column + " on table " + table_object.name;
+	  element.type = "column";
+	  element.id = id;
+
+	  return element;
+	};
+
+	module.exports = Element;
 
 /***/ },
 /* 260 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var React = __webpack_require__(1);
+	// import { Element } from './elements';
+	// import { Filter } from './element_filter';
+	__webpack_require__(259);
+	__webpack_require__(261);
 
-	var MenuRow = React.createClass({
-	  displayName: "MenuRow",
+	var EngineQuery = function (schema) {
+	  if (schema) {
+	    this.table = schema.table == null ? "" : schema.table;
+	    this.contents = schema.contents == null ? [] : schema.contents;
+	    this.columns = schema.columns == null ? [] : schema.columns;
+	    this.filters = schema.filters == null ? [] : schema.filters;
+	    this._initialSchema = schema;
+	  } else {
+	    this.table = "";
+	    this.contents = [];
+	    this.columns = [];
+	    this.filters = [];
+	    this._initialSchema = null;
+	  }
+	};
 
-	  getInitialState: function () {
-	    return {
-	      name: "Name",
-	      classification: "Type",
-	      buttonTitle: "Button"
-	    };
-	  },
+	EngineQuery.prototype.reset_all = function () {
+	  this.table = "";
+	  this.contents = [];
+	  this.columns = [];
+	  this.filters = [];
+	};
+
+	module.exports = EngineQuery;
+
+/***/ },
+/* 261 */
+/***/ function(module, exports) {
+
+	var Filter = function (query_element, options) {
+	  return {
+	    id: query_element['id'],
+	    _element: query_element,
+	    filter_title: query_element["title"],
+
+	    where_or_having: query_element['type'] == "column" ? "where" : "having",
+
+	    // -- tied to the sql library,
+	    _sql_object: null,
+
+	    //--- Start filter exclusive elements here
+	    method: "",
+	    value: ""
+	  };
+	};
+
+	module.exports = Filter;
+
+/***/ },
+/* 262 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var React = __webpack_require__(1),
+	    PanelCard = __webpack_require__(175),
+	    ElementTable = __webpack_require__(176);
+
+	var Panel = React.createClass({
+	  displayName: 'Panel',
+
+
 	  render: function () {
 	    return React.createElement(
-	      "tr",
+	      'div',
 	      null,
-	      React.createElement(
-	        "td",
-	        null,
-	        this.state.name
-	      ),
-	      React.createElement(
-	        "td",
-	        null,
-	        this.state.classification
-	      ),
-	      React.createElement(
-	        "td",
-	        null,
-	        this.state.buttonTitle
-	      )
+	      React.createElement(PanelCard, null)
 	    );
 	  }
 	});
 
-	module.exports = MenuRow;
+	module.exports = Panel;
 
 /***/ }
 /******/ ]);

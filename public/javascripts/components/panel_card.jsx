@@ -1,14 +1,8 @@
 var React = require("react");
 
 var PanelCard = React.createClass({
-  getInitialState: function () {
-    return {
-      queryContent: "unknown"
-    }
-  },
-
   copyQuery: function () {
-    console.log("Hello. Copying query" + this.state.queryContent); 
+    console.log("Copying query " + "\n" + this.props.renderedQuery);
   },
 
   saveQuery: function () {
@@ -20,7 +14,7 @@ var PanelCard = React.createClass({
       <div>
         <div className='card'>
           <div className='card-body' id='sql-content'>
-            <p>{this.state.queryContent}</p>
+            <p>{this.props.renderedQuery}</p>
           </div>
           <div className='card-footer'>
             <div className='btn-group btn-group-block'>

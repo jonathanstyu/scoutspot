@@ -1,6 +1,6 @@
 var React = require("react"),
     PanelCard = require('./panel_card'),
-    ElementTable = require('./panel_table');
+    ElementTable = require('./element_table');
 
 var Panel = React.createClass({
 
@@ -8,7 +8,7 @@ var Panel = React.createClass({
     return (
       <div>
         <PanelCard />
-        <ElementTable />
+        
       </div>
     )
   }

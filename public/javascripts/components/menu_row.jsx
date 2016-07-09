@@ -2,18 +2,30 @@ var React = require("react");
 
 var MenuRow = React.createClass({
   getInitialState: function () {
-    return {
-      name: "Name",
-      classification: "Type",
-      buttonTitle: "Button"
-    }
+    // tableMode means we are just showing tables
+    if (this.props.tableMode) {
+      return {
+        name: this.props.name,
+        classification: "",
+        buttonTitle: "See Schema",
+        id: this.props.name
+      }
+    } else {
+      return {
+        name: this.props.element.title,
+        classification: this.props.element.type,
+        id: this.props.element.id,
+        buttonTitle: "Filter"
+      }
+    } // close else statement
   },
+
   render: function () {
     return (
       <tr>
-        <td>{this.state.name}</td>
+        <td onClick={this.props.clickRowCallback} id={this.state.id}>{this.state.name}</td>
         <td>{this.state.classification}</td>
-        <td>{this.state.buttonTitle}</td>
+        <td><button className='btn btn-sm' onClick={this.props.clickButtonCallback} id={this.state.id}>{this.state.buttonTitle}</button></td>
       </tr>
     )
   }

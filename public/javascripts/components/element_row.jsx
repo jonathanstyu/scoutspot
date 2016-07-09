@@ -1,24 +1,16 @@
 var React = require("react");
 
 var ElementRow = React.createClass({
-  getInitialState: function () {
-    return {
-      name: "none",
-      id: ""
-    }
-  },
-
   closeButtonClicked: function (event) {
-    console.log(event.target);
+    this.props.removeElementCallback(event);
   },
 
   render: function () {
+    var element = this.props.element;
     return (
-      <tr id={this.state.id} className='element-panel-row'>
-        <td>{this.state.name}</td>
-        <td></td>
-        <td></td>
-        <td><button className='btn' id=this.state.id onClick={this.closeButtonClicked}>X</button></td>
+      <tr id={element.id} className='element-panel-row'>
+        <td colSpan='3'>{element.title}</td>
+        <td><button className='btn' id={element.id} onClick={this.closeButtonClicked}>X</button></td>
       </tr>
     )
   }
