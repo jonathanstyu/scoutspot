@@ -1,48 +1,49 @@
 var React = require("react"),
-    MenuRow = require("./menu_row");
+    MenuSectionHeader = require("./menu_section_header"),
+    MenuRowElement = require("./menu_row_element"),
+    MenuRowTable = require("./menu_row_table");
 
 var Menu = React.createClass({
-  buttonClicked: function (event) {
-    this.props.clickButtonCallback(event); 
-  },
-
-  rowClicked: function (event) {
-    this.props.clickRowCallback(event);
-  },
 
   render: function () {
     var that = this;
-    var tableHeader = "";
-
-    var menu_components = []
-    var joined_components = []
+    var table = []
 
     if (this.props.available_tables) {
-      tableHeader = "Tables";
-      menu_components = this.props.available_tables.map(function (table) {
-        return <MenuRow name={table} key={table} tableMode={true} clickButtonCallback={that.buttonClicked} clickRowCallback={that.rowClicked} />
+      var table_elements = this.props.available_tables.map(function (table) {
+        return <MenuRowTable table={table} key={table + "table"}
+          clickButtonCallback={that.buttonClicked} clickRowCallback={that.props.clickRowCallback} />
       });
+
+      return (
+        <table className='table' id='menu-list'>
+          <tbody>
+            <MenuSectionHeader sectionHeader={"Tables"}/>
+            {table_elements}
+          </tbody>
+        </table>
+      ) // close the first return statement
     } else {
-      tableHeader = "Selected Table";
-      menu_components = this.props.available_elements.map(function (element) {
-        return <MenuRow element={element} key={element.id} id={element.id} tableMode={false} clickButtonCallback={that.buttonClicked} clickRowCallback={that.rowClicked} />
-      })
+      var table_elements = this.props.available_elements.map(function (object) {
+        return <MenuRowElement element={object} key={object.id + "object"} clickButtonCallback={that.props.clickButtonCallback} clickRowCallback={that.props.clickRowCallback} />
+      });
 
-      joined_components = this.props.joined_available_elements.map(function (element) {
-        return <MenuRow element={element} key={element.id} id={element.id} tableMode={false} clickButtonCallback={that.buttonClicked} clickRowCallback={that.rowClicked} />
-      })
-    }
+      var joined_elements = this.props.joined_available_elements.map(function (object) {
+        return <MenuRowElement element={object} key={object.id + "filter"} clickButtonCallback={that.props.clickButtonCallback} clickRowCallback={that.props.clickRowCallback} />
+      });
 
-    return (
-      <table className='table' id='menu-list'>
-        <tbody>
-          <tr><th colSpan='3'>{ tableHeader }</th></tr>
-          { menu_components }
-          { joined_components }
-        </tbody>
-      </table>
-    )
-  }
+      return (
+        <table className='table' id='menu-list'>
+          <tbody>
+            <MenuSectionHeader sectionHeader={"Elements"}/>
+            {table_elements}
+            <MenuSectionHeader sectionHeader={"Joined"}/>
+            {joined_elements}
+          </tbody>
+        </table>
+      ) // close return
+    }; // close huge if else statement
+  } // close render
 });
 
 module.exports = Menu;

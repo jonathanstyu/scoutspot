@@ -71,15 +71,18 @@
 
 	var bootstrap = JSON.parse($('#definitions').text().replace(/&quot;/g, '"'));
 	engine.load_definitions(bootstrap);
-	var queryApp = React.createElement(QueryApp, { engine: engine });
 
+	// Passing through QueryApp and definition
+	// Setting IndexRoute for dev purposes
+	// <IndexRoute component={Home} />
+	// <IndexRoute component={SqlDefinitions} definitions={bootstrap}  />
 	ReactDOM.render(React.createElement(
 	    Router,
 	    { history: hashHistory },
 	    React.createElement(
 	        Route,
 	        { path: '/', component: Wrapper },
-	        React.createElement(IndexRoute, { component: Home }),
+	        React.createElement(IndexRoute, { component: QueryApp, engine: engine }),
 	        React.createElement(Route, { path: 'query', component: QueryApp, engine: engine }),
 	        React.createElement(Route, { path: 'definitions', component: SqlDefinitions, definitions: bootstrap })
 	    )
@@ -26890,6 +26893,7 @@
 	var QueryApp = React.createClass({
 	  displayName: "QueryApp",
 
+	  // engine is the only thing passed in as a props
 	  getInitialState: function () {
 	    var engine = this.props.route.engine;
 	    var query = engine.query;
@@ -26910,56 +26914,53 @@
 	    };
 	  },
 
+	  refreshState: function () {
+	    var engine = this.state.engine;
+	    var renderedQuery = engine.render_query();
+	    this.setState({
+	      tableSelected: engine.query.table == "" ? false : true,
+	      available_elements: engine.available_elements,
+	      joined_available_elements: engine.joined_available_elements,
+	      renderedQuery: renderedQuery
+	    });
+	  },
+
 	  selectTable: function (event) {
 	    var that = this;
 	    var selectedTable = event.target.id;
 	    this.state.engine.select_table(selectedTable);
-	    this.setState({
-	      tableSelected: true,
-	      available_elements: that.state.engine.available_elements,
-	      joined_available_elements: that.state.engine.joined_available_elements
-	    });
+	    this.refreshState();
+	  },
+
+	  resetQuery: function (event) {
+	    this.state.engine.reset_all();
+	    this.refreshState();
 	  },
 
 	  selectElement: function (event) {
 	    var that = this;
 	    this.state.engine.add_element(event.target.id);
-	    var query = this.state.engine.render_query();
-	    this.setState({
-	      renderedQuery: query
-	    });
+	    this.refreshState();
 	  },
 
 	  removeElement: function (event) {
 	    this.state.engine.remove_element(event.target.id);
-	    var query = this.state.engine.render_query();
-	    this.setState({
-	      renderedQuery: query
-	    });
+	    this.refreshState();
 	  },
 
 	  selectFilter: function (event) {
 	    this.state.engine.add_filter(event.target.id);
-	    var query = this.state.engine.render_query();
-	    this.setState({
-	      renderedQuery: query
-	    });
+	    this.refreshState();
 	  },
 
 	  editFilter: function (filterData) {
 	    this.state.engine.edit_filter(filterData);
-	    var query = this.state.engine.render_query();
-	    this.setState({
-	      renderedQuery: query
-	    });
+	    this.refreshState();
 	  },
 
 	  removeFilter: function (event) {
 	    this.state.engine.remove_filter(event.target.id);
-	    var query = this.state.engine.render_query();
-	    this.setState({
-	      renderedQuery: query
-	    });
+	    this.refreshState();
 	  },
 
 	  render() {
@@ -26973,7 +26974,7 @@
 	    });
 
 	    //  Pre-render and attach callbacks to the filters/elements
-	    var panelElementTable = React.createElement(ElementTable, { columns: this.state.engine.query.columns,
+	    var panel = React.createElement(ElementTable, { columns: this.state.engine.query.columns,
 	      contents: this.state.engine.query.contents,
 	      filters: this.state.engine.query.filters,
 	      removeElementCallback: this.removeElement,
@@ -26992,8 +26993,8 @@
 	      React.createElement(
 	        "div",
 	        { className: "column col-md-8" },
-	        React.createElement(PanelCard, { renderedQuery: this.state.renderedQuery }),
-	        panelElementTable
+	        React.createElement(PanelCard, { renderedQuery: this.state.renderedQuery, resetCallback: this.resetQuery }),
+	        panel
 	      )
 	    ); // closes return
 	  } // closes render function
@@ -28670,124 +28671,63 @@
 /***/ function(module, exports, __webpack_require__) {
 
 	var React = __webpack_require__(1),
-	    MenuRow = __webpack_require__(237);
+	    MenuSectionHeader = __webpack_require__(329),
+	    MenuRowElement = __webpack_require__(327),
+	    MenuRowTable = __webpack_require__(328);
 
 	var Menu = React.createClass({
 	  displayName: "Menu",
 
-	  buttonClicked: function (event) {
-	    this.props.clickButtonCallback(event);
-	  },
-
-	  rowClicked: function (event) {
-	    this.props.clickRowCallback(event);
-	  },
 
 	  render: function () {
 	    var that = this;
-	    var tableHeader = "";
-
-	    var menu_components = [];
-	    var joined_components = [];
+	    var table = [];
 
 	    if (this.props.available_tables) {
-	      tableHeader = "Tables";
-	      menu_components = this.props.available_tables.map(function (table) {
-	        return React.createElement(MenuRow, { name: table, key: table, tableMode: true, clickButtonCallback: that.buttonClicked, clickRowCallback: that.rowClicked });
-	      });
-	    } else {
-	      tableHeader = "Selected Table";
-	      menu_components = this.props.available_elements.map(function (element) {
-	        return React.createElement(MenuRow, { element: element, key: element.id, id: element.id, tableMode: false, clickButtonCallback: that.buttonClicked, clickRowCallback: that.rowClicked });
+	      var table_elements = this.props.available_tables.map(function (table) {
+	        return React.createElement(MenuRowTable, { table: table, key: table + "table",
+	          clickButtonCallback: that.buttonClicked, clickRowCallback: that.props.clickRowCallback });
 	      });
 
-	      joined_components = this.props.joined_available_elements.map(function (element) {
-	        return React.createElement(MenuRow, { element: element, key: element.id, id: element.id, tableMode: false, clickButtonCallback: that.buttonClicked, clickRowCallback: that.rowClicked });
-	      });
-	    }
-
-	    return React.createElement(
-	      "table",
-	      { className: "table", id: "menu-list" },
-	      React.createElement(
-	        "tbody",
-	        null,
+	      return React.createElement(
+	        "table",
+	        { className: "table", id: "menu-list" },
 	        React.createElement(
-	          "tr",
+	          "tbody",
 	          null,
-	          React.createElement(
-	            "th",
-	            { colSpan: "3" },
-	            tableHeader
-	          )
-	        ),
-	        menu_components,
-	        joined_components
-	      )
-	    );
-	  }
+	          React.createElement(MenuSectionHeader, { sectionHeader: "Tables" }),
+	          table_elements
+	        )
+	      ); // close the first return statement
+	    } else {
+	      var table_elements = this.props.available_elements.map(function (object) {
+	        return React.createElement(MenuRowElement, { element: object, key: object.id + "object", clickButtonCallback: that.props.clickButtonCallback, clickRowCallback: that.props.clickRowCallback });
+	      });
+
+	      var joined_elements = this.props.joined_available_elements.map(function (object) {
+	        return React.createElement(MenuRowElement, { element: object, key: object.id + "filter", clickButtonCallback: that.props.clickButtonCallback, clickRowCallback: that.props.clickRowCallback });
+	      });
+
+	      return React.createElement(
+	        "table",
+	        { className: "table", id: "menu-list" },
+	        React.createElement(
+	          "tbody",
+	          null,
+	          React.createElement(MenuSectionHeader, { sectionHeader: "Elements" }),
+	          table_elements,
+	          React.createElement(MenuSectionHeader, { sectionHeader: "Joined" }),
+	          joined_elements
+	        )
+	      ); // close return
+	    }; // close huge if else statement
+	  } // close render
 	});
 
 	module.exports = Menu;
 
 /***/ },
-/* 237 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var React = __webpack_require__(1);
-
-	var MenuRow = React.createClass({
-	  displayName: "MenuRow",
-
-	  getInitialState: function () {
-	    // tableMode means we are just showing tables
-	    if (this.props.tableMode) {
-	      return {
-	        name: this.props.name,
-	        classification: "",
-	        buttonTitle: "See Schema",
-	        id: this.props.name
-	      };
-	    } else {
-	      return {
-	        name: this.props.element.title,
-	        classification: this.props.element.type,
-	        id: this.props.element.id,
-	        buttonTitle: "Filter"
-	      };
-	    } // close else statement
-	  },
-
-	  render: function () {
-	    return React.createElement(
-	      "tr",
-	      null,
-	      React.createElement(
-	        "td",
-	        { onClick: this.props.clickRowCallback, id: this.state.id },
-	        this.state.name
-	      ),
-	      React.createElement(
-	        "td",
-	        null,
-	        this.state.classification
-	      ),
-	      React.createElement(
-	        "td",
-	        null,
-	        React.createElement(
-	          "button",
-	          { className: "btn btn-sm", onClick: this.props.clickButtonCallback, id: this.state.id },
-	          this.state.buttonTitle
-	        )
-	      )
-	    );
-	  }
-	});
-
-	module.exports = MenuRow;
-
-/***/ },
+/* 237 */,
 /* 238 */
 /***/ function(module, exports, __webpack_require__) {
 
@@ -28802,6 +28742,10 @@
 
 	  saveQuery: function () {
 	    console.log("Save query!");
+	  },
+
+	  resetQuery: function () {
+	    this.props.resetCallback();
 	  },
 
 	  render: function () {
@@ -28835,6 +28779,11 @@
 	              "button",
 	              { className: "btn", onClick: this.saveQuery },
 	              "Save"
+	            ),
+	            React.createElement(
+	              "button",
+	              { className: "btn", onClick: this.resetQuery },
+	              "Reset"
 	            )
 	          )
 	        )
@@ -28939,7 +28888,7 @@
 	      React.createElement(
 	        'td',
 	        { colSpan: '3' },
-	        element.title
+	        element.name
 	      ),
 	      React.createElement(
 	        'td',
@@ -47709,17 +47658,7 @@
 	var Element = function () {
 	  // sql_func is any fancy stuff we want to do like aggregate, sum, count, etc.
 	  // sql_code == the specific column referred
-	  // return {
-	  //   id: id,
-	  //   description: options["description"] ? options["description"] : "",
-	  //   sql_code: options["sql_code"] ? options["sql_code"] : "",
-	  //   type: type,
-	  //   table: options["table"] ? options["table"] : "",
-	  //   group_by: options["group_by"] ? options["group_by"] : "",
-	  //   sql_func: options["sql_func"] ? options["sql_func"] : "",
-	  //   title: options["title"] ? options["title"] : "",
-	  // }
-	  this.id = "", this.description = "", this.sql_code = "", this.type = "", this.table = "", this.group_by = "", this.sql_func = "", this.title = "";
+	  this.id = "", this.description = "", this.sql_code = "", this.type = "", this.table = "", this.group_by = "", this.sql_func = "", this.name = "";
 	};
 
 	Element.populate = function (type, options, id) {
@@ -47731,7 +47670,7 @@
 	  element.table = options["table"] ? options["table"] : "";
 	  element.group_by = options["group_by"] ? options["group_by"] : "";
 	  element.sql_func = options["sql_func"] ? options["sql_func"] : "";
-	  element.title = options["title"] ? options["title"] : "";
+	  element.name = options["name"] ? options["name"] : "";
 	  return element;
 	};
 
@@ -47739,7 +47678,7 @@
 	  var element = new Element();
 	  element.table = table_object.name;
 	  element.sql_code = column;
-	  element.title = table_object.name + "." + column;
+	  element.name = table_object.name + "." + column;
 	  element.sql_func = "field";
 	  element.description = "Column " + column + " on table " + table_object.name;
 	  element.type = "column";
@@ -47792,7 +47731,7 @@
 	  return {
 	    id: query_element['id'],
 	    _element: query_element,
-	    filter_title: query_element["title"],
+	    filter_title: query_element["name"],
 
 	    where_or_having: query_element['type'] == "column" ? "where" : "having",
 
@@ -47860,6 +47799,124 @@
 	});
 
 	module.exports = SqlDefinitions;
+
+/***/ },
+/* 327 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var React = __webpack_require__(1);
+
+	var MenuRowElement = React.createClass({
+	  displayName: "MenuRowElement",
+
+	  getInitialState: function () {
+	    // tableMode means we are just showing tables
+	    var element = this.props.element;
+	    return {
+	      header: element.name,
+	      secondary_header: element.type,
+	      buttonTitle: "Filter",
+	      id: element.id
+	    };
+	  },
+
+	  render: function () {
+	    return React.createElement(
+	      "tr",
+	      null,
+	      React.createElement(
+	        "td",
+	        { onClick: this.props.clickRowCallback, id: this.state.id },
+	        this.state.header
+	      ),
+	      React.createElement(
+	        "td",
+	        null,
+	        this.state.secondary_header
+	      ),
+	      React.createElement(
+	        "td",
+	        null,
+	        React.createElement(
+	          "button",
+	          { className: "btn btn-sm", onClick: this.props.clickButtonCallback, id: this.state.id },
+	          this.state.buttonTitle
+	        )
+	      )
+	    );
+	  }
+	});
+
+	module.exports = MenuRowElement;
+
+/***/ },
+/* 328 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var React = __webpack_require__(1);
+
+	var MenuRowTable = React.createClass({
+	  displayName: "MenuRowTable",
+
+	  getInitialState: function () {
+	    var table = this.props.table;
+	    return {
+	      header: table,
+	      buttonTitle: "See Schema",
+	      id: table
+	    };
+	  },
+
+	  render: function () {
+	    return React.createElement(
+	      "tr",
+	      null,
+	      React.createElement(
+	        "td",
+	        { onClick: this.props.clickRowCallback, id: this.state.id },
+	        this.state.header
+	      ),
+	      React.createElement("td", null),
+	      React.createElement(
+	        "td",
+	        null,
+	        React.createElement(
+	          "button",
+	          { className: "btn btn-sm", onClick: this.props.clickButtonCallback, id: this.state.id },
+	          this.state.buttonTitle
+	        )
+	      )
+	    );
+	  }
+	});
+
+	module.exports = MenuRowTable;
+
+/***/ },
+/* 329 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var React = __webpack_require__(1);
+
+	var MenuSectionHeader = React.createClass({
+	  displayName: "MenuSectionHeader",
+
+	  render: function () {
+	    var that = this;
+	    var sectionHeader = this.props.sectionHeader;
+	    return React.createElement(
+	      "tr",
+	      null,
+	      React.createElement(
+	        "th",
+	        { colSpan: "3" },
+	        sectionHeader
+	      )
+	    );
+	  }
+	});
+
+	module.exports = MenuSectionHeader;
 
 /***/ }
 /******/ ]);

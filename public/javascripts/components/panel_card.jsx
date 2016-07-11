@@ -9,6 +9,10 @@ var PanelCard = React.createClass({
     console.log("Save query!")
   },
 
+  resetQuery: function () {
+    this.props.resetCallback();
+  },
+
   render: function () {
     return (
       <div>
@@ -20,6 +24,7 @@ var PanelCard = React.createClass({
             <div className='btn-group btn-group-block'>
               <button className='btn' onClick={this.copyQuery}>Copy</button>
               <button className='btn' onClick={this.saveQuery}>Save</button>
+              <button className='btn' onClick={this.resetQuery}>Reset</button>
             </div>
           </div>
         </div>

@@ -12,6 +12,7 @@ var React = require("react"),
 var Engine = require('../models/engine');
 
 var QueryApp = React.createClass({
+  // engine is the only thing passed in as a props
   getInitialState: function () {
     var engine = this.props.route.engine;
     var query = engine.query;
@@ -32,56 +33,53 @@ var QueryApp = React.createClass({
     }
   },
 
+  refreshState: function () {
+    var engine = this.state.engine;
+    var renderedQuery = engine.render_query();
+    this.setState({
+      tableSelected: engine.query.table == "" ? false : true,
+      available_elements: engine.available_elements,
+      joined_available_elements: engine.joined_available_elements,
+      renderedQuery: renderedQuery
+    })
+  },
+
   selectTable: function (event) {
     var that = this;
     var selectedTable = event.target.id;
     this.state.engine.select_table(selectedTable);
-    this.setState({
-      tableSelected: true,
-      available_elements: that.state.engine.available_elements,
-      joined_available_elements: that.state.engine.joined_available_elements
-    });
+    this.refreshState();
+  },
+
+  resetQuery: function (event) {
+    this.state.engine.reset_all()
+    this.refreshState();
   },
 
   selectElement: function (event) {
     var that = this;
     this.state.engine.add_element(event.target.id);
-    var query = this.state.engine.render_query()
-    this.setState({
-      renderedQuery: query
-    })
+    this.refreshState();
   },
 
   removeElement: function (event) {
     this.state.engine.remove_element(event.target.id);
-    var query = this.state.engine.render_query()
-    this.setState({
-      renderedQuery: query
-    })
+    this.refreshState();
   },
 
   selectFilter: function (event) {
     this.state.engine.add_filter(event.target.id);
-    var query = this.state.engine.render_query()
-    this.setState({
-      renderedQuery: query
-    })
+    this.refreshState();
   },
 
   editFilter: function (filterData) {
     this.state.engine.edit_filter(filterData);
-    var query = this.state.engine.render_query()
-    this.setState({
-      renderedQuery: query
-    });
+    this.refreshState();
   },
 
   removeFilter: function (event) {
     this.state.engine.remove_filter(event.target.id);
-    var query = this.state.engine.render_query()
-    this.setState({
-      renderedQuery: query
-    });
+    this.refreshState(); 
   },
 
   render() {
@@ -97,7 +95,7 @@ var QueryApp = React.createClass({
         />
 
       //  Pre-render and attach callbacks to the filters/elements
-      var panelElementTable = <ElementTable columns={this.state.engine.query.columns}
+      var panel = <ElementTable columns={this.state.engine.query.columns}
         contents={this.state.engine.query.contents}
         filters={this.state.engine.query.filters}
         removeElementCallback={this.removeElement}
@@ -111,8 +109,8 @@ var QueryApp = React.createClass({
           { menu }
         </div>
         <div className='column col-md-8'>
-          <PanelCard renderedQuery={this.state.renderedQuery} />
-          {panelElementTable}
+          <PanelCard renderedQuery={this.state.renderedQuery} resetCallback={this.resetQuery} />
+          {panel}
         </div>
       </div>
     ); // closes return

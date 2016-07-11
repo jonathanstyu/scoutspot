@@ -7,8 +7,7 @@ var Panel = React.createClass({
   render: function () {
     return (
       <div>
-        <PanelCard />
-        
+        <PanelCard resetCallback={this.props.resetCallback} />
       </div>
     )
   }

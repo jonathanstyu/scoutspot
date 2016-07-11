@@ -25,12 +25,16 @@ var engine = new Engine();
 
 var bootstrap = JSON.parse($('#definitions').text().replace(/&quot;/g,'"'))
 engine.load_definitions(bootstrap);
-var queryApp = <QueryApp engine={engine}/>;
 
+// Passing through QueryApp and definition
+// Setting IndexRoute for dev purposes
+// <IndexRoute component={Home} />
+// <IndexRoute component={SqlDefinitions} definitions={bootstrap}  />
 ReactDOM.render((
     <Router history={hashHistory}>
     <Route path="/" component={Wrapper}>
-      <IndexRoute component={Home} />
+      <IndexRoute component={QueryApp} engine={engine} />
+
       <Route path="query" component={QueryApp} engine={engine} />
       <Route path="definitions" component={SqlDefinitions} definitions={bootstrap} />
     </Route>
