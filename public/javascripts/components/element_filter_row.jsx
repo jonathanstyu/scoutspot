@@ -36,7 +36,7 @@ var FilterRow = React.createClass({
     return (
       <tr id={this.state.id} className='element-panel-row'>
         <td>{filter.filter_title}</td>
-        <td><select value={this.state.filter_method} onChange={this.selectMethod}>{selectOptions}</select></td>
+        <td><select value={this.state.filter_method} className='form-select'  onChange={this.selectMethod}>{selectOptions}</select></td>
         <td><input value={this.state.filter_value} onChange={this.selectValue}></input></td>
         <td><button className='btn' id={this.state.filter_id} onClick={this.closeButtonClicked}>X</button></td>
       </tr>

@@ -29,12 +29,12 @@ engine.load_definitions(bootstrap);
 // Passing through QueryApp and definition
 // Setting IndexRoute for dev purposes
 // <IndexRoute component={Home} />
-// <IndexRoute component={SqlDefinitions} definitions={bootstrap}  />
+// <IndexRoute component={QueryApp} engine={engine} />
+
 ReactDOM.render((
     <Router history={hashHistory}>
     <Route path="/" component={Wrapper}>
-      <IndexRoute component={QueryApp} engine={engine} />
-
+      <IndexRoute component={SqlDefinitions} definitions={bootstrap}  />      
       <Route path="query" component={QueryApp} engine={engine} />
       <Route path="definitions" component={SqlDefinitions} definitions={bootstrap} />
     </Route>

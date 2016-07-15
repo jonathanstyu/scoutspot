@@ -9,7 +9,8 @@ var ElementRow = React.createClass({
     var element = this.props.element;
     return (
       <tr id={element.id} className='element-panel-row'>
-        <td colSpan='3'>{element.name}</td>
+        <td colSpan='2'>{element.name}</td>
+        <td><select className='form-select' value=""><option></option><option>ASC</option><option>DESC</option></select></td>
         <td><button className='btn' id={element.id} onClick={this.closeButtonClicked}>X</button></td>
       </tr>
     )
