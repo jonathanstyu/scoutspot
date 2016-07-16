@@ -8,11 +8,13 @@ var ElementTable = React.createClass({
     var columns = this.props.columns.map(function (column) {
       return <ElementRow element={column} key={column.id}
         removeElementCallback={that.props.removeElementCallback}
+        selectElementOrderCallback={that.props.selectElementOrderCallback}
         />
     });
     var contents = this.props.contents.map(function (content) {
       return <ElementRow element={content} key={content.id}
         removeElementCallback={that.props.removeElementCallback}
+        selectElementOrderCallback={that.props.selectElementOrderCallback}
         />
     });
     var filters = this.props.filters.map(function (filter) {

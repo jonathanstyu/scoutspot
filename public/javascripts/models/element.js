@@ -8,8 +8,7 @@ var Element = function () {
     this.table= "",
     this.group_by= "",
     this.sql_func= "",
-    this.name= "",
-    this.ascending = true
+    this.name= ""
 }
 
 Element.populate = function (type, options, id) {

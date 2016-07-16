@@ -26944,6 +26944,12 @@
 	    this.refreshState();
 	  },
 
+	  selectElementOrder: function (event) {
+	    var that = this;
+	    this.state.engine.add_element_ordering(event.target.id, event.target.value);
+	    this.refreshState();
+	  },
+
 	  removeElement: function (event) {
 	    this.state.engine.remove_element(event.target.id);
 	    this.refreshState();
@@ -26964,6 +26970,11 @@
 	    this.refreshState();
 	  },
 
+	  saveQuery: function () {
+	    var query = this.state.engine.query;
+	    console.log(query);
+	  },
+
 	  render() {
 	    // Pre render the menu
 	    var menu = !this.state.tableSelected ? React.createElement(Menu, { available_tables: this.state.available_tables,
@@ -26978,6 +26989,7 @@
 	    var panel = React.createElement(ElementTable, { columns: this.state.engine.query.columns,
 	      contents: this.state.engine.query.contents,
 	      filters: this.state.engine.query.filters,
+	      selectElementOrderCallback: this.selectElementOrder,
 	      removeElementCallback: this.removeElement,
 	      editFilterCallback: this.editFilter,
 	      removeFilterCallback: this.removeFilter
@@ -26994,7 +27006,11 @@
 	      React.createElement(
 	        "div",
 	        { className: "column col-md-8" },
-	        React.createElement(PanelCard, { renderedQuery: this.state.renderedQuery, resetCallback: this.resetQuery }),
+	        React.createElement(PanelCard, {
+	          renderedQuery: this.state.renderedQuery,
+	          resetCallback: this.resetQuery,
+	          saveCallback: this.saveQuery
+	        }),
 	        panel
 	      )
 	    ); // closes return
@@ -28859,7 +28875,7 @@
 	  },
 
 	  saveQuery: function () {
-	    console.log("Save query!");
+	    this.props.saveCallback();
 	  },
 
 	  resetQuery: function () {
@@ -28927,12 +28943,14 @@
 	    var that = this;
 	    var columns = this.props.columns.map(function (column) {
 	      return React.createElement(ElementRow, { element: column, key: column.id,
-	        removeElementCallback: that.props.removeElementCallback
+	        removeElementCallback: that.props.removeElementCallback,
+	        selectElementOrderCallback: that.props.selectElementOrderCallback
 	      });
 	    });
 	    var contents = this.props.contents.map(function (content) {
 	      return React.createElement(ElementRow, { element: content, key: content.id,
-	        removeElementCallback: that.props.removeElementCallback
+	        removeElementCallback: that.props.removeElementCallback,
+	        selectElementOrderCallback: that.props.selectElementOrderCallback
 	      });
 	    });
 	    var filters = this.props.filters.map(function (filter) {
@@ -28992,48 +29010,61 @@
 	var React = __webpack_require__(1);
 
 	var ElementRow = React.createClass({
-	  displayName: 'ElementRow',
+	  displayName: "ElementRow",
+
+	  getInitialState: function () {
+	    return {
+	      ascendValue: ""
+	    };
+	  },
 
 	  closeButtonClicked: function (event) {
 	    this.props.removeElementCallback(event);
 	  },
 
+	  selectAscendValue: function (event) {
+	    this.setState({
+	      ascendValue: event.target.value
+	    });
+	    this.props.selectElementOrderCallback(event);
+	  },
+
 	  render: function () {
 	    var element = this.props.element;
 	    return React.createElement(
-	      'tr',
-	      { id: element.id, className: 'element-panel-row' },
+	      "tr",
+	      { id: element.id, className: "element-panel-row" },
 	      React.createElement(
-	        'td',
-	        { colSpan: '2' },
+	        "td",
+	        { colSpan: "2" },
 	        element.name
 	      ),
 	      React.createElement(
-	        'td',
+	        "td",
 	        null,
 	        React.createElement(
-	          'select',
-	          { className: 'form-select', value: '' },
-	          React.createElement('option', null),
+	          "select",
+	          { className: "form-select", value: this.state.ascendValue, onChange: this.selectAscendValue, id: element.id },
+	          React.createElement("option", null),
 	          React.createElement(
-	            'option',
+	            "option",
 	            null,
-	            'ASC'
+	            "ASC"
 	          ),
 	          React.createElement(
-	            'option',
+	            "option",
 	            null,
-	            'DESC'
+	            "DESC"
 	          )
 	        )
 	      ),
 	      React.createElement(
-	        'td',
+	        "td",
 	        null,
 	        React.createElement(
-	          'button',
-	          { className: 'btn', id: element.id, onClick: this.closeButtonClicked },
-	          'X'
+	          "button",
+	          { className: "btn", id: element.id, onClick: this.closeButtonClicked },
+	          "X"
 	        )
 	      )
 	    );
@@ -29241,6 +29272,14 @@
 	      sql_query = sql_query.group(group_by_commands);
 	    }
 
+	    // apply the order by columns
+	    if (that.query.order_by_columns.length > 0) {
+	      sql_query = sql_query.order(that.translate_order_bys());
+	    }
+
+	    // apply the limit number
+	    sql_query = sql_query.limit(that.query.limit);
+
 	    // This is a fall through to parse for
 	    return typeof sql_query.toQuery == 'function' ? sql_query.toString() : "Incomplete Query";
 	  } catch (variable) {
@@ -29360,6 +29399,23 @@
 	  });
 	};
 
+	Engine.prototype.translate_order_bys = function () {
+	  var order_by_export = [];
+	  var that = this;
+	  _.each(this.query.order_by_columns, function (order_by_pair) {
+	    var element_to_order = order_by_pair[0];
+	    var filter_sql = that.create_sql_object(element_to_order.table);
+	    var filter_sql_object_with_column = filter_sql[element_to_order.sql_code];
+
+	    if (order_by_pair[1] == "DESC") {
+	      filter_sql_object_with_column = filter_sql_object_with_column.descending;
+	    }
+	    order_by_export.push(filter_sql_object_with_column);
+	  });
+
+	  return order_by_export;
+	};
+
 	//  ---- Prototype functions for maninpulating the columns ----
 
 	// Handling the addition of an element Column or Content
@@ -29381,6 +29437,36 @@
 	  this.query.columns = _.reject(this.query.columns, function (column) {
 	    return column.id == element_id;
 	  });
+
+	  this.query.order_by_columns = _.reject(this.query.order_by_columns, function (order_by_pair) {
+	    return order_by_pair[0].id == element_id;
+	  });
+	};
+
+	// Handling the change of the ascending or descending for an element
+	Engine.prototype.add_element_ordering = function (element_id, order_direction) {
+	  var selected_element = this.elements[element_id];
+
+	  var element_check = _.find(this.query.order_by_columns, function (order_by_pair) {
+	    if (order_by_pair[0].id == element_id) {
+	      return order_by_pair;
+	    }
+	  });
+
+	  if (element_check) {
+	    element_check[1] = order_direction;
+	  } else {
+	    switch (order_direction) {
+	      case "ASC":
+	        this.query.order_by_columns.push([selected_element, "ASC"]);
+	        break;
+	      case "DESC":
+	        this.query.order_by_columns.push([selected_element, "DESC"]);
+	        break;
+	      default:
+	        this.query.order_by_columns.push([selected_element, "ASC"]);
+	    }
+	  }
 	};
 
 	//  Add a filter, though in reality we are adding an element
@@ -47777,7 +47863,7 @@
 	var Element = function () {
 	  // sql_func is any fancy stuff we want to do like aggregate, sum, count, etc.
 	  // sql_code == the specific column referred
-	  this.id = "", this.description = "", this.sql_code = "", this.type = "", this.table = "", this.group_by = "", this.sql_func = "", this.name = "", this.ascending = true;
+	  this.id = "", this.description = "", this.sql_code = "", this.type = "", this.table = "", this.group_by = "", this.sql_func = "", this.name = "";
 	};
 
 	Element.populate = function (type, options, id) {
@@ -47823,12 +47909,16 @@
 	    this.contents = schema.contents == null ? [] : schema.contents;
 	    this.columns = schema.columns == null ? [] : schema.columns;
 	    this.filters = schema.filters == null ? [] : schema.filters;
+	    this.order_by_columns = schema.order_by_columns == null ? [] : schema.order_by_columns;
+	    this.limit = 100;
 	    this._initialSchema = schema;
 	  } else {
 	    this.table = "";
 	    this.contents = [];
 	    this.columns = [];
 	    this.filters = [];
+	    this.order_by_columns = [];
+	    this.limit = 100;
 	    this._initialSchema = null;
 	  }
 	};

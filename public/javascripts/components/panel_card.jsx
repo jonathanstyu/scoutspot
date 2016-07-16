@@ -6,7 +6,7 @@ var PanelCard = React.createClass({
   },
 
   saveQuery: function () {
-    console.log("Save query!")
+    this.props.saveCallback(); 
   },
 
   resetQuery: function () {

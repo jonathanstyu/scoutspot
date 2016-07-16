@@ -62,6 +62,12 @@ var QueryApp = React.createClass({
     this.refreshState();
   },
 
+  selectElementOrder: function (event) {
+    var that = this;
+    this.state.engine.add_element_ordering(event.target.id, event.target.value);
+    this.refreshState();
+  },
+
   removeElement: function (event) {
     this.state.engine.remove_element(event.target.id);
     this.refreshState();
@@ -79,7 +85,12 @@ var QueryApp = React.createClass({
 
   removeFilter: function (event) {
     this.state.engine.remove_filter(event.target.id);
-    this.refreshState(); 
+    this.refreshState();
+  },
+
+  saveQuery: function () {
+    var query = this.state.engine.query;
+    console.log(query);
   },
 
   render() {
@@ -98,6 +109,7 @@ var QueryApp = React.createClass({
       var panel = <ElementTable columns={this.state.engine.query.columns}
         contents={this.state.engine.query.contents}
         filters={this.state.engine.query.filters}
+        selectElementOrderCallback={this.selectElementOrder}
         removeElementCallback={this.removeElement}
         editFilterCallback={this.editFilter}
         removeFilterCallback={this.removeFilter}
@@ -109,7 +121,11 @@ var QueryApp = React.createClass({
           { menu }
         </div>
         <div className='column col-md-8'>
-          <PanelCard renderedQuery={this.state.renderedQuery} resetCallback={this.resetQuery} />
+          <PanelCard
+            renderedQuery={this.state.renderedQuery}
+            resetCallback={this.resetQuery}
+            saveCallback={this.saveQuery}
+            />
           {panel}
         </div>
       </div>

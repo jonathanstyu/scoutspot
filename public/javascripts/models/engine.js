@@ -117,6 +117,14 @@ Engine.prototype.render_query = function () {
       sql_query = sql_query.group(group_by_commands);
     }
 
+    // apply the order by columns
+    if (that.query.order_by_columns.length > 0) {
+      sql_query = sql_query.order(that.translate_order_bys());
+    }
+
+    // apply the limit number
+    sql_query = sql_query.limit(that.query.limit); 
+
     // This is a fall through to parse for
     return (typeof sql_query.toQuery == 'function') ? sql_query.toString() : "Incomplete Query"
   } catch (variable) {
@@ -244,6 +252,23 @@ Engine.prototype.translate_filters = function () {
   });
 }
 
+Engine.prototype.translate_order_bys = function () {
+  var order_by_export = [];
+  var that = this;
+  _.each(this.query.order_by_columns, function (order_by_pair) {
+    var element_to_order = order_by_pair[0];
+    var filter_sql = that.create_sql_object(element_to_order.table);
+    var filter_sql_object_with_column = filter_sql[element_to_order.sql_code];
+
+    if (order_by_pair[1] == "DESC") {
+      filter_sql_object_with_column = filter_sql_object_with_column.descending;
+    }
+    order_by_export.push(filter_sql_object_with_column);
+  });
+
+  return order_by_export;
+}
+
 //  ---- Prototype functions for maninpulating the columns ----
 
 // Handling the addition of an element Column or Content
@@ -265,6 +290,36 @@ Engine.prototype.remove_element = function (element_id) {
   this.query.columns = _.reject(this.query.columns, function (column) {
     return column.id == element_id
   });
+
+  this.query.order_by_columns = _.reject(this.query.order_by_columns, function (order_by_pair) {
+    return order_by_pair[0].id == element_id
+  });
+}
+
+// Handling the change of the ascending or descending for an element
+Engine.prototype.add_element_ordering = function (element_id, order_direction) {
+  var selected_element = this.elements[element_id];
+
+  var element_check = _.find(this.query.order_by_columns, function (order_by_pair) {
+    if (order_by_pair[0].id == element_id) {
+      return order_by_pair
+    }
+  });
+
+  if (element_check) {
+    element_check[1] = order_direction;
+  } else {
+    switch (order_direction) {
+      case "ASC":
+        this.query.order_by_columns.push([selected_element, "ASC"])
+        break;
+      case "DESC":
+        this.query.order_by_columns.push([selected_element, "DESC"])
+        break;
+      default:
+        this.query.order_by_columns.push([selected_element, "ASC"])
+    }
+  }
 }
 
 //  Add a filter, though in reality we are adding an element
