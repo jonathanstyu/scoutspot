@@ -10,17 +10,25 @@ var FilterRow = React.createClass({
   },
 
   selectMethod: function (event) {
-    this.setState({
+    var that = this;
+    that.setState({
       filter_method: event.target.value
     });
-    this.props.editFilterCallback(this.state);
+    that.props.editFilterCallback({
+      filter_method: event.target.value,
+      filter_id: that.state.filter_id
+    });
   },
 
   selectValue: function (event) {
-    this.setState({
+    var that = this;
+    that.setState({
       filter_value: event.target.value
     });
-    this.props.editFilterCallback(this.state);
+    that.props.editFilterCallback({
+      filter_value: event.target.value,
+      filter_id: that.state.filter_id
+    });
   },
 
   closeButtonClicked: function (event) {

@@ -56,8 +56,8 @@
 
 	// Custom React elements
 	var Wrapper = __webpack_require__(232),
-	    Home = __webpack_require__(328),
-	    SqlDefinitions = __webpack_require__(329),
+	    Home = __webpack_require__(333),
+	    SqlDefinitions = __webpack_require__(334),
 	    QueryApp = __webpack_require__(233);
 
 	// Model elements
@@ -26918,6 +26918,7 @@
 	  refreshState: function () {
 	    var engine = this.state.engine;
 	    var renderedQuery = engine.render_query();
+
 	    this.setState({
 	      tableSelected: engine.query.table == "" ? false : true,
 	      available_elements: engine.available_elements,
@@ -29091,17 +29092,25 @@
 	  },
 
 	  selectMethod: function (event) {
-	    this.setState({
+	    var that = this;
+	    that.setState({
 	      filter_method: event.target.value
 	    });
-	    this.props.editFilterCallback(this.state);
+	    that.props.editFilterCallback({
+	      filter_method: event.target.value,
+	      filter_id: that.state.filter_id
+	    });
 	  },
 
 	  selectValue: function (event) {
-	    this.setState({
+	    var that = this;
+	    that.setState({
 	      filter_value: event.target.value
 	    });
-	    this.props.editFilterCallback(this.state);
+	    that.props.editFilterCallback({
+	      filter_value: event.target.value,
+	      filter_id: that.state.filter_id
+	    });
 	  },
 
 	  closeButtonClicked: function (event) {
@@ -29166,8 +29175,14 @@
 	var Filter = __webpack_require__(326);
 	var Definitions = __webpack_require__(327);
 
+	var EngineContents = __webpack_require__(328),
+	    EngineColumns = __webpack_require__(329),
+	    EngineJoins = __webpack_require__(330),
+	    EngineFilters = __webpack_require__(331),
+	    EngineOrderBys = __webpack_require__(332);
+
 	var Engine = function () {
-	  this.definitions = {}, this.relevant_joins = [], this.available_elements = [], this.joined_available_elements = [], this.elements = [], this.filters = [], this.query = new EngineQuery();
+	  this.definitions = {}, this.relevant_joins = [], this.available_elements = [], this.joined_available_elements = [], this.elements = [], this.filters = [], this.query = new EngineQuery(), this._saved_sql_object = "";
 	};
 
 	// Load the definitions file, defining the data
@@ -29240,20 +29255,22 @@
 	  // Apply the individual parts of the query to it
 	  try {
 	    // The arrays of commands that we collect and group the query
-	    var translated_column_output = that.translate_columns();
+	    var translated_column_output = EngineColumns.translate(that);
 	    var select_commands = translated_column_output[0];
 	    var group_by_commands = translated_column_output[1];
 
-	    select_commands = select_commands.concat(that.translate_contents());
+	    select_commands = select_commands.concat(EngineContents.translate(that));
 
 	    // apply the select_commands first.
 	    sql_query = sql_query.select(select_commands);
 
 	    // Use the helper function to create the WHERE elements that are tacked later on
-	    that.translate_filters();
+	    EngineFilters.translate(that);
 
 	    // Apply joins after filters.
-	    sql_query = that.translate_joins(sql_query);
+	    // sql_query = that.translate_joins(sql_query);
+	    sql_query = EngineJoins.translate(sql_query, that);
+
 	    // We split the total filter command pool into where and having, and apply if length is greater than zero
 
 	    var where_filters = _.where(that.query.filters, { "where_or_having": "where" });
@@ -29274,147 +29291,19 @@
 
 	    // apply the order by columns
 	    if (that.query.order_by_columns.length > 0) {
-	      sql_query = sql_query.order(that.translate_order_bys());
+	      sql_query = sql_query.order(EngineOrderBys.translate(that));
 	    }
 
 	    // apply the limit number
 	    sql_query = sql_query.limit(that.query.limit);
-
+	    that._saved_sql_object = sql_query;
 	    // This is a fall through to parse for
 	    return typeof sql_query.toQuery == 'function' ? sql_query.toString() : "Incomplete Query";
 	  } catch (variable) {
 	    //
-	    return variable;
+	    return variable.message;
 	  } // closes try/catch statement
 	}; // closes render function
-
-	// Helper function for render.
-	Engine.prototype.translate_columns = function () {
-	  var that = this;
-
-	  //The arrays of commands that we collect and group the query
-	  var select_commands = [];
-	  var group_by_commands = [];
-
-	  _.forEach(that.query.columns, function (column_element) {
-	    var column_table = that.create_sql_object(column_element.table);
-	    var column_title = column_element.title;
-	    switch (column_element.sql_func) {
-	      case "field":
-	        select_commands.push(column_table[column_element.sql_code].as(column_title));
-	        group_by_commands.push(column_table[column_element.sql_code]);
-	        break;
-	      default:
-
-	    }
-	  });
-	  return [select_commands, group_by_commands];
-	};
-
-	// Helper function for render
-	Engine.prototype.translate_contents = function () {
-	  var that = this;
-	  var commands = [];
-
-	  // ------>>> CONTENTS .. Now we need to create our Contents.  <<<<-----
-	  _.forEach(that.query.contents, function (content_element) {
-
-	    // We need to initialize a sql table to access distinct and various other funcs
-	    var content_table = that.create_sql_object(content_element.table);
-	    var content_title = content_element.title;
-
-	    switch (content_element.sql_func) {
-	      case "count":
-	        commands.push(content_table[content_element.sql_code]["count"]()["distinct"]().as(content_title));
-	        break;
-	      case "sum":
-	        commands.push(content_table[content_element.sql_code]["sum"]().as(content_title));
-	      default:
-
-	    }
-	  });
-	  return commands;
-	};
-
-	// Helper function that translates JOINS
-	Engine.prototype.translate_joins = function (sql_object) {
-	  var sql_object = sql_object;
-	  var that = this;
-	  //A FOREIGN KEY in one table points to a PRIMARY KEY in another table.
-	  var joined_tables = [that.query.table];
-
-	  // Use pluck to grab the core filter elements because concatting filters breaks
-	  var stripped_filter_elements = _.pluck(that.query.filters, '_element');
-	  var joined_elements = that.query.contents.concat(that.query.columns, stripped_filter_elements);
-
-	  _.each(joined_elements, function (element) {
-	    if (!_.contains(joined_tables, element.table)) {
-	      var join_schema = _.findWhere(that.relevant_joins, {
-	        "primary_key_table": element.table,
-	        "foreign_key_table": that.query.table
-	      });
-
-	      var primary_join_table = that.create_sql_object(element.table);
-	      var foreign_join_table = that.create_sql_object(that.query.table);
-
-	      // Create the join schema separately
-	      var join = foreign_join_table.join(primary_join_table).on(foreign_join_table[join_schema['foreign_key']].equals(primary_join_table[join_schema['primary_key']]));
-
-	      sql_object = sql_object.from(join);
-	      // make sure that we don't accidentially rejoin already-joined tables
-	      joined_tables.push(element.table);
-	    };
-	  });
-	  return sql_object;
-	};
-
-	Engine.prototype.translate_filters = function () {
-	  var that = this;
-	  // FILTERSSSSSS
-	  // ------>>> Now we need to create our filters. God.  <<<<-----
-	  // There are two ways to filter, having and where. Throw them here and treat them separately
-
-	  _.forEach(that.query.filters, function (filter) {
-	    var filter_sql = that.create_sql_object(filter._element.table);
-	    var filter_sql_object_with_column = filter_sql[filter._element.sql_code];
-
-	    switch (filter.method) {
-	      case "Equals":
-	        filter_sql_object_with_column = filter_sql_object_with_column["equals"](new String(filter.value));
-	        break;
-	      case "Is Not Null":
-	        filter_sql_object_with_column = filter_sql_object_with_column["isNotNull"]();
-	        break;
-	      case "Greater Than":
-	        filter_sql_object_with_column = "(" + filter._element.table + "." + filter._element.sql_code + " > " + filter.value + ")";
-	        break;
-	      case "Less Than":
-	        filter_sql_object_with_column = "(" + filter._element.table + "." + filter._element.sql_code + " < " + filter.value + ")";
-	        break;
-	      default:
-
-	    }
-	    // attach the sql object or custom sql command to the Filter object
-	    filter._sql_object = filter_sql_object_with_column;
-	  });
-	};
-
-	Engine.prototype.translate_order_bys = function () {
-	  var order_by_export = [];
-	  var that = this;
-	  _.each(this.query.order_by_columns, function (order_by_pair) {
-	    var element_to_order = order_by_pair[0];
-	    var filter_sql = that.create_sql_object(element_to_order.table);
-	    var filter_sql_object_with_column = filter_sql[element_to_order.sql_code];
-
-	    if (order_by_pair[1] == "DESC") {
-	      filter_sql_object_with_column = filter_sql_object_with_column.descending;
-	    }
-	    order_by_export.push(filter_sql_object_with_column);
-	  });
-
-	  return order_by_export;
-	};
 
 	//  ---- Prototype functions for maninpulating the columns ----
 
@@ -29478,10 +29367,20 @@
 
 	// now we will edit the filter in question to add
 	Engine.prototype.edit_filter = function (options) {
+	  console.log(options);
 	  _.each(this.query.filters, function (filter) {
+	    console.log(filter.id == options["filter_id"]);
+	    // console.log(options['filter_method'] != undefined);
 	    if (filter.id == options["filter_id"]) {
-	      filter["method"] = options["filter_method"];
-	      filter["value"] = options["filter_value"];
+
+	      if (options['filter_method'] != undefined) {
+
+	        filter["method"] = options['filter_method'];
+	      }
+
+	      if (options['filter_value'] != undefined) {
+	        filter["value"] = options['filter_value'];
+	      }
 	    }
 	  });
 	};
@@ -48008,6 +47907,211 @@
 /* 328 */
 /***/ function(module, exports, __webpack_require__) {
 
+	var _ = __webpack_require__(245);
+	var sql = __webpack_require__(246);
+	var Element = __webpack_require__(324);
+	var EngineQuery = __webpack_require__(325);
+	var Filter = __webpack_require__(326);
+	var Definitions = __webpack_require__(327);
+	var Engine = __webpack_require__(244);
+
+	var EngineContents = function () {};
+
+	EngineContents.translate = function (engine) {
+	  var that = engine;
+	  var commands = [];
+
+	  // ------>>> CONTENTS .. Now we need to create our Contents.  <<<<-----
+	  _.forEach(that.query.contents, function (content_element) {
+
+	    // We need to initialize a sql table to access distinct and various other funcs
+	    var content_table = that.create_sql_object(content_element.table);
+	    var content_title = content_element.title;
+
+	    switch (content_element.sql_func) {
+	      case "count":
+	        commands.push(content_table[content_element.sql_code]["count"]()["distinct"]().as(content_title));
+	        break;
+	      case "sum":
+	        commands.push(content_table[content_element.sql_code]["sum"]().as(content_title));
+	      default:
+
+	    }
+	  });
+	  return commands;
+	};
+
+	module.exports = EngineContents;
+
+/***/ },
+/* 329 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var _ = __webpack_require__(245);
+	var sql = __webpack_require__(246);
+	var Element = __webpack_require__(324);
+	var EngineQuery = __webpack_require__(325);
+	var Filter = __webpack_require__(326);
+	var Definitions = __webpack_require__(327);
+	var Engine = __webpack_require__(244);
+
+	var EngineColumns = function () {};
+
+	EngineColumns.translate = function (engine) {
+	  var that = engine;
+
+	  //The arrays of commands that we collect and group the query
+	  var select_commands = [];
+	  var group_by_commands = [];
+
+	  _.forEach(that.query.columns, function (column_element) {
+	    var column_table = that.create_sql_object(column_element.table);
+	    var column_title = column_element.title;
+	    switch (column_element.sql_func) {
+	      case "field":
+	        select_commands.push(column_table[column_element.sql_code].as(column_title));
+	        group_by_commands.push(column_table[column_element.sql_code]);
+	        break;
+	      default:
+
+	    }
+	  });
+	  return [select_commands, group_by_commands];
+	};
+
+	module.exports = EngineColumns;
+
+/***/ },
+/* 330 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var _ = __webpack_require__(245);
+	var sql = __webpack_require__(246);
+	var Element = __webpack_require__(324);
+	var EngineQuery = __webpack_require__(325);
+	var Filter = __webpack_require__(326);
+	var Definitions = __webpack_require__(327);
+	var Engine = __webpack_require__(244);
+
+	var EngineJoins = function () {};
+
+	EngineJoins.translate = function (sql_object, engine) {
+	  var sql_object = sql_object;
+	  var that = engine;
+	  //A FOREIGN KEY in one table points to a PRIMARY KEY in another table.
+	  var joined_tables = [that.query.table];
+
+	  // Use pluck to grab the core filter elements because concatting filters breaks
+	  var stripped_filter_elements = _.pluck(that.query.filters, '_element');
+	  var joined_elements = that.query.contents.concat(that.query.columns, stripped_filter_elements);
+
+	  _.each(joined_elements, function (element) {
+	    if (!_.contains(joined_tables, element.table)) {
+	      var join_schema = _.findWhere(that.relevant_joins, {
+	        "primary_key_table": element.table,
+	        "foreign_key_table": that.query.table
+	      });
+
+	      var primary_join_table = that.create_sql_object(element.table);
+	      var foreign_join_table = that.create_sql_object(that.query.table);
+
+	      // Create the join schema separately
+	      var join = foreign_join_table.join(primary_join_table).on(foreign_join_table[join_schema['foreign_key']].equals(primary_join_table[join_schema['primary_key']]));
+
+	      sql_object = sql_object.from(join);
+	      // make sure that we don't accidentially rejoin already-joined tables
+	      joined_tables.push(element.table);
+	    };
+	  });
+	  return sql_object;
+	};
+
+	module.exports = EngineJoins;
+
+/***/ },
+/* 331 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var _ = __webpack_require__(245);
+	var sql = __webpack_require__(246);
+	var Element = __webpack_require__(324);
+	var EngineQuery = __webpack_require__(325);
+	var Filter = __webpack_require__(326);
+	var Definitions = __webpack_require__(327);
+	var Engine = __webpack_require__(244);
+
+	var EngineFilters = function () {};
+
+	EngineFilters.translate = function (engine) {
+	  var that = engine;
+	  // FILTERSSSSSS
+	  // ------>>> Now we need to create our filters. God.  <<<<-----
+	  // There are two ways to filter, having and where. Throw them here and treat them separately
+
+	  _.forEach(that.query.filters, function (filter) {
+	    var filter_sql = that.create_sql_object(filter._element.table);
+	    var filter_sql_object_with_column = filter_sql[filter._element.sql_code];
+
+	    switch (filter.method) {
+	      case "Equals":
+	        filter_sql_object_with_column = filter_sql_object_with_column["equals"](new String(filter.value));
+	        break;
+	      case "Is Not Null":
+	        filter_sql_object_with_column = filter_sql_object_with_column["isNotNull"]();
+	        break;
+	      case "Greater Than":
+	        filter_sql_object_with_column = "(" + filter._element.table + "." + filter._element.sql_code + " > " + filter.value + ")";
+	        break;
+	      case "Less Than":
+	        filter_sql_object_with_column = "(" + filter._element.table + "." + filter._element.sql_code + " < " + filter.value + ")";
+	        break;
+	      default:
+
+	    }
+	    // attach the sql object or custom sql command to the Filter object
+	    filter._sql_object = filter_sql_object_with_column;
+	  });
+	};
+
+	module.exports = EngineFilters;
+
+/***/ },
+/* 332 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var _ = __webpack_require__(245);
+	var sql = __webpack_require__(246);
+	var Element = __webpack_require__(324);
+	var EngineQuery = __webpack_require__(325);
+	var Filter = __webpack_require__(326);
+	var Definitions = __webpack_require__(327);
+	var Engine = __webpack_require__(244);
+
+	var EngineOrderBys = function () {};
+
+	EngineOrderBys.translate = function (engine) {
+	  var order_by_export = [];
+	  var that = engine;
+	  _.each(that.query.order_by_columns, function (order_by_pair) {
+	    var element_to_order = order_by_pair[0];
+	    var filter_sql = that.create_sql_object(element_to_order.table);
+	    var filter_sql_object_with_column = filter_sql[element_to_order.sql_code];
+
+	    if (order_by_pair[1] == "DESC") {
+	      filter_sql_object_with_column = filter_sql_object_with_column.descending;
+	    }
+	    order_by_export.push(filter_sql_object_with_column);
+	  });
+
+	  return order_by_export;
+	};
+
+	module.exports = EngineOrderBys;
+
+/***/ },
+/* 333 */
+/***/ function(module, exports, __webpack_require__) {
+
 	var React = __webpack_require__(1);
 
 	var Home = React.createClass({
@@ -48029,15 +48133,15 @@
 	module.exports = Home;
 
 /***/ },
-/* 329 */
+/* 334 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var React = __webpack_require__(1),
 	    $ = __webpack_require__(234),
 	    _ = __webpack_require__(245);
 
-	var SqlDetailTable = __webpack_require__(330),
-	    SqlDetailPanel = __webpack_require__(331);
+	var SqlDetailTable = __webpack_require__(335),
+	    SqlDetailPanel = __webpack_require__(336);
 
 	var SqlDefinitions = React.createClass({
 	  displayName: 'SqlDefinitions',
@@ -48113,7 +48217,7 @@
 	module.exports = SqlDefinitions;
 
 /***/ },
-/* 330 */
+/* 335 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var React = __webpack_require__(1),
@@ -48211,7 +48315,7 @@
 	module.exports = SqlDetailTable;
 
 /***/ },
-/* 331 */
+/* 336 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var React = __webpack_require__(1),

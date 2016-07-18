@@ -36,6 +36,7 @@ var QueryApp = React.createClass({
   refreshState: function () {
     var engine = this.state.engine;
     var renderedQuery = engine.render_query();
+    
     this.setState({
       tableSelected: engine.query.table == "" ? false : true,
       available_elements: engine.available_elements,
