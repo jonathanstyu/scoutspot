@@ -29278,9 +29278,10 @@
 
 	    if (where_filters.length > 0) {
 	      // Use pluck to grab the values of the _sql_object, because the sql object is tied to the filter object
-	      // sql_query = sql_query.where(_.pluck(where_filters, '_sql_object'));
 	      sql_query = sql_query.where(_.pluck(where_filters, '_sql_object'));
-	    } else if (having_filters.length > 0) {
+	    }
+
+	    if (having_filters.length > 0) {
 	      sql_query = sql_query.having(_.pluck(having_filters, '_sql_object'));
 	    };
 
@@ -29367,10 +29368,7 @@
 
 	// now we will edit the filter in question to add
 	Engine.prototype.edit_filter = function (options) {
-	  console.log(options);
 	  _.each(this.query.filters, function (filter) {
-	    console.log(filter.id == options["filter_id"]);
-	    // console.log(options['filter_method'] != undefined);
 	    if (filter.id == options["filter_id"]) {
 
 	      if (options['filter_method'] != undefined) {

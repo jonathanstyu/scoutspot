@@ -115,9 +115,10 @@ Engine.prototype.render_query = function () {
 
     if (where_filters.length > 0) {
       // Use pluck to grab the values of the _sql_object, because the sql object is tied to the filter object
-      // sql_query = sql_query.where(_.pluck(where_filters, '_sql_object'));
       sql_query = sql_query.where(_.pluck(where_filters, '_sql_object'));
-    } else if (having_filters.length > 0) {
+    }
+
+    if (having_filters.length > 0) {
       sql_query = sql_query.having(_.pluck(having_filters, '_sql_object'));
     };
 
@@ -133,7 +134,7 @@ Engine.prototype.render_query = function () {
 
     // apply the limit number
     sql_query = sql_query.limit(that.query.limit);
-    that._saved_sql_object = sql_query; 
+    that._saved_sql_object = sql_query;
     // This is a fall through to parse for
     return (typeof sql_query.toQuery == 'function') ? sql_query.toString() : "Incomplete Query"
   } catch (variable) {
@@ -204,10 +205,7 @@ Engine.prototype.add_filter = function (element_id) {
 
 // now we will edit the filter in question to add
 Engine.prototype.edit_filter = function (options) {
-  console.log(options);
   _.each(this.query.filters, function (filter) {
-    console.log(filter.id == options["filter_id"]);
-    // console.log(options['filter_method'] != undefined);
     if (filter.id == options["filter_id"]) {
 
       if (options['filter_method'] != undefined) {
