@@ -15,7 +15,7 @@ Definitions.populate = function (options) {
   definitions._options = options;
 
   // set the dialect
-  if (['mssql', 'mysql', 'postgres', 'sqlite'].includes(options['dialect'])) {
+  if (_.contains(['mssql', 'mysql', 'postgres', 'sqlite'], options['dialect'])) {
     definitions.dialect = options['dialect']
   }
 
@@ -32,7 +32,7 @@ Definitions.populate = function (options) {
   _.forEach(options["tables"], function (table_object) {
     _.forEach(table_object.columns, function (column) {
       // For each column within the table object, auto generate an element
-      definitions.elements.push(Element.autogenerate_with_column(table_object, column, element_index_count));
+      definitions.elements.push(Element.autogenerate_with_column(table_object.name, column, element_index_count));
       element_index_count += 1;
     });
   });

@@ -62,6 +62,8 @@
   ],
   "elements": [
     {
+      "id": 0,
+      "generated": false,
       "table": "orders",
       "type": "content",
       "description": "Count of individual orders",
@@ -70,6 +72,8 @@
       "sql_code": "id"
     },
     {
+      "id": 1,
+      "generated": false,
       "table": "orders",
       "type": "content",
       "description": "sum of orders revenue",
@@ -78,6 +82,8 @@
       "sql_code": "revenue"
     },
     {
+      "id": 2,
+      "generated": false,
       "table": "customers",
       "type": "content",
       "description": "Count of individual customers",
@@ -86,6 +92,8 @@
       "sql_code": "id"
     },
     {
+      "id": 3,
+      "generated": false,
       "table": "customers",
       "type": "column",
       "description": "Customers email column",
@@ -95,6 +103,8 @@
       "group_by": ""
     },
     {
+      "id": 4,
+      "generated": false,
       "table": "companies",
       "type": "content",
       "description": "Count of individual companies",

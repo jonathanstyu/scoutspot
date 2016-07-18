@@ -10,8 +10,8 @@ var Filter = function(query_element, options) {
     _sql_object: null,
 
     //--- Start filter exclusive elements here
-    method: "",
-    value: ""
+    method: options["method"] ? options["method"] : "",
+    value: options["value"] ? options["value"] : ""
   }
 };
 
