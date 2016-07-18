@@ -1,12 +1,18 @@
 var React = require("react");
 
 var PanelCard = React.createClass({
-  copyQuery: function () {
+
+  editTextbox: function (event) {
+    console.log(event.target.value);
+  },
+
+  copyQuery: function (event) {
     console.log("Copying query " + "\n" + this.props.renderedQuery);
+    this.props.copyCallback();
   },
 
   saveQuery: function () {
-    this.props.saveCallback(); 
+    this.props.saveCallback();
   },
 
   resetQuery: function () {
@@ -18,7 +24,7 @@ var PanelCard = React.createClass({
       <div>
         <div className='card'>
           <div className='card-body' id='sql-content'>
-            <p>{this.props.renderedQuery}</p>
+            <textarea value={this.props.renderedQuery} rows="3" className='form-input' onChange={this.editTextbox} id="queryBox"></textarea>
           </div>
           <div className='card-footer'>
             <div className='btn-group btn-group-block'>

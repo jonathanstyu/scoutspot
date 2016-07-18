@@ -149,4 +149,18 @@ describe("engine_render", function () {
     expect(result).toEqual("SELECT `orders`.`revenue` FROM `orders` WHERE (orders.revenue > 95) GROUP BY `orders`.`revenue` LIMIT 100");
   });
 
+  it("adds a content and column filter", function () {
+    engine.select_table("orders");
+    var revenue_column_element = Element.autogenerate_with_column("orders", "revenue", 0);
+    var revenue_filter = new Filter(revenue_column_element, {
+      method: "Greater Than",
+      value: "95"
+    });
+
+    engine.query.columns.push(revenue_column_element);
+    engine.query.filters.push(revenue_filter);
+    var result = engine.render_query();
+    expect(result).toEqual("");
+  });
+
 });

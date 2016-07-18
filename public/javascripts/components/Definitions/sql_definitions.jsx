@@ -39,7 +39,7 @@ var SqlDefinitions = React.createClass({
           this.state.tabTitles.map(function (viewItem) {
             return (
               <li key={viewItem} onClick={that.selectTab} className={ viewItem == that.state.focusItem ? "selected tab-item" : "tab-item" } >
-                  <a href="#" id={viewItem}>{viewItem}</a>
+                  <a id={viewItem}>{viewItem}</a>
               </li>
             )
           })

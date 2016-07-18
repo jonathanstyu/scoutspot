@@ -3,13 +3,12 @@ var $ = require('jquery');
 
 // React + components
 var React = require("react"),
-    Search = require("./search"),
     Menu = require("./menu"),
     PanelCard = require("./panel_card"),
     ElementTable = require("./element_table");
 
 // Engine elements
-var Engine = require('../models/engine');
+var Engine = require('../../models/engine');
 
 var QueryApp = React.createClass({
   // engine is the only thing passed in as a props
@@ -36,7 +35,7 @@ var QueryApp = React.createClass({
   refreshState: function () {
     var engine = this.state.engine;
     var renderedQuery = engine.render_query();
-    
+
     this.setState({
       tableSelected: engine.query.table == "" ? false : true,
       available_elements: engine.available_elements,
@@ -89,9 +88,12 @@ var QueryApp = React.createClass({
     this.refreshState();
   },
 
-  saveQuery: function () {
+  saveQuery: function (event) {
     var query = this.state.engine.query;
-    console.log(query);
+  },
+
+  copyQuery: function () {
+    var query = this.state.engine.query;
   },
 
   render() {
@@ -107,7 +109,7 @@ var QueryApp = React.createClass({
         />
 
       //  Pre-render and attach callbacks to the filters/elements
-      var panel = <ElementTable columns={this.state.engine.query.columns}
+      var elementTable = <ElementTable columns={this.state.engine.query.columns}
         contents={this.state.engine.query.contents}
         filters={this.state.engine.query.filters}
         selectElementOrderCallback={this.selectElementOrder}
@@ -126,8 +128,9 @@ var QueryApp = React.createClass({
             renderedQuery={this.state.renderedQuery}
             resetCallback={this.resetQuery}
             saveCallback={this.saveQuery}
+            copyCallback={this.copyQuery}
             />
-          {panel}
+          {elementTable}
         </div>
       </div>
     ); // closes return

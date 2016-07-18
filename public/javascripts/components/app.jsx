@@ -7,9 +7,6 @@ var React = require('react'),
     Link = require('react-router').Link,
     hashHistory = require('react-router').hashHistory;
 
-// Other components
-var QueryApp = require('./query_app');
-
 var Wrapper = React.createClass({
   render: function () {
     return (
@@ -19,8 +16,9 @@ var Wrapper = React.createClass({
             <a href='/' className='navbar-brand'>ScoutSpot</a>
           </section>
           <section className='navbar-section'>
-            <Link to='/query' className='btn btn-link'>Query</Link>
-            <Link to='/definitions' className='btn btn-link'>Definitions</Link>
+            <Link to='/build' className='btn btn-link'>Build</Link>
+            <Link to='/saved' className='btn btn-link'>Saved</Link>
+            <Link to='/edit' className='btn btn-link'>Edit Definitions</Link>
           </section>
         </header>
         <div>

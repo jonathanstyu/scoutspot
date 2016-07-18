@@ -11,8 +11,7 @@ router.get("/", function(req, res) {
 
   res.render("index", {
     title: 'ScoutSpot',
-    definitions: JSON.stringify(jsonDefinitions),
-    partials: {header: 'header'}
+    definitions: JSON.stringify(jsonDefinitions)
   });
 });
 
