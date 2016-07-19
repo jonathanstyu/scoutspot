@@ -4,7 +4,7 @@ var Element = require('./element');
 var EngineQuery = require('./engine_query');
 var Filter = require('./filter');
 var Definitions = require('./definitions');
-var Engine = require('./engine'); 
+var Engine = require('./engine');
 
 var EngineContents = function () {
 
@@ -19,22 +19,19 @@ EngineContents.translate = function (engine) {
 
 // We need to initialize a sql table to access distinct and various other funcs
     var content_table = that.create_sql_object(content_element.table)
-    var content_title = content_element.title;
+    var content_title = content_element.name;
 
+    var query_element = content_table[content_element.sql_code][content_element.sql_func]()
     switch (content_element.sql_func) {
     case "count":
-      commands.push(content_table[content_element.sql_code]
-        ["count"]()
-        ["distinct"]()
-        .as(content_title))
+        query_element = query_element["distinct"]()
       break;
-    case "sum":
-      commands.push(content_table[content_element.sql_code]
-        ["sum"]()
-        .as(content_title))
     default:
-
+      break;
     }
+    query_element = query_element.as(content_title)
+    commands.push(query_element)
+    content_element._query_element = query_element
   });
   return commands;
 }

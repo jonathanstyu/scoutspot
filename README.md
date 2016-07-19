@@ -17,3 +17,5 @@ npm install -g webpack
 webpack --watch
 ```
 
+### run tests
+jasmine-node spec/

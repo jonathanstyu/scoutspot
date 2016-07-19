@@ -18,7 +18,7 @@ var EngineQuery = function (schema) {
     this.columns = [];
     this.filters = [];
     this.order_by_columns = [];
-    this.limit = 100; 
+    this.limit = 100;
     this._initialSchema = null;
   }
 }
@@ -28,6 +28,9 @@ EngineQuery.prototype.reset_all = function () {
   this.contents = [];
   this.columns = [];
   this.filters = [];
+  this.order_by_columns = [];
+  this.limit = 100;
+  this._initialSchema = null;
 }
 
 

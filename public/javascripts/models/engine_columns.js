@@ -19,7 +19,7 @@ EngineColumns.translate = function (engine) {
 
   _.forEach(that.query.columns, function (column_element) {
     var column_table = that.create_sql_object(column_element.table)
-    var column_title = column_element.title;
+    var column_title = column_element.name;
     switch (column_element.sql_func) {
     case "field":
       select_commands.push(column_table[column_element.sql_code]
@@ -29,6 +29,7 @@ EngineColumns.translate = function (engine) {
     default:
 
     }
+    column_element._query_element = column_table[column_element.sql_code];
   });
   return [select_commands, group_by_commands];
 }

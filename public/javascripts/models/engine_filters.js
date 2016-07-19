@@ -33,6 +33,9 @@ EngineFilters.translate = function (engine) {
     case "Less Than":
       filter_sql_object_with_column = "(" + filter._element.table + "." + filter._element.sql_code + " < " + filter.value + ")"
       break;
+    case "Not In":
+      filter_sql_object_with_column = filter_sql_object_with_column["notIn"]([filter.value]);
+      break;
     default:
 
     }

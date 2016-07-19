@@ -18,6 +18,10 @@ EngineOrderBys.translate = function (engine) {
     var filter_sql = that.create_sql_object(element_to_order.table);
     var filter_sql_object_with_column = filter_sql[element_to_order.sql_code];
 
+    if (element_to_order.type === "content") {
+      filter_sql_object_with_column = filter_sql_object_with_column[element_to_order.sql_func]()
+    }
+
     if (order_by_pair[1] == "DESC") {
       filter_sql_object_with_column = filter_sql_object_with_column.descending;
     }

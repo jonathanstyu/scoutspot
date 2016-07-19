@@ -1,3 +1,6 @@
+var _ = require('underscore'),
+    sql = require('../sql');
+
 var Element = function () {
   // sql_func is any fancy stuff we want to do like aggregate, sum, count, etc.
   // sql_code == the specific column referred
@@ -9,27 +12,33 @@ var Element = function () {
     this.table= "",
     this.group_by= "",
     this.sql_func= "",
-    this.name= ""
+    this.name= "",
+    this._query_element = undefined
 }
 
 Element.populate = function (type, options, id) {
   var element = new Element();
+  var schema_names = ["id", "type", "generated" ,"description", "sql_code", "table", "group_by", "sql_func", "name"]
+
+  // populate the various parts of the schema
+  _.each(schema_names, function (schema_name) {
+    if (options[schema_name]) {
+      element[schema_name] = options[schema_name]
+    } else {
+      element[schema_name] = ""
+    }
+  });
+
   element.type = type;
   element.id = id;
-  element.generated = options["generated"] ? options["generated"] : "";
-  element.description = options["description"] ? options["description"] : "";
-  element.sql_code = options["sql_code"] ? options["sql_code"] : "";
-  element.table = options["table"] ? options["table"] : "";
-  element.group_by = options["group_by"] ? options["group_by"] : "";
-  element.sql_func = options["sql_func"] ? options["sql_func"] : "";
-  element.name = options["name"] ? options["name"] : "";
+
   return element;
 }
 
 Element.autogenerate_with_column = function (table_name, column, id) {
   var element = new Element();
   element.table = table_name;
-  element.generated = true; 
+  element.generated = true;
   element.sql_code = column;
   element.name = table_name + "." + column;
   element.sql_func = "field";
