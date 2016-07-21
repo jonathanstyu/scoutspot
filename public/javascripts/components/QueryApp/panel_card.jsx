@@ -11,14 +11,6 @@ var PanelCard = React.createClass({
     this.props.copyCallback();
   },
 
-  saveQuery: function () {
-    this.props.saveCallback();
-  },
-
-  resetQuery: function () {
-    this.props.resetCallback();
-  },
-
   render: function () {
     return (
       <div>
@@ -29,8 +21,9 @@ var PanelCard = React.createClass({
           <div className='card-footer'>
             <div className='btn-group btn-group-block'>
               <button className='btn' onClick={this.copyQuery}>Copy</button>
-              <button className='btn' onClick={this.saveQuery}>Save</button>
-              <button className='btn' onClick={this.resetQuery}>Reset</button>
+              <button className='btn' onClick={this.props.saveCallback}>Save</button>
+              <button className='btn' onClick={this.props.resetCallback}>Reset</button>
+              <button className='btn' onClick={this.props.shareCallback}>Share</button>
             </div>
           </div>
         </div>

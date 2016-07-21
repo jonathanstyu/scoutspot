@@ -62,6 +62,12 @@ EngineQuery.prototype.export = function () {
     }
   }, "");
 
+  if (exportObject.filters.length > 0) {
+    exportObject.string = _.reduce(exportObject.filters, function (memo, filter_set) {
+      return memo + encodeURIComponent(filter_set.join('|') + ",");
+    }, exportObject.string + '&filters=');
+  }
+
   return exportObject.string;
 }
 

@@ -18,7 +18,7 @@ var ElementTable = React.createClass({
         />
     });
     var filters = this.props.filters.map(function (filter) {
-      return <FilterRow filter={filter} key={filter.id + filter.filter_title}
+      return <FilterRow filter={filter} key={filter.id + filter.filter_name}
         editFilterCallback={that.props.editFilterCallback}
         removeFilterCallback={that.props.removeFilterCallback}
         />

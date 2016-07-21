@@ -15,6 +15,11 @@ var DataManager = function () {
     new EngineQuery({
       table: "customers",
       columns: "customers.id,customers.email"
+    }),
+    new EngineQuery({
+      table: "orders",
+      columns: "orders.created_at,orders.customer_id,customers.id",
+      contents: 'customers.count'
     })
   ]
 }

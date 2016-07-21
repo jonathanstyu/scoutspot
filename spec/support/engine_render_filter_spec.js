@@ -61,7 +61,7 @@ describe("engine_render_filter", function () {
 
     engine.query.filters.push(revenue_filter);
     var result = engine.render_query();
-    expect(result).toEqual("SELECT `orders`.* FROM `orders` WHERE (orders.revenue > 45) LIMIT 100");
+    expect(result).toEqual("SELECT `orders`.* FROM `orders` WHERE (`orders`.`revenue` > '45') LIMIT 100");
   });
 
   it("adds a null unjoined filter", function () {
@@ -114,7 +114,7 @@ describe("engine_render_filter", function () {
     engine.query.filters.push(revenue_filter);
     engine.query.filters.push(revenue_filter);
     var result = engine.render_query();
-    expect(result).toEqual("SELECT `orders`.`revenue` AS `orders.revenue` FROM `orders` WHERE (orders.revenue > 95) AND (orders.id = 'abc') GROUP BY `orders`.`revenue` LIMIT 100");
+    expect(result).toEqual("SELECT `orders`.* FROM `orders` WHERE ((`orders`.`revenue` > 95) AND (`orders`.`revenue` > 95)) LIMIT 100");
   })
 
   it("adds one complete column filter and 1 incomplete column filter", function () {
@@ -128,9 +128,9 @@ describe("engine_render_filter", function () {
     })
 
     engine.query.filters.push(revenue_filter);
-    engine.query.filters.push(revenue_filter);
+    engine.query.filters.push(id_filter);
     var result = engine.render_query();
-    expect(result).toEqual("SELECT `orders`.`revenue` AS `orders.revenue` FROM `orders` WHERE (orders.revenue > 95) AND (orders.id ) GROUP BY `orders`.`revenue` LIMIT 100");
+    expect(result).toEqual("SELECT `orders`.* FROM `orders` WHERE ((`orders`.`revenue` > 95) AND `orders`.`id`) LIMIT 100");
   })
 
   it("adds a valued unjoined filter and a column element", function () {
@@ -144,7 +144,7 @@ describe("engine_render_filter", function () {
     engine.query.columns.push(revenue_column_element);
     engine.query.filters.push(revenue_filter);
     var result = engine.render_query();
-    expect(result).toEqual("SELECT `orders`.`revenue` AS `orders.revenue` FROM `orders` WHERE (orders.revenue > 95) GROUP BY `orders`.`revenue` LIMIT 100");
+    expect(result).toEqual("SELECT `orders`.`revenue` AS `orders.revenue` FROM `orders` WHERE (`orders`.`revenue` > '95') GROUP BY `orders`.`revenue` LIMIT 100");
   });
 
   it("adds a content and column filter", function () {
@@ -154,7 +154,18 @@ describe("engine_render_filter", function () {
       value: "45"
     });
 
-    var content_filter = new Filter(revenue_column_element, {
+    var content = {
+      "id": 2,
+      "generated": false,
+      "table": "customers",
+      "type": "content",
+      "description": "Count of individual customers",
+      "name": "customers.count",
+      "sql_func": "count",
+      "sql_code": "id"
+    }
+
+    var content_filter = new Filter(content, {
       method: "Equals",
       value: "45"
     });
@@ -162,7 +173,7 @@ describe("engine_render_filter", function () {
     engine.query.filters.push(content_filter);
     engine.query.filters.push(column_filter);
     var result = engine.render_query();
-    expect(result).toEqual("SELECT `orders`.* FROM `orders` WHERE (`orders`.`id` = '45') AND HAVING SUM (orders.revenue > 45) LIMIT 100");
+    expect(result).toEqual("SELECT `orders`.* FROM `orders` INNER JOIN `customers` ON (`orders`.`customer_id` = `customers`.`id`) WHERE (`orders`.`revenue` > '45') HAVING (COUNT(`customers`.`id`) = '45') LIMIT 100");
   });
 
 });

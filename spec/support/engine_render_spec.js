@@ -102,7 +102,7 @@ describe("engine_render", function () {
     engine.query.columns.push(revenue_column_element);
     engine.query.filters.push(revenue_filter);
     var result = engine.render_query();
-    expect(result).toEqual("SELECT `orders`.`revenue` AS `orders.revenue` FROM `orders` WHERE (orders.revenue > 95) GROUP BY `orders`.`revenue` LIMIT 100");
+    expect(result).toEqual("SELECT `orders`.`revenue` AS `orders.revenue` FROM `orders` WHERE (`orders`.`revenue` > '95') GROUP BY `orders`.`revenue` LIMIT 100");
   });
 
 });

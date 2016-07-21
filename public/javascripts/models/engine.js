@@ -26,7 +26,6 @@ var Engine = function () {
 Engine.prototype.load_definitions = function (definitions_schema) {
   this.definitions = Definitions.populate(definitions_schema);
   var that = this;
-  // Set SQL defaults
   sql.setDialect(this.definitions['dialect']);
   this.elements = this.definitions.elements;
 }
@@ -156,13 +155,28 @@ Engine.prototype.render_query = function () {
 
 //  ---- Prototype functions for maninpulating the columns ----
 
+Engine.prototype.select_element = function (selector) {
+  if (this.elements[selector]) {
+    return this.elements[selector]
+  } else if (_.findWhere(this.elements, {'name': selector})) {
+    return _.findWhere(this.elements, {'name': selector})
+  }
+}
+
 // Handling the addition of an element Column or Content
 Engine.prototype.add_element = function (element_id) {
-  var selected_element = this.elements[element_id];
-  if (selected_element.type == "content") {
-    this.query.contents.push(selected_element);
-  } else {
-    this.query.columns.push(selected_element);
+  var selected_element = this.select_element(element_id);
+
+  // In case we see anything weird, let's exit immediately
+  if (selected_element === undefined) {
+    return;
+  }
+
+  if (
+    (selected_element.type === "content" && _.where(this.query.contents, {name: selected_element.name}).length === 0) ||
+    (selected_element.type === "column" && _.where(this.query.columns, {name: selected_element.name}).length === 0)
+  ) {
+    this.query[`${selected_element.type}s`].push(selected_element);
   }
 }
 
@@ -183,7 +197,7 @@ Engine.prototype.remove_element = function (element_id) {
 
 // Handling the change of the ascending or descending for an element
 Engine.prototype.add_element_ordering = function (element_id, order_direction) {
-  var selected_element = this.elements[element_id];
+  var selected_element = this.select_element(element_id);
 
   var element_check = _.find(this.query.order_by_columns, function (order_by_pair) {
     if (order_by_pair[0].id == element_id) {
@@ -208,9 +222,18 @@ Engine.prototype.add_element_ordering = function (element_id, order_direction) {
 }
 
 //  Add a filter, though in reality we are adding an element
-Engine.prototype.add_filter = function (element_id) {
-  var selected_element = this.elements[element_id];
-  var created_filter = new Filter(selected_element, {id: element_id});
+Engine.prototype.add_filter = function (element_id, method, value) {
+  var selected_element = this.select_element(element_id);
+  var created_filter;
+  if (method && value) {
+    created_filter = new Filter(selected_element, {
+      id: element_id,
+      method: method,
+      value: value
+    });
+  } else {
+    created_filter = new Filter(selected_element, {id: element_id});
+  }
   this.query.filters.push(created_filter);
 }
 

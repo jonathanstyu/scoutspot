@@ -8,32 +8,30 @@ var React = require("react"),
     ElementTable = require("./element_table");
 
 // Engine elements
-var Engine = require('../../models/engine');
+var Engine = require('../../models/engine'),
+    EngineQueryInterpreter = require('../../models/engine_query_interpreter');
 
 var QueryApp = React.createClass({
   // engine is the only thing passed in as a props
   getInitialState: function () {
-    // if there is something to work from
+    // if there is something to work from, we use it
     var queryStringObject = this.props.location.query;
-    console.log(queryStringObject);
-
-    // Grab the engine from the route.
     var dataManager = this.props.route.dataManager;
     var engine = dataManager.engine;
-    var query = engine.query;
-    var available_tables = [];
-    for (var key in engine.definitions['tables']) {
-      if (engine.definitions['tables'].hasOwnProperty(key)) {
-        available_tables.push(key);
-      }
-    };
+    var available_tables = _.keys(engine.definitions['tables']);
+
+
+    if (!_.isEmpty(queryStringObject)) {
+      console.log(queryStringObject);
+      EngineQueryInterpreter.open(queryStringObject, engine);
+    }
 
     return {
       engine: engine,
-      tableSelected: false,
+      tableSelected: engine.query.table == "" ? false : true,
       available_tables: available_tables,
-      available_elements: [],
-      joined_available_elements: [],
+      available_elements: engine.available_elements,
+      joined_available_elements: engine.joined_available_elements,
       renderedQuery: engine.render_query()
     }
   },
@@ -103,6 +101,12 @@ var QueryApp = React.createClass({
     var query = this.state.engine.query;
   },
 
+  shareQuery: function () {
+    var query = this.state.engine.query;
+    var queryShareURL = query.export()
+    console.log(queryShareURL);
+  },
+
   render() {
     // Pre render the menu
     var menu = !this.state.tableSelected ?
@@ -136,6 +140,7 @@ var QueryApp = React.createClass({
             resetCallback={this.resetQuery}
             saveCallback={this.saveQuery}
             copyCallback={this.copyQuery}
+            shareCallback={this.shareQuery}
             />
           {elementTable}
         </div>
