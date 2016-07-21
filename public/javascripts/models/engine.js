@@ -98,6 +98,11 @@ Engine.prototype.render_query = function () {
 
     select_commands = select_commands.concat(EngineContents.translate(that));
 
+    // if select commands is empty, let's just throw in a star.
+    if (select_commands.length === 0) {
+      select_commands.push(that.create_sql_object(table_key).star())
+    }
+
     // apply the select_commands first.
     sql_query = sql_query.select(select_commands);
 
@@ -133,7 +138,13 @@ Engine.prototype.render_query = function () {
     }
 
     // apply the limit number
-    sql_query = sql_query.limit(that.query.limit);
+    if (that.query.limit === "") {
+      sql_query = sql_query.limit(100);
+    } else {
+      sql_query = sql_query.limit(that.query.limit);
+    }
+
+    // Archive for the future
     that._saved_sql_object = sql_query;
     // This is a fall through to parse for
     return (typeof sql_query.toQuery == 'function') ? sql_query.toString() : "Incomplete Query"

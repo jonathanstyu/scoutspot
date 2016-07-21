@@ -9,7 +9,7 @@ var SqlDefinitions = React.createClass({
   getInitialState: function () {
 
     return {
-      definitions: this.props.route.definitions,
+      definitions: this.props.route.dataManager.definitions,
       tabTitles: ["Tables", "Joins", "Custom Elements"],
       detailMenuViewItems: [],
       tabFocus: "",

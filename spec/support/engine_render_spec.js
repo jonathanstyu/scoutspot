@@ -59,7 +59,7 @@ describe("engine_render", function () {
   it("renders something when you add a table", function () {
     engine.select_table("orders");
     var result = engine.render_query();
-    expect(result).toEqual("SELECT  FROM `orders` LIMIT 100");
+    expect(result).toEqual("SELECT `orders`.* FROM `orders` LIMIT 100");
   });
 
   it("adds a column", function () {

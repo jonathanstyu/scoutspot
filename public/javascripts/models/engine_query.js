@@ -1,16 +1,23 @@
 // import { Element } from './elements';
 // import { Filter } from './element_filter';
-require("./element");
-require("./filter");
+var Element = require("./element"),
+    Filter = require("./filter");
+
+var _ = require('underscore');
 
 var EngineQuery = function (schema) {
+  var that = this;
   if (schema) {
-    this.table = schema.table == null ? "" : schema.table;
-    this.contents = schema.contents == null ? [] : schema.contents;
-    this.columns = schema.columns == null ? [] : schema.columns;
-    this.filters = schema.filters == null ? [] : schema.filters;
-    this.order_by_columns = schema.order_by_columns == null ? [] : schema.order_by_columns;
-    this.limit = 100;
+    _.each(["contents", "columns", "filters", "order_by_columns"], function (component) {
+      if (schema[component]) {
+        // it comes in as a string so we are gonna split it up
+        that[component] = String(schema[component]).split(',');
+      } else {
+        that[component] = []
+      }
+    });
+    this.table = schema['table'] ? schema['table'] : "";
+    this.limit = "";
     this._initialSchema = schema;
   } else {
     this.table = "";
@@ -18,7 +25,7 @@ var EngineQuery = function (schema) {
     this.columns = [];
     this.filters = [];
     this.order_by_columns = [];
-    this.limit = 100;
+    this.limit = "";
     this._initialSchema = null;
   }
 }
@@ -29,8 +36,33 @@ EngineQuery.prototype.reset_all = function () {
   this.columns = [];
   this.filters = [];
   this.order_by_columns = [];
-  this.limit = 100;
+  this.limit = "";
   this._initialSchema = null;
+}
+
+EngineQuery.prototype.export = function () {
+  var exportObject = {};
+  exportObject.table = this.table;
+  exportObject.contents = this.contents.map(function (contentElement) {
+    return contentElement.name || contentElement;
+  })
+  exportObject.columns = this.columns.map(function (columnElement) {
+    return columnElement.name || columnElement;
+  })
+  exportObject.filters = this.filters.map(function (filter) {
+    return [filter["filter_name"], filter['method'], filter['value']];
+  })
+  exportObject.limit = this.limit;
+
+  exportObject.string = _.reduce(["table", "contents", "columns", "limit"], function (memo, component) {
+    if (exportObject[component].length === 0) {
+      return memo
+    } else {
+      return memo + "&" + component + "=" + exportObject[component].toString();
+    }
+  }, "");
+
+  return exportObject.string;
 }
 
 

@@ -13,7 +13,13 @@ var Engine = require('../../models/engine');
 var QueryApp = React.createClass({
   // engine is the only thing passed in as a props
   getInitialState: function () {
-    var engine = this.props.route.engine;
+    // if there is something to work from
+    var queryStringObject = this.props.location.query;
+    console.log(queryStringObject);
+
+    // Grab the engine from the route.
+    var dataManager = this.props.route.dataManager;
+    var engine = dataManager.engine;
     var query = engine.query;
     var available_tables = [];
     for (var key in engine.definitions['tables']) {
@@ -90,6 +96,7 @@ var QueryApp = React.createClass({
 
   saveQuery: function (event) {
     var query = this.state.engine.query;
+    console.log(query.export());
   },
 
   copyQuery: function () {

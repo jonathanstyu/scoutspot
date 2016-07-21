@@ -15,28 +15,17 @@ var Wrapper = require("./components/app"),
     QueryApp = require("./components/QueryApp/query_app"),
     SavedApp = require("./components/SavedApp/saved_app");
 
-// Model elements
-var $ = require('jquery');
-var _ = require('underscore');
+var DataManager = require('./models/data_manager');
+var dataManager = new DataManager();
 
-var Engine = require('./models/engine');
-
-var engine = new Engine();
-
-var bootstrap = JSON.parse($('#definitions').text().replace(/&quot;/g,'"'))
-engine.load_definitions(bootstrap);
-
-// Passing through QueryApp and definition
 // Setting IndexRoute for dev purposes
-// <IndexRoute component={QueryApp} engine={engine} />
-
 ReactDOM.render((
     <Router history={hashHistory}>
     <Route path="/" component={Wrapper}>
-      <IndexRoute component={Home} />
-      <Route path="build" component={QueryApp} engine={engine} />
-      <Route path="saved" component={SavedApp} />
-      <Route path="edit" component={SqlDefinitions} definitions={bootstrap} />
+      <IndexRoute component={Home} dataManager={dataManager} />
+      <Route path="build" component={QueryApp} dataManager={dataManager} />
+      <Route path="saved" component={SavedApp} dataManager={dataManager}/>
+      <Route path="edit" component={SqlDefinitions} dataManager={dataManager} />
     </Route>
   </Router>
   ),

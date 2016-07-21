@@ -61,7 +61,7 @@ describe("engine_render_filter", function () {
 
     engine.query.filters.push(revenue_filter);
     var result = engine.render_query();
-    expect(result).toEqual("SELECT  FROM `orders` WHERE (orders.revenue > 45) LIMIT 100");
+    expect(result).toEqual("SELECT `orders`.* FROM `orders` WHERE (orders.revenue > 45) LIMIT 100");
   });
 
   it("adds a null unjoined filter", function () {
@@ -73,7 +73,7 @@ describe("engine_render_filter", function () {
 
     engine.query.filters.push(filter);
     var result = engine.render_query();
-    expect(result).toEqual("SELECT  FROM `orders` WHERE (`orders`.`created_at` IS NOT NULL) LIMIT 100");
+    expect(result).toEqual("SELECT `orders`.* FROM `orders` WHERE (`orders`.`created_at` IS NOT NULL) LIMIT 100");
   });
 
   it("adds a plain unjoined filter", function () {
@@ -84,7 +84,7 @@ describe("engine_render_filter", function () {
 
     engine.query.filters.push(revenue_filter);
     var result = engine.render_query();
-    expect(result).toEqual("SELECT  FROM `orders` WHERE `orders`.`revenue` LIMIT 100");
+    expect(result).toEqual("SELECT `orders`.* FROM `orders` WHERE `orders`.`revenue` LIMIT 100");
   });
 
   it("adds a plain unjoined filter and a column element", function () {
@@ -162,7 +162,7 @@ describe("engine_render_filter", function () {
     engine.query.filters.push(content_filter);
     engine.query.filters.push(column_filter);
     var result = engine.render_query();
-    expect(result).toEqual("SELECT  FROM `orders` WHERE (`orders`.`id` = '45') AND HAVING SUM (orders.revenue > 45) LIMIT 100");
+    expect(result).toEqual("SELECT `orders`.* FROM `orders` WHERE (`orders`.`id` = '45') AND HAVING SUM (orders.revenue > 45) LIMIT 100");
   });
 
 });
