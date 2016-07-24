@@ -9,7 +9,8 @@ var React = require("react"),
 
 // Engine elements
 var Engine = require('../../models/engine'),
-    EngineQueryInterpreter = require('../../models/engine_query_interpreter');
+    EngineQueryInterpreter = require('../../models/engine_query_interpreter'),
+    DataManager = require('../../models/data_manager');
 
 var QueryApp = React.createClass({
   // engine is the only thing passed in as a props
@@ -22,7 +23,6 @@ var QueryApp = React.createClass({
 
 
     if (!_.isEmpty(queryStringObject)) {
-      console.log(queryStringObject);
       EngineQueryInterpreter.open(queryStringObject, engine);
     }
 
@@ -52,11 +52,6 @@ var QueryApp = React.createClass({
     var that = this;
     var selectedTable = event.target.id;
     this.state.engine.select_table(selectedTable);
-    this.refreshState();
-  },
-
-  resetQuery: function (event) {
-    this.state.engine.reset_all()
     this.refreshState();
   },
 
@@ -95,6 +90,12 @@ var QueryApp = React.createClass({
   saveQuery: function (event) {
     var query = this.state.engine.query;
     console.log(query.export());
+  },
+
+  resetQuery: function (event) {
+    this.state.engine.reset_all()
+    this.refreshState();
+    DataManager.clearQueryString();
   },
 
   copyQuery: function () {

@@ -24,4 +24,8 @@ var DataManager = function () {
   ]
 }
 
+DataManager.clearQueryString = function () {
+  window.history.pushState({}, document.title, window.location.origin+'/#/build')
+}
+
 module.exports = DataManager;

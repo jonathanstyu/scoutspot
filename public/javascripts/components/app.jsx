@@ -7,26 +7,29 @@ var React = require('react'),
     Link = require('react-router').Link,
     hashHistory = require('react-router').hashHistory;
 
-var Wrapper = React.createClass({
+var NavBar = require("./navbar"),
+    Home = require("./home"),
+    SqlDefinitions = require("./Definitions/sql_definitions"),
+    QueryApp = require("./QueryApp/query_app"),
+    SavedApp = require("./SavedApp/saved_app");
+
+var DataManager = require('../models/data_manager');
+
+var App = React.createClass({
   render: function () {
+    var dataManager = new DataManager();
+
     return (
-      <div>
-        <header className='navbar'>
-          <section className='navbar-section'>
-            <a href='/' className='navbar-brand'>ScoutSpot</a>
-          </section>
-          <section className='navbar-section'>
-            <Link to='/build' className='btn btn-link'>Build</Link>
-            <Link to='/saved' className='btn btn-link'>Saved</Link>
-            <Link to='/edit' className='btn btn-link'>Edit Definitions</Link>
-          </section>
-        </header>
-        <div>
-          {this.props.children}
-        </div>
-      </div>
+      <Router history={hashHistory}>
+        <Route path="/" component={NavBar}>
+          <IndexRoute component={Home} dataManager={dataManager} />
+          <Route path="build" component={QueryApp} dataManager={dataManager} />
+          <Route path="saved" component={SavedApp} dataManager={dataManager}/>
+          <Route path="edit" component={SqlDefinitions} dataManager={dataManager} />
+        </Route>
+      </Router>
     )
   }
 });
 
-module.exports = Wrapper;
+module.exports = App;
