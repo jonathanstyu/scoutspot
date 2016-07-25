@@ -5,7 +5,8 @@ var React = require('react'),
     Route = require('react-router').Route,
     IndexRoute = require('react-router').IndexRoute,
     Link = require('react-router').Link,
-    hashHistory = require('react-router').hashHistory;
+    hashHistory = require('react-router').hashHistory,
+    Provider = require('react-redux').Provider;
 
 var NavBar = require("./navbar"),
     Home = require("./home"),
@@ -14,20 +15,24 @@ var NavBar = require("./navbar"),
     SavedApp = require("./SavedApp/saved_app");
 
 var DataManager = require('../models/data_manager');
+var store = require('../store/store_index');
 
 var App = React.createClass({
-  render: function () {
-    var dataManager = new DataManager();
 
+  render: function () {
+    // console.log(store);
+    var dataManager = new DataManager();
     return (
-      <Router history={hashHistory}>
-        <Route path="/" component={NavBar}>
-          <IndexRoute component={Home} dataManager={dataManager} />
-          <Route path="build" component={QueryApp} dataManager={dataManager} />
-          <Route path="saved" component={SavedApp} dataManager={dataManager}/>
-          <Route path="edit" component={SqlDefinitions} dataManager={dataManager} />
-        </Route>
-      </Router>
+      <Provider store={store}>
+        <Router history={hashHistory}>
+          <Route path="/" component={NavBar}>
+            <IndexRoute component={Home} dataManager={dataManager} />
+            <Route path="build" component={QueryApp} dataManager={dataManager} />
+            <Route path="saved" component={SavedApp} />
+            <Route path="edit" component={SqlDefinitions} dataManager={dataManager} />
+          </Route>
+        </Router>
+      </Provider>
     )
   }
 });

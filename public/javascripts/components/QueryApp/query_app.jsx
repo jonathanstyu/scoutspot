@@ -5,7 +5,8 @@ var $ = require('jquery');
 var React = require("react"),
     Menu = require("./menu"),
     PanelCard = require("./panel_card"),
-    ElementTable = require("./element_table");
+    ElementTable = require("./element_table"),
+    connect = require('react-redux').connect;
 
 // Engine elements
 var Engine = require('../../models/engine'),
@@ -48,13 +49,6 @@ var QueryApp = React.createClass({
     })
   },
 
-  selectTable: function (event) {
-    var that = this;
-    var selectedTable = event.target.id;
-    this.state.engine.select_table(selectedTable);
-    this.refreshState();
-  },
-
   selectElement: function (event) {
     var that = this;
     this.state.engine.add_element(event.target.id);
@@ -87,38 +81,7 @@ var QueryApp = React.createClass({
     this.refreshState();
   },
 
-  saveQuery: function (event) {
-    var query = this.state.engine.query;
-    console.log(query.export());
-  },
-
-  resetQuery: function (event) {
-    this.state.engine.reset_all()
-    this.refreshState();
-    DataManager.clearQueryString();
-  },
-
-  copyQuery: function () {
-    var query = this.state.engine.query;
-  },
-
-  shareQuery: function () {
-    var query = this.state.engine.query;
-    var queryShareURL = query.export()
-    console.log(queryShareURL);
-  },
-
   render() {
-    // Pre render the menu
-    var menu = !this.state.tableSelected ?
-      <Menu available_tables={this.state.available_tables}
-        clickRowCallback={this.selectTable}
-        /> :
-      <Menu available_elements={this.state.available_elements}
-        joined_available_elements={this.state.joined_available_elements}
-        clickRowCallback={this.selectElement}
-        clickButtonCallback={this.selectFilter}
-        />
 
       //  Pre-render and attach callbacks to the filters/elements
       var elementTable = <ElementTable columns={this.state.engine.query.columns}
@@ -133,16 +96,10 @@ var QueryApp = React.createClass({
     return (
       <div className='columns'>
         <div className='column col-md-4'>
-          { menu }
+          <Menu />
         </div>
         <div className='column col-md-8'>
-          <PanelCard
-            renderedQuery={this.state.renderedQuery}
-            resetCallback={this.resetQuery}
-            saveCallback={this.saveQuery}
-            copyCallback={this.copyQuery}
-            shareCallback={this.shareQuery}
-            />
+          <PanelCard />
           {elementTable}
         </div>
       </div>

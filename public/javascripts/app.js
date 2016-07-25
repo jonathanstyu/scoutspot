@@ -1,7 +1,8 @@
 // React elements
 // React + components
 var React = require('react'),
-    ReactDOM = require('react-dom');
+    ReactDOM = require('react-dom'),
+    Provider = require('react-redux').Provider;
 
 // Custom React elements
 var App = require("./components/app");

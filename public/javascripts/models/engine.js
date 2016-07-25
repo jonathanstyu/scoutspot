@@ -11,7 +11,7 @@ var EngineContents = require('./engine_contents'),
     EngineFilters = require('./engine_filters'),
     EngineOrderBys = require('./engine_order_by');
 
-var Engine = function () {
+var Engine = function (defOptions) {
   this.definitions = {},
   this.relevant_joins = [],
   this.available_elements = [],
@@ -20,6 +20,10 @@ var Engine = function () {
   this.filters = [],
   this.query = new EngineQuery(),
   this._saved_sql_object = ""
+  if (typeof defOptions != 'undefined') {
+    this.load_definitions(defOptions)
+    return this
+  }
 }
 
 // Load the definitions file, defining the data

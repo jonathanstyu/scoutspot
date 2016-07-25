@@ -1,15 +1,14 @@
 var React = require("react"),
-    MenuSectionHeader = require("./menu_section_header"),
     MenuRowElement = require("./menu_row_element"),
-    MenuRowTable = require("./menu_row_table");
+    MenuRowTable = require("./menu_row_table"),
+    connect = require('react-redux').connect;
 
 var Menu = React.createClass({
 
   render: function () {
     var that = this;
     var table = []
-
-    if (this.props.available_tables) {
+    if (!this.props.table_selected) {
       var table_elements = this.props.available_tables.map(function (table) {
         return <MenuRowTable table={table} key={table + "table"}
           clickButtonCallback={that.buttonClicked} clickRowCallback={that.props.clickRowCallback} />
@@ -18,7 +17,7 @@ var Menu = React.createClass({
       return (
         <table className='table' id='menu-list'>
           <tbody>
-            <MenuSectionHeader sectionHeader={"Tables"}/>
+            <tr><th colSpan='3'>Tables</th></tr>
             {table_elements}
           </tbody>
         </table>
@@ -35,9 +34,9 @@ var Menu = React.createClass({
       return (
         <table className='table' id='menu-list'>
           <tbody>
-            <MenuSectionHeader sectionHeader={"Elements"}/>
+            <tr><th colSpan='3'>Elements</th></tr>
             {table_elements}
-            <MenuSectionHeader sectionHeader={"Joined"}/>
+            <tr><th colSpan='3'>Joined</th></tr>
             {joined_elements}
           </tbody>
         </table>
@@ -45,5 +44,23 @@ var Menu = React.createClass({
     }; // close huge if else statement
   } // close render
 });
+
+const mapStateToProps = (state) => {
+  return {
+    table_selected: state.table_selected,
+    available_tables: state.available_tables,
+    available_elements: state.available_elements,
+    joined_available_elements: state.joined_available_elements,
+  }
+}
+
+const mapDispatchToProps = (dispatch) => {
+  return {
+
+  }
+}
+
+
+Menu = connect(mapStateToProps, mapDispatchToProps)(Menu);
 
 module.exports = Menu;
