@@ -1,4 +1,5 @@
-var React = require("react");
+var React = require("react"),
+    connect = require('react-redux').connect;
 
 var ElementRow = React.createClass({
   getInitialState: function () {
@@ -7,15 +8,11 @@ var ElementRow = React.createClass({
     }
   },
 
-  closeButtonClicked: function (event) {
-    this.props.removeElementCallback(event);
-  },
-
   selectAscendValue: function (event) {
     this.setState({
       ascendValue: event.target.value
     });
-    this.props.selectElementOrderCallback(event);
+    this.props.selectAscendValue(event);
   },
 
   render: function () {
@@ -30,10 +27,36 @@ var ElementRow = React.createClass({
             <option>DESC</option>
           </select>
         </td>
-        <td><button className='btn' id={element.id} onClick={this.closeButtonClicked}>X</button></td>
+        <td><button className='btn' id={element.id} onClick={this.props.removeElement}>X</button></td>
       </tr>
     )
   }
 });
+
+const mapStateToProps = (state) => {
+  return {
+
+  }
+}
+
+const mapDispatchToProps = (dispatch) => {
+  return {
+    removeElement: (event) => {
+      dispatch({
+        type: "REMOVE_ELEMENT",
+        value: event.target.id
+      })
+    },
+    selectAscendValue: (event) => {
+      dispatch({
+        type: "SET_ASC_VALUE",
+        value: event.target.value,
+        id: event.target.id
+      })
+    }
+  }
+}
+
+ElementRow = connect(mapStateToProps, mapDispatchToProps)(ElementRow);
 
 module.exports = ElementRow;

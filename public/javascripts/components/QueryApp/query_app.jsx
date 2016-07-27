@@ -82,17 +82,6 @@ var QueryApp = React.createClass({
   },
 
   render() {
-
-      //  Pre-render and attach callbacks to the filters/elements
-      var elementTable = <ElementTable columns={this.state.engine.query.columns}
-        contents={this.state.engine.query.contents}
-        filters={this.state.engine.query.filters}
-        selectElementOrderCallback={this.selectElementOrder}
-        removeElementCallback={this.removeElement}
-        editFilterCallback={this.editFilter}
-        removeFilterCallback={this.removeFilter}
-        />
-
     return (
       <div className='columns'>
         <div className='column col-md-4'>
@@ -100,7 +89,7 @@ var QueryApp = React.createClass({
         </div>
         <div className='column col-md-8'>
           <PanelCard />
-          {elementTable}
+          <ElementTable />
         </div>
       </div>
     ); // closes return

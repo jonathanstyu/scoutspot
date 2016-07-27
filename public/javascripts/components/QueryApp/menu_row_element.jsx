@@ -1,26 +1,36 @@
-var React = require("react");
+var React = require("react"),
+    connect = require('react-redux').connect;
 
 var MenuRowElement = React.createClass({
-  getInitialState: function () {
-    // tableMode means we are just showing tables
-    var element = this.props.element;
-    return {
-      header: element.name,
-      secondary_header: element.type,
-      buttonTitle: "Filter",
-      id: element.id
-    }
-  },
-
   render: function () {
+    var element = this.props.element;
     return (
       <tr>
-        <td onClick={this.props.clickRowCallback} id={this.state.id}>{this.state.header}</td>
-        <td>{this.state.secondary_header}</td>
-        <td><button className='btn btn-sm' onClick={this.props.clickButtonCallback} id={this.state.id}>{this.state.buttonTitle}</button></td>
+        <td onClick={this.props.selectElement} id={element.id}>{element.name}</td>
+        <td>{element.type}</td>
+        <td><button className='btn btn-sm' onClick={this.props.selectFilter} id={element.id}>Filter</button></td>
       </tr>
     )
   }
 });
+
+const mapStateToProps = function (state) {
+  return ({
+
+  })
+}
+
+const mapDispatchToProps = (dispatch) => {
+  return {
+    selectElement: (event) => {
+      dispatch({type: "SELECT_ELEMENT", value: event.target.id})
+    },
+    selectFilter: (event) => {
+      dispatch({type: "SELECT_FILTER", value: event.target.id})
+    }
+  }
+}
+
+MenuRowElement = connect(mapStateToProps, mapDispatchToProps)(MenuRowElement);
 
 module.exports = MenuRowElement;

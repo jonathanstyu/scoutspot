@@ -5,8 +5,9 @@ var _ = require('underscore'),
 
 var DataManager = function () {
   this.engine = new Engine(),
-  this.definitions = JSON.parse($('#definitions').text().replace(/&quot;/g,'"')),
-  this.engine.load_definitions(this.definitions),
+  // this.definitions = JSON.parse($('#definitions').text().replace(/&quot;/g,'"')),
+  this.definitions = {},
+  // this.engine.load_definitions(this.definitions),
   this.savedQueries = [
     new EngineQuery({
       table: "orders",

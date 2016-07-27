@@ -10,8 +10,7 @@ var Menu = React.createClass({
     var table = []
     if (!this.props.table_selected) {
       var table_elements = this.props.available_tables.map(function (table) {
-        return <MenuRowTable table={table} key={table + "table"}
-          clickButtonCallback={that.buttonClicked} clickRowCallback={that.props.clickRowCallback} />
+        return <MenuRowTable table={table} key={table + "table"} />
       });
 
       return (
@@ -24,11 +23,11 @@ var Menu = React.createClass({
       ) // close the first return statement
     } else {
       var table_elements = this.props.available_elements.map(function (object) {
-        return <MenuRowElement element={object} key={object.id + "object"} clickButtonCallback={that.props.clickButtonCallback} clickRowCallback={that.props.clickRowCallback} />
+        return <MenuRowElement element={object} key={object.id + "object"} />
       });
 
       var joined_elements = this.props.joined_available_elements.map(function (object) {
-        return <MenuRowElement element={object} key={object.id + "filter"} clickButtonCallback={that.props.clickButtonCallback} clickRowCallback={that.props.clickRowCallback} />
+        return <MenuRowElement element={object} key={object.id + "filter"} />
       });
 
       return (

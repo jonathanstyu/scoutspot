@@ -1,42 +1,52 @@
 var React = require("react"),
     ElementRow = require('./element_row'),
-    FilterRow = require('./element_filter_row');
+    FilterRow = require('./element_filter_row'),
+    connect = require('react-redux').connect;
 
 var ElementTable = React.createClass({
   render: function () {
     var that = this;
-    var columns = this.props.columns.map(function (column) {
-      return <ElementRow element={column} key={column.id}
-        removeElementCallback={that.props.removeElementCallback}
-        selectElementOrderCallback={that.props.selectElementOrderCallback}
-        />
-    });
-    var contents = this.props.contents.map(function (content) {
-      return <ElementRow element={content} key={content.id}
-        removeElementCallback={that.props.removeElementCallback}
-        selectElementOrderCallback={that.props.selectElementOrderCallback}
-        />
-    });
-    var filters = this.props.filters.map(function (filter) {
-      return <FilterRow filter={filter} key={filter.id + filter.filter_name}
-        editFilterCallback={that.props.editFilterCallback}
-        removeFilterCallback={that.props.removeFilterCallback}
-        />
-    });
-
     return (
       <table className='table'>
         <tbody>
           <tr><th colSpan='4'>Columns</th></tr>
-          {columns}
+          {
+            this.props.columns.map(function (column) {
+              return <ElementRow element={column} key={column.id} />
+            })
+          }
           <tr><th colSpan='4'>Contents</th></tr>
-          {contents}
+          {
+            this.props.contents.map(function (content) {
+              return <ElementRow element={content} key={content.id} />
+            })
+          }
           <tr><th colSpan='4'>Filters</th></tr>
-          {filters}
+          {
+            this.props.filters.map(function (filter) {
+              return <FilterRow filter={filter} key={filter.id + filter.filter_name} />
+            })
+          }
         </tbody>
       </table>
     )
   }
 });
+
+const mapStateToProps = (state) => {
+  return {
+    columns: state.query_columns,
+    contents: state.query_contents,
+    filters: state.query_filters
+  }
+}
+
+const mapDispatchToProps = (dispatch) => {
+  return {
+
+  }
+}
+
+ElementTable = connect(mapStateToProps, mapDispatchToProps)(ElementTable);
 
 module.exports = ElementTable;

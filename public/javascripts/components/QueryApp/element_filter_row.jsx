@@ -1,4 +1,5 @@
-var React = require("react");
+var React = require("react"),
+    connect = require('react-redux').connect;
 
 var FilterRow = React.createClass({
   getInitialState: function () {
@@ -31,10 +32,6 @@ var FilterRow = React.createClass({
     });
   },
 
-  closeButtonClicked: function (event) {
-    this.props.removeFilterCallback(event);
-  },
-
   render: function () {
     var that = this;
     var filter = this.props.filter;
@@ -46,10 +43,29 @@ var FilterRow = React.createClass({
         <td>{filter.filter_name}</td>
         <td><select value={this.state.filter_method} className='form-select'  onChange={this.selectMethod}>{selectOptions}</select></td>
         <td><input value={this.state.filter_value} onChange={this.selectValue}></input></td>
-        <td><button className='btn' id={this.state.filter_id} onClick={this.closeButtonClicked}>X</button></td>
+        <td><button className='btn' id={this.state.filter_id} onClick={this.props.removeFilter}>X</button></td>
       </tr>
     )
   }
 });
+
+const mapStateToProps = (state) => {
+  return {
+
+  }
+}
+
+const mapDispatchToProps = (dispatch) => {
+  return {
+    removeFilter: (event) => {
+      dispatch({
+        type: "REMOVE_FILTER",
+        value: event.target.id
+      })
+    }
+  }
+}
+
+FilterRow = connect(mapStateToProps, mapDispatchToProps)(FilterRow);
 
 module.exports = FilterRow;
