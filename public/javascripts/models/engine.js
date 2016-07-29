@@ -231,32 +231,31 @@ Engine.prototype.add_filter = function (element_id, method, value) {
   var selected_element = this.select_element_helper(element_id);
   var created_filter;
   if (method && value) {
-    created_filter = new Filter(selected_element, {
+    created_filter = Filter.build(selected_element, {
       id: element_id,
       method: method,
       value: value
-    });
+    })
   } else {
-    created_filter = new Filter(selected_element, {id: element_id});
+    created_filter =  Filter.build(selected_element, {id: element_id});
   }
   this.query.filters = this.query.filters.concat([created_filter]);
 }
 
 // now we will edit the filter in question to add
 Engine.prototype.edit_filter = function (options) {
-  _.each(this.query.filters, function (filter) {
+
+  this.query.filters = this.query.filters.map(function (filter) {
     if (filter.id == options["filter_id"]) {
-
-      if (options['filter_method'] != undefined) {
-
-        filter["method"] = options['filter_method']
+      if (options['filter_method'] && options['filter_method'] != '') {
+        filter.method = options['filter_method']
+      } else if (options['filter_value'] && options['filter_value'] != '') {
+        filter.value = options['filter_value']
       }
-
-      if (options['filter_value'] != undefined) {
-        filter["value"] = options['filter_value']
-      }
+      return _.assign(new Filter(), filter)
+    } else {
+      return filter
     }
-
   });
 }
 

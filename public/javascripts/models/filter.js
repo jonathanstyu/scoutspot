@@ -1,18 +1,29 @@
-var Filter = function(query_element, options) {
-  return {
-    id: query_element['id'],
-    _element: query_element,
-    filter_name: query_element["name"],
+var Filter = function () {
+  this.id = ''
+  this._element = ''
+  this.filter_name = ''
+  this.where_or_having = ''
+  this._sql_object = ''
+  this.method = ''
+  this.value = ''
+}
 
-    where_or_having: query_element['type'] == "column" ? "where" : "having",
+Filter.build = function(query_element, options) {
+  var newFilter = new Filter();
+  newFilter.id = query_element['id'] || options['id'] || '';
+  newFilter._element = query_element || '';
+  newFilter.filter_name = query_element["name"] || '';
 
-    // -- tied to the sql library,
-    _sql_object: null,
+  newFilter.where_or_having = query_element['type'] == "column" ? "where" : "having";
 
-    //--- Start filter exclusive elements here
-    method: options["method"] ? options["method"] : "",
-    value: options["value"] ? options["value"] : ""
-  }
+  // -- tied to the sql library,
+  newFilter._sql_object = null;
+
+  //--- Start filter exclusive elements here
+  newFilter.method = options["method"] || "";
+  newFilter.value = options["value"] || "";
+
+  return newFilter;
 };
 
 module.exports = Filter;

@@ -54,7 +54,7 @@ describe("engine_render_filter", function () {
   it("adds an method unjoined filter", function () {
     engine.select_table("orders");
     var revenue_column_element = Element.autogenerate_with_column("orders", "revenue", 0);
-    var revenue_filter = new Filter(revenue_column_element, {
+    var revenue_filter = Filter.build(revenue_column_element, {
       method: "Greater Than",
       value: "45"
     })
@@ -67,7 +67,7 @@ describe("engine_render_filter", function () {
   it("adds a null unjoined filter", function () {
     engine.select_table("orders");
     var column_element = Element.autogenerate_with_column("orders", "created_at", 0);
-    var filter = new Filter(column_element, {
+    var filter = Filter.build(column_element, {
       method: "Is Not Null"
     })
 
@@ -79,7 +79,7 @@ describe("engine_render_filter", function () {
   it("adds a plain unjoined filter", function () {
     engine.select_table("orders");
     var revenue_column_element = Element.autogenerate_with_column("orders", "revenue", 0);
-    var revenue_filter = new Filter(revenue_column_element, {
+    var revenue_filter = Filter.build(revenue_column_element, {
     });
 
     engine.query.filters.push(revenue_filter);
@@ -90,7 +90,7 @@ describe("engine_render_filter", function () {
   it("adds a plain unjoined filter and a column element", function () {
     engine.select_table("orders");
     var revenue_column_element = Element.autogenerate_with_column("orders", "revenue", 0);
-    var revenue_filter = new Filter(revenue_column_element, {
+    var revenue_filter = Filter.build(revenue_column_element, {
     });
 
     engine.query.columns.push(revenue_column_element);
@@ -101,12 +101,12 @@ describe("engine_render_filter", function () {
 
   it("adds two column filters at the same time", function () {
     engine.select_table("orders");
-    var revenue_filter = new Filter(revenue_column_element, {
+    var revenue_filter = Filter.build(revenue_column_element, {
       method: "Greater Than",
       value: 95
     });
     var id_column_element = Element.autogenerate_with_column("orders", "id", 0);
-    var id_filter = new Filter(id_column_element, {
+    var id_filter = Filter.build(id_column_element, {
       method: "Equals",
       value: 'abc'
     })
@@ -119,12 +119,12 @@ describe("engine_render_filter", function () {
 
   it("adds one complete column filter and 1 incomplete column filter", function () {
     engine.select_table("orders");
-    var revenue_filter = new Filter(revenue_column_element, {
+    var revenue_filter = Filter.build(revenue_column_element, {
       method: "Greater Than",
       value: 95
     });
     var id_column_element = Element.autogenerate_with_column("orders", "id", 0);
-    var id_filter = new Filter(id_column_element, {
+    var id_filter = Filter.build(id_column_element, {
     })
 
     engine.query.filters.push(revenue_filter);
@@ -136,7 +136,7 @@ describe("engine_render_filter", function () {
   it("adds a valued unjoined filter and a column element", function () {
     engine.select_table("orders");
     var revenue_column_element = Element.autogenerate_with_column("orders", "revenue", 0);
-    var revenue_filter = new Filter(revenue_column_element, {
+    var revenue_filter = Filter.build(revenue_column_element, {
       method: "Greater Than",
       value: "95"
     });
@@ -149,7 +149,7 @@ describe("engine_render_filter", function () {
 
   it("adds a content and column filter", function () {
     engine.select_table("orders");
-    var column_filter = new Filter(revenue_column_element, {
+    var column_filter = Filter.build(revenue_column_element, {
       method: "Greater Than",
       value: "45"
     });
@@ -165,7 +165,7 @@ describe("engine_render_filter", function () {
       "sql_code": "id"
     }
 
-    var content_filter = new Filter(content, {
+    var content_filter = Filter.build(content, {
       method: "Equals",
       value: "45"
     });
@@ -175,5 +175,111 @@ describe("engine_render_filter", function () {
     var result = engine.render_query();
     expect(result).toEqual("SELECT `orders`.* FROM `orders` INNER JOIN `customers` ON (`orders`.`customer_id` = `customers`.`id`) WHERE (`orders`.`revenue` > '45') HAVING (COUNT(`customers`.`id`) = '45') LIMIT 100");
   });
+
+  it("edits a content filter value", function () {
+    engine.select_table("orders");
+    var column_filter = Filter.build(revenue_column_element, {
+      method: "Greater Than",
+      value: "45",
+      id: 1
+    });
+
+    var content = {
+      "id": 2,
+      "generated": false,
+      "table": "customers",
+      "type": "content",
+      "description": "Count of individual customers",
+      "name": "customers.count",
+      "sql_func": "count",
+      "sql_code": "id"
+    }
+
+    var content_filter = Filter.build(content, {
+      id: 2,
+      method: "Equals",
+      value: "45"
+    });
+    engine.query.filters.push(content_filter);
+    engine.query.filters.push(column_filter);
+
+    engine.edit_filter({
+      filter_id: 2,
+      filter_value: 60
+    })
+    var result = engine.render_query()
+    expect(result).toEqual("SELECT `orders`.* FROM `orders` INNER JOIN `customers` ON (`orders`.`customer_id` = `customers`.`id`) WHERE (`orders`.`revenue` > '45') HAVING (COUNT(`customers`.`id`) = '60') LIMIT 100");
+  })
+
+  it("edits a content filter method", function () {
+    engine.select_table("orders");
+    var column_filter = Filter.build(revenue_column_element, {
+      method: "Greater Than",
+      value: "45",
+      id: 1
+    });
+
+    var content = {
+      "id": 2,
+      "generated": false,
+      "table": "customers",
+      "type": "content",
+      "description": "Count of individual customers",
+      "name": "customers.count",
+      "sql_func": "count",
+      "sql_code": "id"
+    }
+
+    var content_filter = Filter.build(content, {
+      id: 2,
+      method: "Equals",
+      value: "45"
+    });
+    engine.query.filters.push(content_filter);
+    engine.query.filters.push(column_filter);
+
+    engine.edit_filter({
+      filter_id: 2,
+      filter_method: 'Greater Than'
+    })
+    var result = engine.render_query()
+    expect(result).toEqual("SELECT `orders`.* FROM `orders` INNER JOIN `customers` ON (`orders`.`customer_id` = `customers`.`id`) WHERE (`orders`.`revenue` > '45') HAVING (COUNT(`customers`.`id`) > '45') LIMIT 100");
+  })
+
+  it("edits a content filter method and a joined column", function () {
+    engine.select_table("orders");
+    var customer_id_column_element = Element.autogenerate_with_column("customers", "email", 0);
+    var column_filter = Filter.build(customer_id_column_element, {
+      method: "Equals",
+      value: "1asdf23",
+      id: 1
+    });
+
+    var content = {
+      "id": 2,
+      "generated": false,
+      "table": "customers",
+      "type": "content",
+      "description": "Count of individual customers",
+      "name": "customers.count",
+      "sql_func": "count",
+      "sql_code": "id"
+    }
+
+    var content_filter = Filter.build(content, {
+      id: 2,
+      method: "Equals",
+      value: "45"
+    });
+    engine.query.filters.push(content_filter);
+    engine.query.filters.push(column_filter);
+
+    engine.edit_filter({
+      filter_id: 1,
+      filter_value: '3343434'
+    })
+    var result = engine.render_query()
+    expect(result).toEqual("SELECT `orders`.* FROM `orders` INNER JOIN `customers` ON (`orders`.`customer_id` = `customers`.`id`) WHERE (`customers`.`email` = '3343434') HAVING (COUNT(`customers`.`id`) = '45') LIMIT 100");
+  })
 
 });

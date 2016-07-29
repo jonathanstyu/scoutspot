@@ -15,10 +15,7 @@ var FilterRow = React.createClass({
     that.setState({
       filter_method: event.target.value
     });
-    that.props.editFilterCallback({
-      filter_method: event.target.value,
-      filter_id: that.state.filter_id
-    });
+    that.props.editFilterMethod(event);
   },
 
   selectValue: function (event) {
@@ -26,10 +23,7 @@ var FilterRow = React.createClass({
     that.setState({
       filter_value: event.target.value
     });
-    that.props.editFilterCallback({
-      filter_value: event.target.value,
-      filter_id: that.state.filter_id
-    });
+    that.props.editFilterValue(event);
   },
 
   render: function () {
@@ -39,10 +33,10 @@ var FilterRow = React.createClass({
       return <option key={option}>{option}</option>
     });
     return (
-      <tr id={this.state.id} className='element-panel-row'>
+      <tr id={this.state.filter_id} className='element-panel-row'>
         <td>{filter.filter_name}</td>
-        <td><select value={this.state.filter_method} className='form-select'  onChange={this.selectMethod}>{selectOptions}</select></td>
-        <td><input value={this.state.filter_value} onChange={this.selectValue}></input></td>
+        <td><select id={this.state.filter_id} value={this.state.filter_method} className='form-select'  onChange={this.selectMethod}>{selectOptions}</select></td>
+        <td><input value={this.state.filter_value} onChange={this.selectValue} id={this.state.filter_id}></input></td>
         <td><button className='btn' id={this.state.filter_id} onClick={this.props.removeFilter}>X</button></td>
       </tr>
     )
@@ -61,6 +55,20 @@ const mapDispatchToProps = (dispatch) => {
       dispatch({
         type: "REMOVE_FILTER",
         value: event.target.id
+      })
+    },
+    editFilterValue: (event) => {
+      dispatch({
+        type: "EDIT_FILTER_VALUE",
+        id: event.target.id,
+        value: event.target.value
+      })
+    },
+    editFilterMethod: (event) => {
+      dispatch({
+        type: "EDIT_FILTER_METHOD",
+        id: event.target.id,
+        method: event.target.value
       })
     }
   }

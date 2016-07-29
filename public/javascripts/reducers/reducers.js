@@ -156,9 +156,7 @@ var createInitialState = function (definitions) {
 }
 
 var generateFromEngineAction = function (state, action, option) {
-  // var newState = Immutable.map(state);
   var newEngine = _.extend(state.engine, state.engine[action](option));
-  // var newEngine = state.engine[action](option);
   var newQuery = Immutable.Map(newEngine.query)
   return _.assign({}, state, {
     table_selected: newQuery.get('table') === "" ? false : true,
@@ -193,19 +191,7 @@ var spotApp = function (state, action) {
 
     case "SELECT_ELEMENT":
       var selectedElement = action.value;
-      var newEngine = _.extend(state.engine, state.engine.add_element(selectedElement));
-      // var newEngine = state.engine[action](option);
-      var newQuery = Immutable.Map(newEngine.query)
-      return _.assign({}, state, {
-        table_selected: newQuery.get('table') === "" ? false : true,
-        engine: newEngine,
-        definitions: newEngine.definitions,
-        joined_available_elements: newEngine.joined_available_elements,
-        available_elements: newEngine.available_elements,
-        query_columns: newQuery.get('columns'),
-        query_contents: newQuery.get('contents'),
-        query_filters: newQuery.get('filters')
-      });
+      return generateFromEngineAction(state, "add_element", selectedElement)
 
     case "SELECT_FILTER":
       var selectedFilter = action.value;
@@ -218,6 +204,18 @@ var spotApp = function (state, action) {
     case "REMOVE_FILTER":
       var selectedFilter = action.value;
       return generateFromEngineAction(state, "remove_filter", selectedFilter)
+
+    case "EDIT_FILTER_VALUE":
+    return generateFromEngineAction(state, "edit_filter", {
+      filter_id: action.id,
+      filter_value: action.value
+    });
+
+    case "EDIT_FILTER_METHOD":
+    return generateFromEngineAction(state, "edit_filter", {
+      filter_id: action.id,
+      filter_method: action.method
+    });
 
     case "SET_ASC_VALUE":
       var selectedElementID = action.id

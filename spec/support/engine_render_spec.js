@@ -94,7 +94,7 @@ describe("engine_render", function () {
   it("adds a valued unjoined filter and a column element", function () {
     engine.select_table("orders");
     var revenue_column_element = Element.autogenerate_with_column("orders", "revenue", 0);
-    var revenue_filter = new Filter(revenue_column_element, {
+    var revenue_filter = Filter.build(revenue_column_element, {
       method: "Greater Than",
       value: "95"
     });
