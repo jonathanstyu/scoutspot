@@ -31,6 +31,7 @@ var PanelCard = React.createClass({
 });
 
 const mapStateToProps = function (state) {
+  var state = state.buildApp; 
   return ({
     renderedQuery: state.engine.render_query()
   })

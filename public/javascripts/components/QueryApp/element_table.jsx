@@ -34,6 +34,7 @@ var ElementTable = React.createClass({
 });
 
 const mapStateToProps = (state) => {
+  var state = state.buildApp; 
   return {
     columns: state.query_columns,
     contents: state.query_contents,

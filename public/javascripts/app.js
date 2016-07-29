@@ -7,6 +7,8 @@ var React = require('react'),
 // Custom React elements
 var App = require("./components/app");
 
+// DataManager
+
 // Setting IndexRoute for dev purposes
 ReactDOM.render((
     <App />

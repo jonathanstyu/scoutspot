@@ -20,14 +20,13 @@ var store = require('../store/store_index');
 var App = React.createClass({
 
   render: function () {
-    // console.log(store);
     var dataManager = new DataManager();
     return (
       <Provider store={store}>
         <Router history={hashHistory}>
           <Route path="/" component={NavBar}>
             <IndexRoute component={Home} dataManager={dataManager} />
-            <Route path="build" component={QueryApp} dataManager={dataManager} />
+            <Route path="build" component={QueryApp} />
             <Route path="saved" component={SavedApp} />
             <Route path="edit" component={SqlDefinitions} dataManager={dataManager} />
           </Route>

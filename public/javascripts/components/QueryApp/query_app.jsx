@@ -10,75 +10,14 @@ var React = require("react"),
 
 // Engine elements
 var Engine = require('../../models/engine'),
-    EngineQueryInterpreter = require('../../models/engine_query_interpreter'),
     DataManager = require('../../models/data_manager');
 
 var QueryApp = React.createClass({
-  // engine is the only thing passed in as a props
-  getInitialState: function () {
-    // if there is something to work from, we use it
+  componentDidMount: function () {
     var queryStringObject = this.props.location.query;
-    var dataManager = this.props.route.dataManager;
-    var engine = dataManager.engine;
-    var available_tables = _.keys(engine.definitions['tables']);
-
-
     if (!_.isEmpty(queryStringObject)) {
-      EngineQueryInterpreter.open(queryStringObject, engine);
+      this.props.openQueryString(queryStringObject);
     }
-
-    return {
-      engine: engine,
-      tableSelected: engine.query.table == "" ? false : true,
-      available_tables: available_tables,
-      available_elements: engine.available_elements,
-      joined_available_elements: engine.joined_available_elements,
-      renderedQuery: engine.render_query()
-    }
-  },
-
-  refreshState: function () {
-    var engine = this.state.engine;
-    var renderedQuery = engine.render_query();
-
-    this.setState({
-      tableSelected: engine.query.table == "" ? false : true,
-      available_elements: engine.available_elements,
-      joined_available_elements: engine.joined_available_elements,
-      renderedQuery: renderedQuery
-    })
-  },
-
-  selectElement: function (event) {
-    var that = this;
-    this.state.engine.add_element(event.target.id);
-    this.refreshState();
-  },
-
-  selectElementOrder: function (event) {
-    var that = this;
-    this.state.engine.add_element_ordering(event.target.id, event.target.value);
-    this.refreshState();
-  },
-
-  removeElement: function (event) {
-    this.state.engine.remove_element(event.target.id);
-    this.refreshState();
-  },
-
-  selectFilter: function (event) {
-    this.state.engine.add_filter(event.target.id);
-    this.refreshState();
-  },
-
-  editFilter: function (filterData) {
-    this.state.engine.edit_filter(filterData);
-    this.refreshState();
-  },
-
-  removeFilter: function (event) {
-    this.state.engine.remove_filter(event.target.id);
-    this.refreshState();
   },
 
   render() {
@@ -95,5 +34,22 @@ var QueryApp = React.createClass({
     ); // closes return
   } // closes render function
 }); // closes React class
+
+const mapStateToProps = (state) => {
+  return {}
+}
+
+const mapDispatchToProps = (dispatch) => {
+  return {
+    openQueryString: (string) => {
+      dispatch({
+        type: "OPEN_QUERY_STRING",
+        queryObject: string
+      });
+    }
+  }
+}
+
+QueryApp = connect(mapStateToProps, mapDispatchToProps)(QueryApp);
 
 module.exports = QueryApp;

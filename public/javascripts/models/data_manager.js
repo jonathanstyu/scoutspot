@@ -4,10 +4,8 @@ var _ = require('underscore'),
     EngineQuery = require('./engine_query');
 
 var DataManager = function () {
-  this.engine = new Engine(),
-  // this.definitions = JSON.parse($('#definitions').text().replace(/&quot;/g,'"')),
+  this.definitions = JSON.parse($('#definitions').text().replace(/&quot;/g,'"')),
   this.definitions = {},
-  // this.engine.load_definitions(this.definitions),
   this.savedQueries = [
     new EngineQuery({
       table: "orders",

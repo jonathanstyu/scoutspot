@@ -7,7 +7,6 @@ var Menu = React.createClass({
 
   render: function () {
     var that = this;
-    var table = []
     if (!this.props.table_selected) {
       var table_elements = this.props.available_tables.map(function (table) {
         return <MenuRowTable table={table} key={table + "table"} />
@@ -45,6 +44,7 @@ var Menu = React.createClass({
 });
 
 const mapStateToProps = (state) => {
+  var state = state.buildApp;
   return {
     table_selected: state.table_selected,
     available_tables: state.available_tables,

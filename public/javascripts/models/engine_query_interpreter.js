@@ -1,5 +1,5 @@
 var Engine = require('./engine');
-var _ = require('underscore'); 
+var _ = require('underscore');
 
 var EngineQueryInterpreter = function () {
 
@@ -8,6 +8,10 @@ var EngineQueryInterpreter = function () {
 EngineQueryInterpreter.open = function (options, engine) {
   // This opens a schema and does its best to "recreate" the query
   // if an option exists, select the table
+  if (options._saved_sql_object === "") {
+    throw "Engine error: You probably switched options and engine."
+  }
+
   if (options.table) {
     engine.select_table(options.table)
   } else {
@@ -33,7 +37,7 @@ EngineQueryInterpreter.open = function (options, engine) {
       }
     })
   }
-
+  return engine;
 }
 
 module.exports = EngineQueryInterpreter;

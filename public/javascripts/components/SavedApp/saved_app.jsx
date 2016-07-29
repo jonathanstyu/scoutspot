@@ -1,7 +1,6 @@
 var React = require('react'),
     SavedTable = require('./saved_table'),
-    connect = require('react-redux').connect,
-    store = require('../../store/store_index');
+    connect = require('react-redux').connect;
 
 var EngineQuery = require('../../models/engine_query');
 
@@ -13,11 +12,24 @@ var SavedApp = React.createClass({
           <h3>Saved Page</h3>
         </div>
         <div className='columns'>
-          <SavedTable queries={store.getState().savedQueries} />
+          <SavedTable queries={this.props.savedQueries} />
         </div>
       </div>
     )
   }
 })
-SavedApp = connect()(SavedApp);
+
+const mapStateToProps = (state) => {
+  var state = state.buildApp;
+  return {
+    savedQueries: state.savedQueries
+  }
+}
+
+const mapDispatchToProps = (dispatch) => {
+  return {
+  }
+}
+
+SavedApp = connect(mapStateToProps, mapDispatchToProps)(SavedApp);
 module.exports = SavedApp;

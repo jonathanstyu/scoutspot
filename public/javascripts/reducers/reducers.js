@@ -3,7 +3,9 @@ var Immutable = require('immutable'),
     $ = require('jquery'),
     Engine = require('../models/engine'),
     Definitions = require('../models/definitions'),
-    EngineQuery = require('../models/engine_query');
+    EngineQuery = require('../models/engine_query'),
+    EngineQueryInterpreter = require('../models/engine_query_interpreter'),
+    combineReducers = require('redux').combineReducers;
 
 var data = {
   "dialect": "mysql",
@@ -156,8 +158,14 @@ var createInitialState = function (definitions) {
 }
 
 var generateFromEngineAction = function (state, action, option) {
-  var newEngine = _.extend(state.engine, state.engine[action](option));
-  var newQuery = Immutable.Map(newEngine.query)
+  var newEngine;
+  if (typeof action != 'undefined' && typeof option != 'undefined') {
+    newEngine = _.extend(state.engine, state.engine[action](option));
+  } else {
+    newEngine = _.extend(state.engine);
+  }
+  var newQuery = Immutable.Map(newEngine.query);
+
   return _.assign({}, state, {
     table_selected: newQuery.get('table') === "" ? false : true,
     engine: newEngine,
@@ -170,13 +178,18 @@ var generateFromEngineAction = function (state, action, option) {
   });
 }
 
-var spotApp = function (state, action) {
+var buildApp = function (state, action) {
   if (typeof state === 'undefined') {
     return createInitialState()
   }
-  // console.log(state);
-  // console.log(action);
+  
   switch (action.type) {
+    case "OPEN_QUERY_STRING":
+      var queryObject = action.queryObject;
+      var newEngine = EngineQueryInterpreter.open(queryObject, state.engine);
+      state.engine = newEngine;
+      return generateFromEngineAction(state)
+
     case "RESET_QUERY":
       return createInitialState()
       break;
@@ -225,5 +238,18 @@ var spotApp = function (state, action) {
   }
   return state;
 }
+
+var definitionsApp = function (state, action) {
+  if (typeof state === 'undefined') {
+    return {}
+  }
+  console.log(action);
+  return state
+}
+
+var spotApp = combineReducers({
+  definitionsApp,
+  buildApp
+})
 
 module.exports = spotApp;
