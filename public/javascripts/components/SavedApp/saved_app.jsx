@@ -20,7 +20,7 @@ var SavedApp = React.createClass({
 })
 
 const mapStateToProps = (state) => {
-  var state = state.buildApp;
+  var state = state.savedApp;
   return {
     savedQueries: state.savedQueries
   }

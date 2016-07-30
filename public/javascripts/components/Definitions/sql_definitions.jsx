@@ -1,16 +1,13 @@
 var React = require('react'),
-    $ = require('jquery'),
-    _ = require('underscore');
+    _ = require('underscore'),
+    connect = require('react-redux').connect;
 
-var SqlDetailTable = require('./sql_detail_table'),
+var SqlDetailMenu = require('./sql_detail_menu'),
     SqlDetailPanel = require('./sql_detail_panel');
 
 var SqlDefinitions = React.createClass({
   getInitialState: function () {
-
     return {
-      definitions: this.props.route.dataManager.definitions,
-      tabTitles: ["Tables", "Joins", "Custom Elements"],
       detailMenuViewItems: [],
       tabFocus: "",
       detailFocusItem: ""
@@ -36,7 +33,7 @@ var SqlDefinitions = React.createClass({
     var tabContent = (
       <ul className='tab tab-block'>
         {
-          this.state.tabTitles.map(function (viewItem) {
+          ["Tables", "Joins", "Custom Elements"].map(function (viewItem) {
             return (
               <li key={viewItem} onClick={that.selectTab} className={ viewItem == that.state.focusItem ? "selected tab-item" : "tab-item" } >
                   <a id={viewItem}>{viewItem}</a>
@@ -51,8 +48,7 @@ var SqlDefinitions = React.createClass({
       <div>
         <div className='columns'>
           <div className='column col-md-4'>
-            <SqlDetailTable selectDetailItemCallback={this.selectDetailItem}
-              definitions={this.state.definitions}
+            <SqlDetailMenu selectDetailItemCallback={this.selectDetailItem}
               tabFocus={this.state.tabFocus}
               />
           </div>
@@ -65,5 +61,18 @@ var SqlDefinitions = React.createClass({
     )
   }
 })
+
+const mapStateToProps = (state) => {
+  return {
+
+  }
+}
+
+const mapDispatchToProps = (dispatch) => {
+  return {
+  }
+}
+
+SqlDefinitions = connect(mapStateToProps, mapDispatchToProps)(SqlDefinitions);
 
 module.exports = SqlDefinitions;

@@ -1,8 +1,8 @@
 var React = require('react'),
-    $ = require('jquery'),
-    _ = require('underscore');
+    _ = require('underscore'),
+    connect = require('react-redux').connect;
 
-var SqlDetailTable = React.createClass({
+var SqlDetailMenu = React.createClass({
   render: function () {
     var detailItems = [];
     var definitions = this.props.definitions;
@@ -55,4 +55,18 @@ var SqlDetailTable = React.createClass({
   }
 });
 
-module.exports = SqlDetailTable;
+const mapStateToProps = (state) => {
+  var state = state.definitionsApp;
+  return {
+    definitions: state.definitions
+  }
+}
+
+const mapDispatchToProps = (dispatch) => {
+  return {
+  }
+}
+
+SqlDetailMenu = connect(mapStateToProps, mapDispatchToProps)(SqlDetailMenu);
+
+module.exports = SqlDetailMenu;

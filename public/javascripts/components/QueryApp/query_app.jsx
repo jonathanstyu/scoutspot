@@ -1,6 +1,3 @@
-// Libraries
-var $ = require('jquery');
-
 // React + components
 var React = require("react"),
     Menu = require("./menu"),

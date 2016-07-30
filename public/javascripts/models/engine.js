@@ -38,7 +38,12 @@ Engine.prototype.load_definitions = function (definitions_schema) {
 Engine.prototype.select_table = function (selected_table) {
   var that = this;
   this.reset_all()
-  this.query.table = selected_table;
+  if (typeof this.definitions['tables'][selected_table] === 'undefined') {
+    throw "Unknown table selected."
+    return;
+  } else {
+    this.query.table = selected_table;
+  }
 
   // Create content items from content_mappings
   this.available_elements = _.where(this.elements, {"table": selected_table});
@@ -161,6 +166,7 @@ Engine.prototype.render_query = function () {
 
 Engine.prototype.select_element_helper = function (selector) {
   // Have to create a new element and assign it into the new one for immutability
+
   if (this.elements[selector]) {
     return _.assign(new Element(), this.elements[selector]);
   } else if (_.findWhere(this.elements, {'name': selector})) {
@@ -171,9 +177,7 @@ Engine.prototype.select_element_helper = function (selector) {
 // Handling the addition of an element Column or Content
 Engine.prototype.add_element = function (element_id) {
   var selected_element = this.select_element_helper(element_id);
-
-  // In case we see anything weird, let's exit immediately
-  if (selected_element === undefined || selected_element.type === undefined) {
+  if (typeof selected_element === 'undefined') {
     return;
   }
 
@@ -182,6 +186,9 @@ Engine.prototype.add_element = function (element_id) {
     (selected_element.type === "column" && _.where(this.query.columns, {name: selected_element.name}).length === 0)
   ) {
     this.query[`${selected_element.type}s`] = this.query[`${selected_element.type}s`].concat([selected_element])
+  } else {
+    console.log(selected_element);
+    throw `Unknown error: ${element_id}`
   }
 }
 
@@ -203,6 +210,10 @@ Engine.prototype.remove_element = function (element_id) {
 // Handling the change of the ascending or descending for an element
 Engine.prototype.add_element_ordering = function (element_id, order_direction) {
   var selected_element = this.select_element_helper(element_id);
+  if (typeof selected_element === 'undefined') {
+    throw `Invalid element: ${element_id}`
+    return;
+  }
 
   var element_check = _.find(this.query.order_by_columns, function (order_by_pair) {
     if (order_by_pair[0].id == element_id) {
@@ -229,6 +240,11 @@ Engine.prototype.add_element_ordering = function (element_id, order_direction) {
 //  Add a filter, though in reality we are adding an element
 Engine.prototype.add_filter = function (element_id, method, value) {
   var selected_element = this.select_element_helper(element_id);
+  if (typeof selected_element === 'undefined') {
+    throw `Invalid element: ${element_id}`
+    return;
+  }
+
   var created_filter;
   if (method && value) {
     created_filter = Filter.build(selected_element, {

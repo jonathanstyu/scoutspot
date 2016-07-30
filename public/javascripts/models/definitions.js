@@ -17,6 +17,8 @@ Definitions.populate = function (options) {
   // set the dialect
   if (_.contains(['mssql', 'mysql', 'postgres', 'sqlite'], options['dialect'])) {
     definitions.dialect = options['dialect']
+  } else {
+    definitions.dialect = 'postgres'
   }
 
   // set the tables

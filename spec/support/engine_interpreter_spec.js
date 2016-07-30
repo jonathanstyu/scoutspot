@@ -72,7 +72,7 @@ describe("engine_interpeter", function () {
       filters: "orders.customer_id|Equals|3434,orders.count||,",
       table: "orders"
     }
-    EngineQueryInterpreter.open(query_string, engine);
+    engine = EngineQueryInterpreter.open(query_string, engine);
     var result = engine.render_query();
     expect(result).toEqual("SELECT `orders`.`created_at` AS `orders.created_at` FROM `orders` WHERE (`orders`.`customer_id` = '3434') HAVING `orders`.`id` GROUP BY `orders`.`created_at` LIMIT 100");
   })

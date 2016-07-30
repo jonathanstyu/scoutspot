@@ -1,5 +1,4 @@
 var React = require('react'),
-    $ = require('jquery'),
     _ = require('underscore');
 
 var SqlDetailPanel = React.createClass({
@@ -28,7 +27,7 @@ var SqlDetailPanel = React.createClass({
       var detailFocusItemPairs = _.pairs(detailFocusItem);
 
       formContent = detailFocusItemPairs.map(function (focusPair) {
-        
+
         return (
           <div className='form-group' key={focusPair[0]}>
             <label className="form-label" htmlFor={"input-" + focusPair[0]}>{focusPair[0]}</label>

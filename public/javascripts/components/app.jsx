@@ -18,7 +18,6 @@ var DataManager = require('../models/data_manager');
 var store = require('../store/store_index');
 
 var App = React.createClass({
-
   render: function () {
     var dataManager = new DataManager();
     return (
@@ -28,7 +27,7 @@ var App = React.createClass({
             <IndexRoute component={Home} dataManager={dataManager} />
             <Route path="build" component={QueryApp} />
             <Route path="saved" component={SavedApp} />
-            <Route path="edit" component={SqlDefinitions} dataManager={dataManager} />
+            <Route path="edit" component={SqlDefinitions} />
           </Route>
         </Router>
       </Provider>

@@ -1,11 +1,10 @@
 var _ = require('underscore'),
-    $ = require('jquery'),
+    Firebase = require('firebase'),
     Engine = require('./engine'),
     EngineQuery = require('./engine_query');
 
 var DataManager = function () {
-  this.definitions = JSON.parse($('#definitions').text().replace(/&quot;/g,'"')),
-  this.definitions = {},
+  this.definitions = DataManager.getBootstrappedData('definitions'),
   this.savedQueries = [
     new EngineQuery({
       table: "orders",
@@ -21,6 +20,23 @@ var DataManager = function () {
       contents: 'customers.count'
     })
   ]
+
+  // Run third party stuff
+  this.setupThirdParty();
+}
+
+DataManager.prototype.setupThirdParty = function () {
+
+}
+
+DataManager.getBootstrappedData = function (selector) {
+  if (typeof document != 'undefined') {
+    var bootstrappedText = document.getElementById(selector).text
+  } else {
+    return {}
+  }
+
+  return JSON.parse(bootstrappedText.replace(/&quot;/g,'"'))
 }
 
 DataManager.clearQueryString = function () {
