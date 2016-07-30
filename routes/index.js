@@ -9,7 +9,7 @@ import React from "react";
 router.get("/", function(req, res) {
   var jsonDefinitions = require('../resources/test.json')
 
-  res.render("index", {
+  res.render("../public/index", {
     title: 'ScoutSpot',
     definitions: JSON.stringify(jsonDefinitions)
   });

@@ -20,6 +20,7 @@ var store = require('../store/store_index');
 var App = React.createClass({
   render: function () {
     var dataManager = new DataManager();
+    dataManager.setupThirdParty(); 
     return (
       <Provider store={store}>
         <Router history={hashHistory}>

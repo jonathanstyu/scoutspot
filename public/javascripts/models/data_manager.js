@@ -3,6 +3,8 @@ var _ = require('underscore'),
     Engine = require('./engine'),
     EngineQuery = require('./engine_query');
 
+var Config = require('../../../resources/config');
+
 var DataManager = function () {
   this.definitions = DataManager.getBootstrappedData('definitions'),
   this.savedQueries = [
@@ -21,12 +23,10 @@ var DataManager = function () {
     })
   ]
 
-  // Run third party stuff
-  this.setupThirdParty();
 }
 
 DataManager.prototype.setupThirdParty = function () {
-
+  Firebase.initializeApp(Config);
 }
 
 DataManager.getBootstrappedData = function (selector) {

@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>ScoutSpot - Web</title>
+    <link rel='stylesheet' href='./stylesheets/style.css' />
+  </head>
+  <body>
+    <div id='container'></div>
+  </body>
+  <footer>
+    <script type="text" id='definitions'>
+    {
+      "dialect": "mysql",
+      "tables": {
+        "orders": {
+          "name": "orders",
+          "columns": ["created_at", "id", "customer_id", "revenue"]
+        },
+        "customers": {
+          "name": "customers",
+          "columns": ["id", "created_at", "email"]
+        },
+        "order_items": {
+          "name": "order_items",
+          "columns": ["created_at", "id", "order_id", "revenue", "cost", "sale"]
+        },
+        "purchase_orders": {
+          "name": "purchase_orders",
+          "columns": ["id", "created_at", "vendor", "product_name"]
+        },
+        "companies" : {
+          "name": "companies",
+          "columns": ["company_id", "payroll_processed_at", "state", "industry", "is_active"]
+        },
+        "customer_care": {
+          "name": "customer_care",
+          "columns": ["company_id", "ticket_id", "created_at", "solved_at", "issue_type", "ticket_status"]
+        }
+      },
+      "joins": [
+        {
+          "id": 0,
+          "foreign_key_table": "order_items",
+          "foreign_key": "order_id",
+          "primary_key_table": "orders",
+          "primary_key": "id",
+          "join_type": "join"
+        },
+        {
+          "id": 1,
+          "foreign_key_table": "orders",
+          "foreign_key": "customer_id",
+          "primary_key_table": "customers",
+          "primary_key": "id",
+          "join_type": "join"
+        },
+        {
+          "id": 2,
+          "foreign_key_table": "customers",
+          "foreign_key": "id",
+          "primary_key_table": "orders",
+          "primary_key": "customer_id",
+          "join_type": "join"
+        },
+        {
+          "id": 3,
+          "foreign_key_table": "companies",
+          "foreign_key": "company_id",
+          "primary_key_table": "customer_care",
+          "primary_key": "company_id",
+          "join_type": "join"
+        }
+      ],
+      "elements": [
+        {
+          "id": 0,
+          "generated": false,
+          "table": "orders",
+          "type": "content",
+          "description": "Count of individual orders",
+          "name": "orders.count",
+          "sql_func": "count",
+          "sql_code": "id"
+        },
+        {
+          "id": 1,
+          "generated": false,
+          "table": "orders",
+          "type": "content",
+          "description": "sum of orders revenue",
+          "name": "orders.sum revenue",
+          "sql_func": "sum",
+          "sql_code": "revenue"
+        },
+        {
+          "id": 2,
+          "generated": false,
+          "table": "customers",
+          "type": "content",
+          "description": "Count of individual customers",
+          "name": "customers.count",
+          "sql_func": "count",
+          "sql_code": "id"
+        },
+        {
+          "id": 3,
+          "generated": false,
+          "table": "customers",
+          "type": "column",
+          "description": "Customers email column",
+          "name": "customers.email",
+          "sql_func": "field",
+          "sql_code": "email",
+          "group_by": ""
+        },
+        {
+          "id": 4,
+          "generated": false,
+          "table": "companies",
+          "type": "content",
+          "description": "Count of individual companies",
+          "name": "companies.count",
+          "sql_func": "count",
+          "sql_code": "company_id"
+        }
+      ]
+    }
+    </script>
+    <script src="./javascripts/bundle.js"></script>
+  </footer>
+</html>
