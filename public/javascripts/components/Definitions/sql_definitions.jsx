@@ -64,7 +64,7 @@ var SqlDefinitions = React.createClass({
 
 const mapStateToProps = (state) => {
   return {
-
+    definitions: state.buildApp.definitions
   }
 }
 

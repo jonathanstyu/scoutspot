@@ -5,15 +5,18 @@ var Immutable = require('immutable'),
 
 var definitionsApp = function (state, action) {
   if (typeof state === 'undefined') {
-    var dataManager = new DataManager();
-    var emptyState = {};
-    var definitions = dataManager.definitions;
-    
-    emptyState.definitions = definitions;
-    return emptyState;
+    return {
+      level: [0, 1, 2]
+    }
   }
-  console.log(state);
-  return state
+
+  switch (action.type) {
+    case "TREE_MOVE_FORWARD":
+      console.log(action);
+      return state
+    default:
+      return state
+  }
 }
 
 module.exports = definitionsApp;

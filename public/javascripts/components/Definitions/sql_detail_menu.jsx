@@ -56,9 +56,8 @@ var SqlDetailMenu = React.createClass({
 });
 
 const mapStateToProps = (state) => {
-  var state = state.definitionsApp;
   return {
-    definitions: state.definitions
+    definitions: state.buildApp.definitions
   }
 }
 

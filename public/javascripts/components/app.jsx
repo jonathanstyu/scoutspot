@@ -14,18 +14,17 @@ var NavBar = require("./navbar"),
     QueryApp = require("./QueryApp/query_app"),
     SavedApp = require("./SavedApp/saved_app");
 
-var DataManager = require('../models/data_manager');
+var FirebaseHandler = require('../models/firebase_manager');
 var store = require('../store/store_index');
 
 var App = React.createClass({
   render: function () {
-    var dataManager = new DataManager();
-    dataManager.setupThirdParty(); 
+    FirebaseHandler.initialize();
     return (
       <Provider store={store}>
         <Router history={hashHistory}>
           <Route path="/" component={NavBar}>
-            <IndexRoute component={Home} dataManager={dataManager} />
+            <IndexRoute component={Home} />
             <Route path="build" component={QueryApp} />
             <Route path="saved" component={SavedApp} />
             <Route path="edit" component={SqlDefinitions} />

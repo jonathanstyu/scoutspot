@@ -6,7 +6,8 @@ var Definitions = function () {
   this.tables = {},
   this.joins = [],
   this.elements = [],
-  this._options = ""
+  this._options = "",
+  this.empty = true
 }
 
 Definitions.populate = function (options) {
@@ -43,6 +44,8 @@ Definitions.populate = function (options) {
   _.forEach(options['elements'], function (element_options, index) {
     definitions.elements.push(Element.populate(element_options.type, element_options, index + element_index_count));
   });
+  
+  definitions.empty = false;
 
   return definitions;
 }

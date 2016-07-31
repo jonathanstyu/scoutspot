@@ -7,3 +7,12 @@ body {
 a {
   color: #00B7FF;
 }
+
+#terminal-bar {
+  padding: 25px;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: auto;
+}

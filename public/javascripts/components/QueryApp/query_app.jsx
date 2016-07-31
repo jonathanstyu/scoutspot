@@ -3,6 +3,7 @@ var React = require("react"),
     Menu = require("./menu"),
     PanelCard = require("./panel_card"),
     ElementTable = require("./element_table"),
+    Terminal = require('./terminal'),
     connect = require('react-redux').connect;
 
 // Engine elements
@@ -19,14 +20,17 @@ var QueryApp = React.createClass({
 
   render() {
     return (
-      <div className='columns'>
-        <div className='column col-md-4'>
-          <Menu />
+      <div>
+        <div className='columns'>
+          <div className='column col-md-4'>
+            <Menu />
+          </div>
+          <div className='column col-md-8'>
+            <PanelCard />
+            <ElementTable />
+          </div>
         </div>
-        <div className='column col-md-8'>
-          <PanelCard />
-          <ElementTable />
-        </div>
+        <Terminal />
       </div>
     ); // closes return
   } // closes render function
