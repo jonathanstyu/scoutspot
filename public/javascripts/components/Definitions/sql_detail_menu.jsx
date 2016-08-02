@@ -4,9 +4,8 @@ var React = require('react'),
 
 var SqlDetailMenu = React.createClass({
   render: function () {
-    var detailItems = [];
-    var definitions = this.props.definitions;
     var that = this;
+    var definitions = that.props.definitions;
 
     switch (this.props.tabFocus) {
       case "Tables":

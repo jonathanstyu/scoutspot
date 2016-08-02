@@ -3,7 +3,7 @@ var React = require('react'),
     connect = require('react-redux').connect;
 
 var SqlDetailMenu = require('./sql_detail_menu'),
-    SqlDetailPanel = require('./sql_detail_panel');
+    SQLDefinitionsEditor = require('./sql_def_editor');
 
 var SqlDefinitions = React.createClass({
   getInitialState: function () {
@@ -30,31 +30,14 @@ var SqlDefinitions = React.createClass({
   render: function () {
     var that = this;
 
-    var tabContent = (
-      <ul className='tab tab-block'>
-        {
-          ["Tables", "Joins", "Custom Elements"].map(function (viewItem) {
-            return (
-              <li key={viewItem} onClick={that.selectTab} className={ viewItem == that.state.focusItem ? "selected tab-item" : "tab-item" } >
-                  <a id={viewItem}>{viewItem}</a>
-              </li>
-            )
-          })
-        }
-      </ul>
-    )
-
     return (
       <div>
         <div className='columns'>
-          <div className='column col-md-4'>
-            <SqlDetailMenu selectDetailItemCallback={this.selectDetailItem}
-              tabFocus={this.state.tabFocus}
-              />
+          <div className='column col-md-3'>
+            CONTNET GOES HERE
           </div>
-          <div className='column col-md-8'>
-            {tabContent}
-            <SqlDetailPanel detailFocusItem={this.state.detailFocusItem}/>
+          <div className='column col-md-9'>
+            <SQLDefinitionsEditor />
           </div>
         </div>
       </div>

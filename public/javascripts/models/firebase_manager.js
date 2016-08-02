@@ -5,18 +5,34 @@ var _ = require('underscore'),
     store = require('../store/store_index'),
     Config = require('../../../resources/config');
 
-var FirebaseHandler = function () {
+var FirebaseManager = function () {
 
 }
 
-FirebaseHandler.initialize = function () {
+FirebaseManager.initialize = function () {
   Firebase.initializeApp(Config);
 }
 
-FirebaseHandler.googleLogin = function () {
-  dispatch({type: "LOG_IN_SUCCESS"})
-  // var provider = new Firebase.auth.GoogleAuthProvider();
-  // firebase.auth().signInWithRedirect(provider);
+FirebaseManager.googleLogin = function () {
+  var provider = new Firebase.auth.GoogleAuthProvider();
+  Firebase.auth().signInWithRedirect(provider);
 }
 
-module.exports = FirebaseHandler;
+FirebaseManager.handleRedirect = function () {
+  Firebase.auth().getRedirectResult().then(function (result) {
+    if (result.credential) {
+      var token = result.credential.accessToken;
+    }
+    if (result.user) {
+      var user = result.user;
+      console.log(user);
+      store.dispatch({type: "LOG_IN_SUCCESS"});
+    }
+  }).catch(function (error) {
+    var errorMessage = error.message;
+    store.dispatch({type: "LOG_IN_FAIL"});
+    console.log(errorMessage);
+  })
+}
+
+module.exports = FirebaseManager;

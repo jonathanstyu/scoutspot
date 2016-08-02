@@ -16,3 +16,43 @@ a {
   right: 0;
   height: auto;
 }
+
+/*For the editor. */
+#editor > .objectAttr {
+  float: left;
+}
+
+.attrChildren {
+  margin-left: 20px;
+  display: none;
+  font-weight: normal;
+  border-left: 1px dotted #ddd;
+}
+
+.compoundAttr.open > .attrChildren {
+  display: block;
+}
+
+.hashToggle {
+  cursor: pointer;
+}
+
+.hashToggle:before{
+  content: '▸';
+  color: #333;
+  line-height: 1em;
+  margin-right: 3px;
+}
+.open > .hashToggle:before {
+  content: '▾';
+}
+
+.attrRemove {
+  visibility: hidden;
+  margin-right: 5px;
+  text-decoration: none;
+}
+
+.hashAttribute:hover > .attrRemove {
+  visibility: visible;
+}

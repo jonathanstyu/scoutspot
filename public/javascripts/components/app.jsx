@@ -14,12 +14,13 @@ var NavBar = require("./navbar"),
     QueryApp = require("./QueryApp/query_app"),
     SavedApp = require("./SavedApp/saved_app");
 
-var FirebaseHandler = require('../models/firebase_manager');
+var FirebaseManager = require('../models/firebase_manager');
 var store = require('../store/store_index');
 
 var App = React.createClass({
   render: function () {
-    FirebaseHandler.initialize();
+    FirebaseManager.initialize();
+    FirebaseManager.handleRedirect(); 
     return (
       <Provider store={store}>
         <Router history={hashHistory}>

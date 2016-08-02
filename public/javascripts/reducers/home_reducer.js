@@ -2,7 +2,7 @@ var Immutable = require('immutable'),
     _ = require('underscore'),
     Definitions = require('../models/definitions'),
     EngineQuery = require('../models/engine_query'),
-    FirebaseHandler = require('../models/firebase_manager'),
+    FirebaseManager = require('../models/firebase_manager'),
     DataManager = require('../models/data_manager');
 
 var homeApp = function (state, action) {
@@ -14,9 +14,6 @@ var homeApp = function (state, action) {
   }
   switch (action.type) {
     case "START_LOG_IN":
-      setTimeout(
-        FirebaseHandler.googleLogin()
-      )
       return _.assign({}, state, {requesting: !state.requesting});
 
     case "LOG_IN_SUCCESS":
