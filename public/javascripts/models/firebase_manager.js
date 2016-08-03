@@ -25,14 +25,35 @@ FirebaseManager.handleRedirect = function () {
     }
     if (result.user) {
       var user = result.user;
+      this.
       console.log(user);
+      console.log(encodeURI(user.uid));
+      // sessionStorage.setItem('current_user', user);
       store.dispatch({type: "LOG_IN_SUCCESS"});
     }
+    // var cachedUser = sessionStorage.getItem('current_user');
+    // if (typeof cachedUser != 'undefined') {
+    //   console.log(cachedUser);
+    // }
   }).catch(function (error) {
     var errorMessage = error.message;
     store.dispatch({type: "LOG_IN_FAIL"});
     console.log(errorMessage);
   })
+}
+
+FirebaseManager.saveDefinitions = function (definitions) {
+  var current_user = Firebase.auth().currentUser;
+  if (current_user && definitions) {
+    Firebase.database()
+      .ref("definitions/"+encodeURI(current_user.uid))
+      .set(definitions)
+      .then(function (result) {
+        console.log(result);
+      })
+  } else {
+    console.log("LOG IN");
+  }
 }
 
 module.exports = FirebaseManager;

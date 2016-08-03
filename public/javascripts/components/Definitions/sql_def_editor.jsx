@@ -1,24 +1,22 @@
 var React = require('react'),
     _ = require('underscore'),
     Freezer = require('freezer-js'),
+    FirebaseManager = require('../../models/firebase_manager'),
     connect = require('react-redux').connect;
 
 var ObjectAttribute = require('./sql_def_editor_obj_attr');
 
-var typeDefaultValues = {
-  string: "",
-  object: {},
-  array: []
-}
-
 var SQLDefinitionsEditor = React.createClass({
+  saveDefinitions: function () {
+    FirebaseManager.saveDefinitions(this.props.definitions);
+  },
   render: function () {
     var that = this;
     return (
       <div>
         <header className='navbar'>
           <section className='section-navbar'>
-            <button className='btn'>Save</button>
+            <button className='btn' onClick={this.saveDefinitions}>Save</button>
           </section>
         </header>
         <hr />

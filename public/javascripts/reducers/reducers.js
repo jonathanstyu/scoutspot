@@ -1,4 +1,6 @@
 var combineReducers = require('redux').combineReducers;
+var applyMiddleware = require('redux').applyMiddleware;
+var thunkMiddleware = require('redux-thunk');
 
 // Other reducers
 var definitionsApp = require('./definitions_reducer'),
