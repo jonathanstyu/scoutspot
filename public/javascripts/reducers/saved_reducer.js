@@ -4,31 +4,32 @@ var Immutable = require('immutable'),
     EngineQuery = require('../models/engine_query'),
     DataManager = require('../models/data_manager');
 
+var fetchSavedQueries = require('../actions/actions.js');
+
 var savedApp = function (state, action) {
   if (typeof state === 'undefined') {
     var dataManager = new DataManager();
     var emptyState = {};
     var definitions = dataManager.definitions;
 
+    emptyState.fetching = false;
     emptyState.definitions = definitions;
-    emptyState.savedQueries = [
-      new EngineQuery({
-        table: "orders",
-        columns: "orders.created_at"
-      }),
-      new EngineQuery({
-        table: "customers",
-        columns: "customers.id,customers.email"
-      }),
-      new EngineQuery({
-        table: "orders",
-        columns: "orders.created_at,orders.customer_id,customers.id",
-        contents: 'customers.count'
-      })
-    ]
+    emptyState.savedQueries = []
     return emptyState;
   }
-  return state
+  switch (action.type) {
+    case "FETCH_QUERIES":
+      return Object.assign({}, state, {
+        fetching: true
+      });
+    case "FETCH_QUERIES_SUCCESS":
+      return Object.assign({}, state, {
+        fetching: false,
+        savedQueries: action.queries
+      });
+    default:
+      return state;
+  }
 }
 
 module.exports = savedApp;

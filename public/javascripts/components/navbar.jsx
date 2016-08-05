@@ -2,6 +2,7 @@
 var React = require('react'),
     connect = require('react-redux').connect,
     Link = require('react-router').Link,
+    Firebase = require('firebase'),
     FirebaseManager = require('../models/firebase_manager')
 
 var NavBar = React.createClass({
@@ -22,7 +23,7 @@ var NavBar = React.createClass({
             <Link to='/saved' className='btn btn-link'>Saved</Link>
             <Link to='/edit' className='btn btn-link'>Definitions/User</Link>
             <a className='btn' onClick={this.login}>{
-                this.props.loggedIn ? "Sign Out" : "Sign In"
+                Firebase.auth().currentUser ? "Sign Out" : "Sign In"
               }</a>
           </section>
         </header>

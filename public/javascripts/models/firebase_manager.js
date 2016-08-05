@@ -56,4 +56,45 @@ FirebaseManager.saveDefinitions = function (definitions) {
   }
 }
 
+FirebaseManager.saveQuery = function (query) {
+  var current_user = Firebase.auth().currentUser;
+  if (current_user && query) {
+    Firebase.database()
+      .ref("queries/"+encodeURI(current_user.uid))
+      .push(query)
+      .then(function (result) {
+        console.log(result);
+      })
+  } else {
+    console.log("LOG IN");
+  }
+}
+
+FirebaseManager.removeQuery = function (query) {
+  var current_user = Firebase.auth().currentUser;
+  if (current_user && query) {
+    Firebase.database()
+      .ref("queries/"+encodeURI(current_user.uid))
+      .remove(query)
+      .then(function (result) {
+        console.log(result);
+      })
+  } else {
+    console.log("LOG IN");
+  }
+}
+
+FirebaseManager.fetchSavedQueries = function () {
+  var current_user = Firebase.auth().currentUser;
+  if (current_user) {
+    var current_user_queries = Firebase.database()
+      .ref("queries/"+encodeURI(current_user.uid));
+    current_user_queries.on('value', function (snapshot) {
+      console.log(snapshot.val());
+    })
+  } else {
+    console.log(error);
+  }
+}
+
 module.exports = FirebaseManager;

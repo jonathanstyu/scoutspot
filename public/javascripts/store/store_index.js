@@ -1,10 +1,16 @@
 var createStore = require('redux').createStore,
     applyMiddleware = require('redux').applyMiddleware,
-    thunk = require('redux-thunk');
+    createLogger = require('redux-logger'),
+    thunk = require('redux-thunk').default;
 
 var spotApp = require('../reducers/reducers.js');
 
+const loggerMiddleware = createLogger();
 let store = createStore(
-  spotApp
+  spotApp,
+  applyMiddleware(
+    thunk,
+    loggerMiddleware
+  )
 );
 module.exports = store;
