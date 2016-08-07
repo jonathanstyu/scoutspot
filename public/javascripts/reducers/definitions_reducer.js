@@ -6,7 +6,7 @@ var Immutable = require('immutable'),
 var definitionsApp = function (state, action) {
   if (typeof state === 'undefined') {
     return {
-      level: [0, 1, 2]
+      fetching: false
     }
   }
 

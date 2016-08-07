@@ -35,7 +35,6 @@ var SavedTable = React.createClass({
                   <td>{(query.contents ? query.contents.length : 0) + (query.columns ? query.columns.length : 0)}</td>
                   <td><a href={'#/build?' + query.export()} className='btn btn-link'>Go to Build Page</a></td>
                   <td><div className='btn-group btn-group-block'>
-                    <button id={index} onClick={that.save} className='btn'>Save</button>
                     <button id={index} onClick={that.delete} className='btn'>Delete</button>
                   </div></td>
                 </tr>

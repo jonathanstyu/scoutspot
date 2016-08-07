@@ -10,6 +10,7 @@ var PanelCard = React.createClass({
   },
 
   render: function () {
+    var acceptableQuery = this.props.renderedQuery == 'Empty Query';
     return (
       <div>
         <div className='card'>
@@ -18,10 +19,10 @@ var PanelCard = React.createClass({
           </div>
           <div className='card-footer'>
             <div className='btn-group btn-group-block'>
-              <button className='btn' onClick={this.props.copy}>Copy</button>
-              <button className='btn' onClick={this.props.save}>Save</button>
-              <button className='btn' onClick={this.props.reset}>Reset</button>
-              <button className='btn' onClick={this.props.share}>Share</button>
+              <button className='btn' onClick={this.props.copy} disabled={acceptableQuery}>Copy</button>
+              <button className='btn' onClick={this.props.save} disabled={acceptableQuery}>Save</button>
+              <button className='btn' onClick={this.props.reset} disabled={acceptableQuery}>Reset</button>
+              <button className='btn' onClick={this.props.share} disabled={acceptableQuery}>Share</button>
             </div>
           </div>
         </div>
@@ -31,7 +32,7 @@ var PanelCard = React.createClass({
 });
 
 const mapStateToProps = function (state) {
-  var state = state.buildApp; 
+  var state = state.buildApp;
   return ({
     renderedQuery: state.engine.render_query()
   })

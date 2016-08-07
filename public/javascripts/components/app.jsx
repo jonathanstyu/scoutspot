@@ -15,12 +15,17 @@ var NavBar = require("./navbar"),
     SavedApp = require("./SavedApp/saved_app");
 
 var FirebaseManager = require('../models/firebase_manager');
-var store = require('../store/store_index');
+
+// Redux and react actions
+var store = require('../store/store_index'),
+    fetchDefinitionsIfNeeded = require('../actions/definitions_actions');
 
 var App = React.createClass({
   render: function () {
     FirebaseManager.initialize();
-    FirebaseManager.handleRedirect(); 
+    FirebaseManager.handleRedirect();
+    store.dispatch(fetchDefinitionsIfNeeded())
+
     return (
       <Provider store={store}>
         <Router history={hashHistory}>

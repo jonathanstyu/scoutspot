@@ -24,7 +24,7 @@ var MenuRowTable = React.createClass({
 
 const mapStateToProps = function (state) {
   return ({
-
+    
   })
 }
 

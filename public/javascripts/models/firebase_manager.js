@@ -25,16 +25,11 @@ FirebaseManager.handleRedirect = function () {
     }
     if (result.user) {
       var user = result.user;
-      this.
-      console.log(user);
-      console.log(encodeURI(user.uid));
-      // sessionStorage.setItem('current_user', user);
+      // this.
+      // console.log(user);
+      // console.log(encodeURI(user.uid));
       store.dispatch({type: "LOG_IN_SUCCESS"});
     }
-    // var cachedUser = sessionStorage.getItem('current_user');
-    // if (typeof cachedUser != 'undefined') {
-    //   console.log(cachedUser);
-    // }
   }).catch(function (error) {
     var errorMessage = error.message;
     store.dispatch({type: "LOG_IN_FAIL"});

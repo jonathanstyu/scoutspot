@@ -9,6 +9,9 @@ var Immutable = require('immutable'),
 var createInitialState = function (definitions) {
   var dataManager = new DataManager();
   var emptyState = {};
+  // if (!definitions) {
+  //   var definitions = {};
+  // }
   var definitions = dataManager.definitions;
   var engine = new Engine(definitions);
 
@@ -37,6 +40,7 @@ var generateFromEngineAction = function (state, action, option) {
   return _.assign({}, state, {
     table_selected: newQuery.get('table') === "" ? false : true,
     engine: newEngine,
+    available_tables: _.keys(newEngine.definitions['tables']),
     definitions: newEngine.definitions,
     joined_available_elements: newEngine.joined_available_elements,
     available_elements: newEngine.available_elements,
@@ -58,9 +62,15 @@ var buildApp = function (state, action) {
       state.engine = newEngine;
       return generateFromEngineAction(state)
 
+    case "FETCH_DEFINITIONS_SUCCESS":
+      var newDefinitions = action.definitions;
+      return generateFromEngineAction(state, "load_definitions", newDefinitions);
+      break;
+
     case "RESET_QUERY":
       window.history.pushState({}, document.title, window.location.origin+'/#/build')
-      return createInitialState()
+      // return generateFromEngineAction(state, "reset_all");
+      return createInitialState(Object.assign({}, state.definitions))
       break;
 
     case "SHARE_QUERY":
