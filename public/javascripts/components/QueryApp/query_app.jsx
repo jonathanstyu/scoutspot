@@ -4,7 +4,8 @@ var React = require("react"),
     PanelCard = require("./panel_card"),
     ElementTable = require("./element_table"),
     Terminal = require('./terminal'),
-    connect = require('react-redux').connect;
+    connect = require('react-redux').connect,
+    QueryModal = require('./query_modal');
 
 // Engine elements
 var Engine = require('../../models/engine'),
@@ -28,6 +29,7 @@ var QueryApp = React.createClass({
           <div className='column col-md-8'>
             <PanelCard />
             <ElementTable />
+            <QueryModal />
           </div>
         </div>
         <Terminal />

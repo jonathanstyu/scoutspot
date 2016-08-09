@@ -9,9 +9,9 @@ var React = require('react'),
     Provider = require('react-redux').Provider;
 
 var NavBar = require("./navbar"),
-    Home = require("./home"),
     SqlDefinitions = require("./Definitions/sql_definitions"),
     QueryApp = require("./QueryApp/query_app"),
+    Home = require("./HomeApp/home"),
     SavedApp = require("./SavedApp/saved_app");
 
 var FirebaseManager = require('../models/firebase_manager');

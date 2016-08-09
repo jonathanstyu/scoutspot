@@ -1,11 +1,7 @@
 @import './spectre.min.css';
 
 body {
-  padding: 10px;
-}
-
-a {
-  color: #00B7FF;
+  padding: 1rem;
 }
 
 #terminal-bar {
@@ -17,7 +13,22 @@ a {
   height: auto;
 }
 
-/*For the editor. */
+.bg-grey {
+  background-color: #efefef;
+  padding: 1rem;
+}
+
+.hero {
+  padding-top: 5rem;
+  padding-bottom: 5rem;
+}
+
+.hero > h2 {
+  margin-top: 4rem;
+  margin-bottom: 4rem;
+}
+
+/*For the definitions editor. */
 #editor > .objectAttr {
   float: left;
 }

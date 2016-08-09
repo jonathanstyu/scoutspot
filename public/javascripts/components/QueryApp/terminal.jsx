@@ -5,7 +5,11 @@ var Terminal = React.createClass({
   render() {
     return (
       <div id="terminal-bar">
-        <input className='form-input input-lg' type='text' placeholder='Type here' />
+        <input
+          className='form-input input-lg'
+          type='text'
+          placeholder='Type here'
+          onChange={this.props.terminalType} />
       </div>
     )
   } // close render
@@ -17,10 +21,10 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
   return {
-    openQueryString: (string) => {
+    terminalType: (event) => {
       dispatch({
-        type: "OPEN_QUERY_STRING",
-        queryObject: string
+        type: "TERMINAL_TYPE",
+        content: event.target.value
       });
     }
   }

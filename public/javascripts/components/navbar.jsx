@@ -16,7 +16,7 @@ var NavBar = React.createClass({
       <div>
         <header className='navbar'>
           <section className='navbar-section'>
-            <a href='/' className='navbar-brand'>ScoutSpot</a>
+            <Link to='/' className='navbar-brand'>ScoutSpot</Link>
           </section>
           <section className='navbar-section'>
             <Link to='/build' className='btn btn-link'>Build</Link>

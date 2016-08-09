@@ -21,7 +21,7 @@ var SQLDefinitionsEditor = React.createClass({
         </header>
         <hr />
         <div className='container' id='editor'>
-          <ObjectAttribute value={this.props.definitions} />
+          <ObjectAttribute value={this.props.definitions} parent={true} />
         </div>
       </div>
     )

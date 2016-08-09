@@ -6,7 +6,7 @@ var React = require('react'),
 var ObjectAttribute = React.createClass({
   getInitialState: function () {
     return ({
-      editing: false
+      editing: this.props.parent
     })
   },
   render: function () {

@@ -44,7 +44,7 @@ const mapDispatchToProps = function (dispatch) {
       dispatch({type: "SAVE_QUERY"})
     },
     copy: () => {
-      dispatch({type: "COPY_QUERY"})
+      dispatch({type: "COPY_QUERY_MODAL"})
     },
     edit: (event) => {
       dispatch({type: "EDIT_QUERY_BOX", value: event.target.value})
@@ -53,7 +53,7 @@ const mapDispatchToProps = function (dispatch) {
       dispatch({type: "RESET_QUERY"})
     },
     share: () => {
-      dispatch({type: "SHARE_QUERY"})
+      dispatch({type: "SHARE_QUERY_MODAL"})
     }
   })
 }

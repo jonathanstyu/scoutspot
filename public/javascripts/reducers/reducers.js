@@ -6,6 +6,7 @@ var thunkMiddleware = require('redux-thunk');
 var definitionsApp = require('./definitions_reducer'),
     savedApp = require('./saved_reducer'),
     buildApp = require('./build_reducer'),
+    buildModalApp = require('./build_modal_reducer'),
     homeApp = require('./home_reducer');
 
 var spotApp = combineReducers({
