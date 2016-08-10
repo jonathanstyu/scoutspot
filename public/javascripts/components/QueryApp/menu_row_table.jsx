@@ -6,7 +6,6 @@ var MenuRowTable = React.createClass({
     var table = this.props.table;
     return {
       header: table,
-      buttonTitle: "See Schema",
       id: table
     }
   },
@@ -16,7 +15,9 @@ var MenuRowTable = React.createClass({
       <tr>
         <td onClick={this.props.selectTable} id={this.state.id}>{this.state.header}</td>
         <td></td>
-        <td><button className='btn btn-sm' id={this.state.id}>{this.state.buttonTitle}</button></td>
+        <td>
+          <button className='btn btn-sm' id={this.state.id} onClick={this.props.seeTableSchema}>Schema</button>
+        </td>
       </tr>
     )
   }
@@ -24,7 +25,7 @@ var MenuRowTable = React.createClass({
 
 const mapStateToProps = function (state) {
   return ({
-    
+
   })
 }
 
@@ -32,6 +33,9 @@ const mapDispatchToProps = (dispatch) => {
   return {
     selectTable: (event) => {
       dispatch({type: "SELECT_TABLE", value: event.target.id})
+    },
+    seeTableSchema: (event) => {
+      dispatch({type: "SEE_TABLE_SCHEMA_MODAL", value: event.target.id})
     }
   }
 }

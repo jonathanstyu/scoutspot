@@ -4,15 +4,6 @@ body {
   padding: 1rem;
 }
 
-#terminal-bar {
-  padding: 25px;
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: auto;
-}
-
 .bg-grey {
   background-color: #efefef;
   padding: 1rem;
@@ -62,6 +53,11 @@ body {
   visibility: hidden;
   margin-right: 5px;
   text-decoration: none;
+}
+
+.attrName {
+  font-weight: bold;
+  font-size: 125%
 }
 
 .hashAttribute:hover > .attrRemove {

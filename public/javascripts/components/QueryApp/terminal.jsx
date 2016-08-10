@@ -1,10 +1,19 @@
 var React = require("react"),
     connect = require('react-redux').connect;
 
+const terminalStyles = {
+  padding: '25px',
+  position: 'fixed',
+  bottom: '0',
+  left: '0',
+  right: '0',
+  height: 'auto'
+}
+
 var Terminal = React.createClass({
   render() {
     return (
-      <div id="terminal-bar">
+      <div style={terminalStyles}>
         <input
           className='form-input input-lg'
           type='text'

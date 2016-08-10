@@ -27,6 +27,24 @@ Definitions.populate = function (options) {
     definitions.tables = options['tables'];
   }
 
+  if (options['tables']['schemas']) {
+    _.each(options['tables'], function (tableObject) {
+      // find the schema in the options
+      var schemas = options['tables']['schemas'][tableObject.name];
+      if (schemas) {
+        definitions.tables[tableObject.name]['schema'] = schemas.map(function (column_schema) {
+          return column_schema || "string"
+        })
+      }
+    })
+  } else {
+    _.each(options['tables'], function (tableObject) {
+      definitions.tables[tableObject.name]['schema'] = tableObject.columns.map(function (column) {
+        return 'string'
+      })
+    })
+  }
+
   if (options['joins']) {
     definitions.joins = options['joins'];
   }
@@ -44,7 +62,7 @@ Definitions.populate = function (options) {
   _.forEach(options['elements'], function (element_options, index) {
     definitions.elements.push(Element.populate(element_options.type, element_options, index + element_index_count));
   });
-  
+
   definitions.empty = false;
 
   return definitions;

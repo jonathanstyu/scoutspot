@@ -51,7 +51,7 @@ var ObjectAttribute = React.createClass({
 
     return (
       <span className={className}>
-        <span onClick={this.toggleEditing} className="hashToggle">Map: [{keys.length}]</span>
+        <span onClick={this.toggleEditing} className="hashToggle">[{keys.length}] Child Elements</span>
         <div className="attrChildren">
           {attrs}
         </div>

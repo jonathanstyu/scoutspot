@@ -7,7 +7,8 @@ var StringAttribute = React.createClass({
   getInitialState: function () {
     return ({
       editing: !this.props.value,
-      value: this.props.value,
+      oldValue: this.props.value,
+      currentValue: this.props.value,
       modified: false
     })
   },
@@ -17,7 +18,7 @@ var StringAttribute = React.createClass({
       className = ' modified';
     }
     if (this.state.editing) {
-      return <input value={this.state.value} onChange={this.updateValue} onBlur={this.setValue} ref="input" onKeyDown={this.handleKeyDown} />
+      return <input value={this.state.currentValue} onChange={this.updateValue} onBlur={this.setValue} ref="input" onKeyDown={this.handleKeyDown} />
     } else {
       return <span onClick={this.setEditMode} className={className}>{this.props.value}</span>;
     }
@@ -31,6 +32,16 @@ var StringAttribute = React.createClass({
 
   setEditMode: function () {
     this.setState({editing: true})
+  },
+
+  updateValue: function (event) {
+    console.log(event.target.value);
+    this.setState({currentValue: event.target.value})
+  },
+
+  setValue: function (event) {
+    console.log(`old value: ${this.state.oldValue} :: new Value: ${this.state.currentValue}`);
+    this.toggleEditing()
   }
 })
 

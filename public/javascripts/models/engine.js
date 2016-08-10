@@ -83,7 +83,7 @@ Engine.prototype.reset_all = function () {
 // helper function that initializes a fresh sql object
 Engine.prototype.create_sql_object = function (table_name) {
   var table_definition = this.definitions['tables'][table_name];
-  return sql.define(table_definition);
+  return sql.define(_.pick(table_definition, 'name', 'columns'));
 }
 
 // --- The BBIG FUNCTION that renders ---

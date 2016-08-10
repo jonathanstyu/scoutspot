@@ -1,9 +1,9 @@
 [debug] ----------------------------------------------------------------------
 [debug] Command:      /usr/local/bin/node /usr/local/bin/firebase serve
-[debug] CLI Version:  3.0.4
+[debug] CLI Version:  3.0.6
 [debug] Platform:     darwin
 [debug] Node Version: v4.2.1
-[debug] Time:         Sat Jul 30 2016 16:12:41 GMT-0700 (PDT)
+[debug] Time:         Mon Aug 08 2016 18:23:57 GMT-0700 (PDT)
 [debug] ----------------------------------------------------------------------
 [debug] 
 [info] Starting Firebase development server...

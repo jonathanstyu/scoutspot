@@ -22,7 +22,7 @@ var buildModalApp = function (state, action) {
         modalContent: `#/build?${queryString}`,
         modalContentType: "InputBar"
       });
-
+      break;
     case "COPY_QUERY_MODAL":
       var queryString = state.engine.render_query()
       return Object.assign({}, state, {
@@ -30,7 +30,20 @@ var buildModalApp = function (state, action) {
         modalContent: queryString,
         modalContentType: "Announcement"
       });
+      break;
+    case "SEE_TABLE_SCHEMA_MODAL":
+      var selectedTable = action.value;
+      var selectedTableObject = state.definitions.tables[selectedTable]
+      var selectedTableColumns = selectedTableObject['columns'];
+      var selectedTableColumnSchemas = selectedTableObject['schema'];
 
+      var zipped = _.zip(selectedTableColumns, selectedTableColumnSchemas);
+      return Object.assign({}, state, {
+        openModal: true,
+        modalContentType: 'Schema',
+        modalContent: zipped
+      });
+      break;
     case "CLOSE_MODAL":
       return Object.assign({}, state, {
         openModal: false

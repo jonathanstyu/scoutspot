@@ -30,6 +30,30 @@ var QueryModal = React.createClass({
           </div>
         )
         break;
+      case 'Schema':
+        zipped_columns = this.props.content
+        content = (
+          <div>
+            <h3>Schema for Table</h3>
+            <table className='table'>
+              <tbody>
+                <tr>
+                  <th>Column</th>
+                  <th>Data Type</th>
+                </tr>
+                {zipped_columns.map(function (column, index) {
+                  return (
+                    <tr key={index}>
+                      <td>{column[0]}</td>
+                      <td>{column[1]}</td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        )
+        break;
       default:
 
     }
@@ -53,7 +77,7 @@ const mapStateToProps = (state) => {
   var state = state.buildApp
   return {
     open: state.openModal,
-    content: state.modalContent || "Hello",
+    content: state.modalContent ? state.modalContent : "Hello",
     contentType: state.modalContentType
   }
 }
