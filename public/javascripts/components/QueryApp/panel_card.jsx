@@ -1,10 +1,17 @@
 var React = require("react"),
     connect = require('react-redux').connect;
 
-// var store = require('../../store/store_index');
+
+const boxStyles = {
+  margin: '2px',
+  padding: '10px',
+  width: '100%',
+  background: '#EDE6E3',
+  fontFamily: 'Menlo',
+  fontSize: '100%'
+}
 
 var PanelCard = React.createClass({
-
   editTextbox: function (event) {
     this.props.dispatch({type: "editBoxEdit", value: event.target.value})
   },
@@ -15,7 +22,12 @@ var PanelCard = React.createClass({
       <div>
         <div className='card'>
           <div className='card-body' id='sql-content'>
-            <textarea value={this.props.renderedQuery} rows="3" className='form-input' onChange={this.props.edit} id="queryBox"></textarea>
+            <textarea
+              value={this.props.renderedQuery}
+              rows="6"
+              style={boxStyles}
+              onChange={this.props.edit}>
+            </textarea>
           </div>
           <div className='card-footer'>
             <div className='btn-group btn-group-block'>
