@@ -1,6 +1,8 @@
 var React = require("react"),
     connect = require('react-redux').connect;
 
+var saveQuery = require('../../actions/actions').saveQuery,
+    store = require('../../store/store_index');
 
 const boxStyles = {
   margin: '2px',
@@ -12,6 +14,11 @@ const boxStyles = {
 }
 
 var PanelCard = React.createClass({
+  save: function () {
+    store.dispatch(saveQuery(this.props.query))
+    this.props.save();
+  },
+
   editTextbox: function (event) {
     this.props.dispatch({type: "editBoxEdit", value: event.target.value})
   },
@@ -32,7 +39,7 @@ var PanelCard = React.createClass({
           <div className='card-footer'>
             <div className='btn-group btn-group-block'>
               <button className='btn' onClick={this.props.copy} disabled={acceptableQuery}>Copy</button>
-              <button className='btn' onClick={this.props.save} disabled={acceptableQuery}>Save</button>
+              <button className='btn' onClick={this.save} disabled={acceptableQuery}>Save</button>
               <button className='btn' onClick={this.props.reset} disabled={acceptableQuery}>Reset</button>
               <button className='btn' onClick={this.props.share} disabled={acceptableQuery}>Share</button>
             </div>
@@ -46,6 +53,7 @@ var PanelCard = React.createClass({
 const mapStateToProps = function (state) {
   var state = state.buildApp;
   return ({
+    query: state.engine.query,
     renderedQuery: state.engine.render_query()
   })
 }
@@ -53,7 +61,9 @@ const mapStateToProps = function (state) {
 const mapDispatchToProps = function (dispatch) {
   return ({
     save: () => {
-      dispatch({type: "SAVE_QUERY"})
+      // for some reason, if try to map this to props and then insert into the React code directly it dispatches prematurely. Had to roll it out into a this.save, which then toggles the store dispatch 
+      // store.dispatch(saveQuery(this.props.query))
+      dispatch({type: "SAVE_QUERY_BEGIN"})
     },
     copy: () => {
       dispatch({type: "COPY_QUERY_MODAL"})

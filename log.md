@@ -23,7 +23,7 @@ Javascript, [app.js] <Wraps the app.jsx and renders it to the HTML dom element /
     - QueryApp ('QueryApp/query_app.jsx') <The App page>
       - PanelCard <The Part that shows the Query>
       - Menu, which then holds >> [MenuRowTable || MenuRowElement] depending on what is being displayed
-      - ElementTable, which then holds >> [ElementRow || FilterRow] depending on what the query is showing 
+      - ElementTable, which then holds >> [ElementRow || FilterRow] depending on what the query is showing
     - SavedApp ('SavedApp/saved_app.jsx') <Page for looking at queries we have saved // pulled down from Firebase>
     - DefinitionsApp ('Definitions/sql_definitions.jsx') <A tree structure for viewing and managing the definitions JSON structure>
 

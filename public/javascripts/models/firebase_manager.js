@@ -25,15 +25,11 @@ FirebaseManager.handleRedirect = function () {
     }
     if (result.user) {
       var user = result.user;
-      // this.
-      // console.log(user);
-      // console.log(encodeURI(user.uid));
-      store.dispatch({type: "LOG_IN_SUCCESS"});
+      store.dispatch({type: "LOG_IN_SUCCESS", user: user});
     }
   }).catch(function (error) {
     var errorMessage = error.message;
-    store.dispatch({type: "LOG_IN_FAIL"});
-    console.log(errorMessage);
+    store.dispatch({type: "LOG_IN_FAIL", message: errorMessage});
   })
 }
 
@@ -44,21 +40,7 @@ FirebaseManager.saveDefinitions = function (definitions) {
       .ref("definitions/"+encodeURI(current_user.uid))
       .set(definitions)
       .then(function (result) {
-        console.log(result);
-      })
-  } else {
-    console.log("LOG IN");
-  }
-}
-
-FirebaseManager.saveQuery = function (query) {
-  var current_user = Firebase.auth().currentUser;
-  if (current_user && query) {
-    Firebase.database()
-      .ref("queries/"+encodeURI(current_user.uid))
-      .push(query)
-      .then(function (result) {
-        console.log(result);
+        // `console.log(result);`
       })
   } else {
     console.log("LOG IN");
@@ -76,19 +58,6 @@ FirebaseManager.removeQuery = function (query) {
       })
   } else {
     console.log("LOG IN");
-  }
-}
-
-FirebaseManager.fetchSavedQueries = function () {
-  var current_user = Firebase.auth().currentUser;
-  if (current_user) {
-    var current_user_queries = Firebase.database()
-      .ref("queries/"+encodeURI(current_user.uid));
-    current_user_queries.on('value', function (snapshot) {
-      console.log(snapshot.val());
-    })
-  } else {
-    console.log(error);
   }
 }
 

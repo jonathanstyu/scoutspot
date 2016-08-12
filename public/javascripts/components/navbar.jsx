@@ -16,9 +16,10 @@ var NavBar = React.createClass({
       <div>
         <header className='navbar'>
           <section className='navbar-section'>
-            <Link to='/' className='navbar-brand'>ScoutSpot</Link>
+            <Link to='/' className='navbar-brand'>ScoutSpot || <small className='label'>Defined Query Builder</small></Link>
           </section>
           <section className='navbar-section'>
+            <Link to='/about' className='btn btn-link'>About</Link>
             <Link to='/build' className='btn btn-link'>Build</Link>
             <Link to='/saved' className='btn btn-link'>Saved</Link>
             <Link to='/edit' className='btn btn-link'>Definitions/User</Link>

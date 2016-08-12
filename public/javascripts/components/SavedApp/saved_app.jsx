@@ -5,11 +5,10 @@ var React = require('react'),
     connect = require('react-redux').connect;
 
 var EngineQuery = require('../../models/engine_query');
-var fetchSavedQueries = require('../../actions/actions.js');
+var fetchSavedQueries = require('../../actions/actions.js').fetchSavedQueries;
 
 var SavedApp = React.createClass({
   fetchQueries: function () {
-    // FirebaseManager.fetchSavedQueries();
     this.props.dispatch(fetchSavedQueries());
   },
 

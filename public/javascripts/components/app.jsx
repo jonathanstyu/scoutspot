@@ -30,8 +30,9 @@ var App = React.createClass({
       <Provider store={store}>
         <Router history={hashHistory}>
           <Route path="/" component={NavBar}>
-            <IndexRoute component={Home} />
+            <IndexRoute component={QueryApp} />
             <Route path="build" component={QueryApp} />
+            <Route path="about" component={Home} />
             <Route path="saved" component={SavedApp} />
             <Route path="edit" component={SqlDefinitions} />
           </Route>

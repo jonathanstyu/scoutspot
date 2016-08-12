@@ -9,6 +9,7 @@ var Immutable = require('immutable'),
 // actions
 var createInitialState = require('../actions/build_actions').createInitialState;
 var generateFromEngineAction = require('../actions/build_actions').generateFromEngineAction;
+var saveQuery = require('../actions/actions').saveQuery;
 
 // sub-reducer
 var buildModalApp = require('./build_modal_reducer'),
@@ -44,6 +45,15 @@ var buildApp = function (state, action) {
     case "RESET_QUERY":
       window.history.pushState({}, document.title, window.location.origin+'/#/build')
       return createInitialState(Object.assign({}, state.definitions))
+      break;
+
+    case "SAVE_QUERY_BEGIN":
+      var query = state.engine.query;
+      return state
+      break;
+
+    case "SAVE_QUERY_CONFIRMED":
+      return state
       break;
 
     case "SELECT_TABLE":

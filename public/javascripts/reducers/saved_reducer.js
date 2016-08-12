@@ -4,7 +4,7 @@ var Immutable = require('immutable'),
     EngineQuery = require('../models/engine_query'),
     DataManager = require('../models/data_manager');
 
-var fetchSavedQueries = require('../actions/actions.js');
+var fetchSavedQueries = require('../actions/actions.js').fetchSavedQueries;
 
 var savedApp = function (state, action) {
   if (typeof state === 'undefined') {

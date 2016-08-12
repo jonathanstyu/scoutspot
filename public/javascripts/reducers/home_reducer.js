@@ -5,6 +5,8 @@ var Immutable = require('immutable'),
     FirebaseManager = require('../models/firebase_manager'),
     DataManager = require('../models/data_manager');
 
+var logUserIn = require('../actions/home_actions.js');
+
 var homeApp = function (state, action) {
   if (typeof state === 'undefined') {
     return {
